@@ -1,0 +1,14 @@
+# de_laws_to_json dependencies
+# Tested on Python 3.14.2
+#
+# Install:  pip install -r requirements.txt
+
+# --- download_de_laws.py ---
+requests>=2.32.5       # HTTP downloads with retry support
+tqdm>=4.67.3           # Progress bars
+urllib3>=2.6.3         # Pulled in by requests; listed explicitly for the Retry adapter
+
+# --- process_de_laws.py ---
+beautifulsoup4>=4.14.3 # XML/HTML parsing (import name: bs4)
+lxml>=6.0.2            # Fast XML parser backend for BeautifulSoup
+tiktoken>=0.12.0       # OpenAI BPE tokenizer (cl100k_base encoding)

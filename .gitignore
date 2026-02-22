@@ -6,13 +6,19 @@
 *config.js
 *package.json
 *.csv
-de_federal_json/*.json
-*.txt
-de_federal_raw/*.xml
+# --- project outputs (generated, not committed) ---
+de_federal_json/
+de_federal_raw/
 de_federal.json
+de_federal_unprocessed_absatze.txt
+de_federal_missing_files.txt
+download_errors.txt
 *.zip
 *.log
-*.venv*
+# Virtual environments
+.venv/
+venv/
+env/
 event.json
 .env*
 *.bak
@@ -35,7 +41,6 @@ event.json
 ### Node ###
 # Logs
 logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
