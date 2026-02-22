@@ -12,3 +12,6 @@ urllib3>=2.6.3         # Pulled in by requests; listed explicitly for the Retry 
 beautifulsoup4>=4.14.3 # XML/HTML parsing (import name: bs4)
 lxml>=6.0.2            # Fast XML parser backend for BeautifulSoup
 tiktoken>=0.12.0       # OpenAI BPE tokenizer (cl100k_base encoding)
+
+# --- app.py (dashboard) ---
+flask>=3.1.0           # Web server for the search dashboard

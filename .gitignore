@@ -13,6 +13,8 @@ de_federal.json
 de_federal_unprocessed_absatze.txt
 de_federal_missing_files.txt
 download_errors.txt
+examples/
+search_index.json
 *.zip
 *.log
 # Virtual environments

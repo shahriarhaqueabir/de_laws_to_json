@@ -63,8 +63,20 @@ def _make_session() -> requests.Session:
 
 
 def _safe_dir_name(url: str) -> str:
-    """Derive a filesystem-safe subdirectory name from a URL."""
-    return re.sub(r"[^A-Za-z0-9_-]", "_", url.rstrip("/").split("/")[-1])
+    """Derive a unique subdirectory name based on the law's path in the URL."""
+    parts = url.rstrip("/").split("/")
+    if len(parts) >= 2:
+        # Use the law abbreviation part (e.g. 'bgb' from '.../bgb/xml.zip')
+        return re.sub(r"[^A-Za-z0-9_-]", "_", parts[-2])
+    return re.sub(r"[^A-Za-z0-9_-]", "_", parts[-1])
+
+
+def process_with_delay(law: dict) -> tuple[bool, str]:
+    """Added a small delay to avoid triggering server-side rate limits."""
+    import time
+
+    time.sleep(0.15)  # 150ms pause
+    return process_law(law)
 
 
 def process_law(law: dict) -> tuple[bool, str]:
@@ -91,32 +103,30 @@ def process_law(law: dict) -> tuple[bool, str]:
 
     session = _make_session()
     try:
+        # Download
         response = session.get(link, stream=True, timeout=DOWNLOAD_TIMEOUT)
         response.raise_for_status()
         with open(zip_path, "wb") as fh:
             for chunk in response.iter_content(chunk_size=1024 * 64):
                 fh.write(chunk)
-    except requests.RequestException as exc:
-        return False, f"HTTP error for {link}: {exc}"
 
-    try:
+        # Extract
         with zipfile.ZipFile(zip_path, "r") as zf:
             xml_files = [n for n in zf.namelist() if n.endswith(".xml")]
-            if not xml_files:
-                return False, f"No XML found in ZIP for {link}"
-            # Zip-slip guard: reject any member whose resolved path escapes law_dir.
-            law_dir_real = os.path.realpath(law_dir)
-            for xml_name in xml_files:
-                target = os.path.realpath(os.path.join(law_dir, xml_name))
-                if not target.startswith(law_dir_real + os.sep):
-                    return False, f"Zip-slip attempt blocked in {link}: {xml_name}"
-                zf.extract(xml_name, law_dir)
-    except zipfile.BadZipFile as exc:
-        return False, f"Corrupt ZIP for {link}: {exc}"
+            if xml_files:
+                zf.extractall(law_dir, xml_files)
+            else:
+                return False, f"No XML in ZIP: {link}"
+    except Exception as exc:
+        return False, f"Error processing {link}: {exc}"
     finally:
-        # Always clean up the downloaded ZIP regardless of extraction outcome.
+        session.close()
+        # Clean up zip file immediately
         if os.path.exists(zip_path):
-            os.remove(zip_path)
+            try:
+                os.remove(zip_path)
+            except Exception:
+                pass
 
     return True, link
 
@@ -147,21 +157,55 @@ def main() -> None:
     total = len(item_array)
     print(f"Found {total} laws in the index.")
 
-    cpu_count = multiprocessing.cpu_count()
-    print(f"Using {cpu_count} parallel processes.")
+    # Limit parallel workers and add a small delay to avoid triggering server-side rate limits
+    cpu_count = min(4, multiprocessing.cpu_count())
+    print(f"Using {cpu_count} parallel processes (limited to 4 to avoid rate limits).")
 
     errors: list[str] = []
-    pool = multiprocessing.Pool(processes=cpu_count)
+
+    # Filter items that need downloading
+    to_download = []
+    legacy_dir = os.path.join(RAW_DIR, "xml_zip")
+
+    print("Checking for existing files to resume...")
+    for law in item_array:
+        safe_name = _safe_dir_name(law["link"])
+        law_dir = os.path.join(RAW_DIR, safe_name)
+
+        already_has_it = False
+        if os.path.exists(law_dir) and any(
+            f.endswith(".xml") for f in os.listdir(law_dir)
+        ):
+            already_has_it = True
+        elif os.path.exists(legacy_dir):
+            if os.path.exists(os.path.join(legacy_dir, f"{safe_name}.xml")):
+                already_has_it = True
+
+        if not already_has_it:
+            to_download.append(law)
+
+    if not to_download:
+        print("All laws are already downloaded.")
+        return
+
+    print(
+        f"Starting download of {len(to_download)} remaining laws using {cpu_count} workers..."
+    )
+
     try:
-        with tqdm(total=total, desc="Downloading laws", dynamic_ncols=True) as pbar:
-            for success, message in pool.imap_unordered(process_law, item_array):
-                pbar.update()
-                if not success:
-                    errors.append(message)
-                    logging.warning(message)
+        with multiprocessing.Pool(processes=cpu_count) as pool:
+            with tqdm(
+                total=len(to_download), desc="Downloading laws", dynamic_ncols=True
+            ) as pbar:
+                for success, message in pool.imap_unordered(
+                    process_with_delay, to_download
+                ):
+                    pbar.update()
+                    if not success:
+                        errors.append(message)
+                        logging.warning(message)
     finally:
-        pool.close()
-        pool.join()
+        pass
 
     # --- Summary ---
     succeeded = total - len(errors)
