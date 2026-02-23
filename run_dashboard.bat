@@ -8,7 +8,7 @@ echo ===================================================
 
 :: 1. Virtual Environment Setup
 echo.
-echo [1/8] Checking Virtual Environment...
+echo [1/9] Checking Virtual Environment...
 if not exist ".venv\Scripts\python.exe" (
     echo       Creating .venv...
     python -m venv .venv
@@ -23,7 +23,7 @@ echo       Virtual Environment Ready.
 
 :: 2. Dependencies
 echo.
-echo [2/8] Checking Dependencies...
+echo [2/9] Checking Dependencies...
 if exist "requirements.txt" (
     "%PIP%" install -q -r requirements.txt
 ) else (
@@ -31,64 +31,33 @@ if exist "requirements.txt" (
 )
 echo       Dependencies Installed.
 
-:: 3. Ollama Installation Check
+:: 3. DB Download
 echo.
-echo [3/8] Checking Local AI Engine (Ollama)...
-where ollama >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo       [WARNING] Ollama is completely missing from this system.
-    echo       Downloading Ollama Installer natively using PowerShell...
-    powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://ollama.com/download/OllamaSetup.exe' -OutFile 'OllamaSetup.exe'"
-    if exist "OllamaSetup.exe" (
-        echo       Launching Ollama setup. Please finish the installer windows that appear!
-        start /wait OllamaSetup.exe
-    ) else (
-        echo       [ERROR] Could not download OllamaSetup.exe
-    )
-    
-    echo       Waiting for Ollama to become available...
-    :wait_ollama
-    timeout /t 5 /nobreak >nul
-    where ollama >nul 2>&1
-    if %ERRORLEVEL% neq 0 goto wait_ollama
-    echo       Ollama successfully installed and detected!
-) else (
-    echo       Ollama is installed.
-)
-
-:: 4. Ollama Model Pull
-echo.
-echo [4/8] Ensuring `llama3.2` model is downloaded...
-echo       (If this is the first time, this may take a few minutes...)
-ollama pull llama3.2
-
-:: 5. DB Download
-echo.
-echo [5/8] Downloading/Updating Federal Laws (XML Database)...
+echo [3/9] Downloading/Updating Federal Laws (XML Database)...
 "%PY%" download_de_laws.py
 
-:: 6. DB Processing
+:: 4. DB Processing
 echo.
-echo [6/8] Processing XML into JSON...
+echo [4/9] Processing XML into JSON...
 "%PY%" process_de_laws.py
 
-:: 7. DB Deduplication
+:: 5. DB Deduplication
 echo.
-echo [7/8] Removing Duplicate/Redundant Data...
+echo [5/9] Removing Duplicate/Redundant Data...
 if exist "dedupe_processed_data.py" (
     "%PY%" dedupe_processed_data.py
 )
 
-:: 8. Dictionary Build (Legal Translation Engine)
+:: 6. Dictionary Build (Legal Translation Engine)
 echo.
-echo [8/9] Checking Legal Dictionary Database...
+echo [6/9] Checking Legal Dictionary Database...
 if not exist "templates\eng-deu.tei" (
     echo       [WARNING] templates\eng-deu.tei not found. 
     echo       The dictionary database cannot be built from source without the TEI file.
     echo       Dictionary features will use static fallbacks.
 ) else (
     if not exist "dictionary\dictionary.db" (
-        echo       Building Dictionary Database (this may take a minute)...
+        echo       Building Dictionary Database ^(this may take a minute^)...
         "%PY%" dictionary\parse_tei_dictionary.py
         "%PY%" dictionary\reverse_dictionary.py
         "%PY%" dictionary\build_dictionary_db.py --rebuild
@@ -98,19 +67,60 @@ if not exist "templates\eng-deu.tei" (
     )
 )
 
+:: 7. Ollama Installation Check
+echo.
+echo [7/9] Checking Local AI Engine (Ollama)...
+where ollama >nul 2>&1
+if not errorlevel 1 (
+    echo       Ollama is installed.
+    goto :ollama_installed
+)
+
+echo       [WARNING] Ollama is completely missing from this system.
+echo       Downloading Ollama Installer natively using PowerShell...
+powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://ollama.com/download/OllamaSetup.exe' -OutFile 'OllamaSetup.exe'"
+if exist "OllamaSetup.exe" (
+    echo       Launching Ollama setup. Please finish the installer windows that appear!
+    start /wait OllamaSetup.exe
+) else (
+    echo       [ERROR] Could not download OllamaSetup.exe
+)
+
+echo       Waiting for Ollama to become available...
+:wait_ollama
+timeout /t 5 /nobreak >nul
+where ollama >nul 2>&1
+if errorlevel 1 goto wait_ollama
+echo       Ollama successfully installed and detected!
+
+:ollama_installed
+
+:: 8. Ollama Model Pull
+echo.
+echo [8/9] Ensuring `llama3.2` model is downloaded...
+echo       (If this is the first time, this may take a few minutes...)
+ollama pull llama3.2
+
 :: 9. Start Backend ^& Dashboard
 echo.
 echo [9/9] Starting Backend and Launching Dashboard...
 set "SERVER_PID="
 set "URL=http://127.0.0.1:5000/"
 
-:: Start Flask app using the native START command to avoid PID capture crashes
-start "GermanLawBackend" /B "%PY%" app.py
+:: Start Flask app — pipe stdout+stderr to server.log via PowerShell for live log capture
+set "LOG_FILE=%~dp0server.log"
+echo. > "%LOG_FILE%"
+powershell -NoProfile -Command ^
+    "$p = Start-Process -FilePath '%PY%' -ArgumentList 'app.py' -RedirectStandardOutput '%LOG_FILE%' -RedirectStandardError '%LOG_FILE%' -PassThru -WindowStyle Hidden; $p.Id | Out-File -FilePath pid_server.tmp -Encoding ascii"
+
+:: Open a second console window showing a live tail of the log
+start "German Law — Server Log" cmd /k "powershell -NoProfile -Command \"Get-Content -Path '%LOG_FILE%' -Wait -Tail 40\""
+
 
 echo       Waiting for Backend to become ready...
 for /l %%I in (1,1,90) do (
     powershell -NoProfile -Command "try { $r = Invoke-RestMethod -Uri '%URL%api/status' -TimeoutSec 2; if ($null -ne $r) { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>&1
-    if %ERRORLEVEL% equ 0 goto :ready
+    if not errorlevel 1 goto :ready
     timeout /t 1 /nobreak >nul
 )
 :ready

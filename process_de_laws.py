@@ -13,6 +13,7 @@ import logging
 import multiprocessing
 import os
 import re
+import hashlib
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
@@ -186,9 +187,21 @@ def _parse_norm(
     if not metadaten_tag:
         return
 
-    enigma = metadaten_tag.find("enigma")
+    enbez_tag = metadaten_tag.find("enbez")
+    jurabk_tag = metadaten_tag.find("jurabk")
+    doknr_attr = str(law_tag.get("doknr", "")).strip()
     norm_id = (
-        metadaten_tag.find("jurabk").text if metadaten_tag.find("jurabk") else "unknown"
+        enbez_tag.get_text(strip=True)
+        if enbez_tag and enbez_tag.get_text(strip=True)
+        else (
+            doknr_attr
+            if doknr_attr
+            else (
+                jurabk_tag.get_text(strip=True)
+                if jurabk_tag and jurabk_tag.get_text(strip=True)
+                else "unknown"
+            )
+        )
     )
 
     title = ""
@@ -216,6 +229,62 @@ def _parse_norm(
 
     if title or this_norm["paragraphs"]:
         output["norms"].append(this_norm)
+
+
+def _dedupe_exact_norms(norms: List[Dict]) -> List[Dict]:
+    """Remove exact duplicate norm entries while preserving original order."""
+    seen = set()
+    deduped: List[Dict] = []
+
+    for norm in norms:
+        norm_id = str(norm.get("norm_id", "")).strip()
+        title = str(norm.get("title", "")).strip()
+        paragraphs = norm.get("paragraphs", []) or []
+        para_sig = tuple(
+            (str(p.get("id", "")).strip(), str(p.get("text", "")).strip())
+            for p in paragraphs
+        )
+        sig = (norm_id, title, para_sig)
+        if sig in seen:
+            continue
+        seen.add(sig)
+        deduped.append(norm)
+
+    return deduped
+
+
+def _score_norm(norm: Dict) -> tuple[int, int, int]:
+    paragraphs = norm.get("paragraphs", []) or []
+    paragraph_count = len(paragraphs)
+    text_len = sum(len(str(p.get("text", ""))) for p in paragraphs)
+    title_len = len(str(norm.get("title", "")))
+    return paragraph_count, text_len, title_len
+
+
+def _dedupe_norm_ids(norms: List[Dict]) -> List[Dict]:
+    """
+    Keep one norm per norm_id while preserving first-seen order.
+    If duplicates exist, keep the richer norm (more paragraphs/text/title).
+    """
+    deduped: List[Dict] = []
+    slot_by_id: Dict[str, int] = {}
+
+    for norm in norms:
+        norm_id = str(norm.get("norm_id", "")).strip()
+        if not norm_id:
+            deduped.append(norm)
+            continue
+
+        slot = slot_by_id.get(norm_id)
+        if slot is None:
+            slot_by_id[norm_id] = len(deduped)
+            deduped.append(norm)
+            continue
+
+        if _score_norm(norm) > _score_norm(deduped[slot]):
+            deduped[slot] = norm
+
+    return deduped
 
 
 # ---------------------------------------------------------------------------
@@ -265,9 +334,15 @@ def process_file(xml_path: str) -> Optional[Dict]:
     for law_tag in soup.find_all("norm"):
         _parse_norm(law_tag, output, filename, unprocessed_absatze)
 
+    output["norms"] = _dedupe_exact_norms(output["norms"])
+    output["norms"] = _dedupe_norm_ids(output["norms"])
+
     # --- Save JSON to temporary file ---
     # We use the source XML filename as a temporary unique identifier
-    temp_filename = filename.replace(".xml", ".json")
+    # Include a stable hash of the full source path to prevent temp-file collisions
+    # when different directories contain XML files with the same base name.
+    path_hash = hashlib.md5(xml_path.encode("utf-8", errors="ignore")).hexdigest()[:12]
+    temp_filename = f"{path_hash}_{filename.replace('.xml', '.json')}"
     temp_path = os.path.join(JSON_DIR_PATH, f"tmp_{temp_filename}")
 
     try:
@@ -366,10 +441,10 @@ def main() -> None:
         if os.path.exists(tp):
             try:
                 os.remove(tp)
-            except:
-                pass
+            except Exception as e:
+                logging.warning("Could not remove temp file %s: %s", tp, e)
 
-    print(f"\n✓ Success! {len(key_to_path)} laws indexed in {JSON_DIR_PATH}")
+    print(f"\n[OK] Success! {len(key_to_path)} laws indexed in {JSON_DIR_PATH}")
 
 
 if __name__ == "__main__":

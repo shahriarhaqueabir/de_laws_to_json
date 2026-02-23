@@ -1,0 +1,10 @@
+Reverse Dictionary Statistics
+==================================================
+
+Input English Words: 64,876
+Output German Words: 98,121
+Total Mappings: 143,935
+Compound Words Detected: 18,473
+Multi-word German: 15,179
+
+Average English translations per German word: 1.47

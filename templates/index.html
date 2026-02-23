@@ -14,1127 +14,10 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js"></script>
 
-    <style>
-      /* ── Design tokens ─────────────────────────────────── */
-      :root {
-        --bg: #0b0c1a;
-        --bg2: #0f1020;
-        --surface: rgba(255, 255, 255, 0.04);
-        --surface-hov: rgba(255, 255, 255, 0.07);
-        --border: rgba(255, 255, 255, 0.08);
-        --border-hov: rgba(255, 255, 255, 0.16);
-        --gold: #d4a847;
-        --gold-soft: rgba(212, 168, 71, 0.18);
-        --gold-glow: rgba(212, 168, 71, 0.35);
-        --blue: #5b9bd5;
-        --blue-soft: rgba(91, 155, 213, 0.15);
-        --green: #4caf7d;
-        --green-soft: rgba(76, 175, 125, 0.15);
-        --red: #e05c5c;
-        --text: #dde1ef;
-        --muted: #7a849a;
-        --radius-s: 8px;
-        --radius-m: 14px;
-        --radius-l: 22px;
-        --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-        --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.3);
-      }
-
-      /* ── Reset & base ──────────────────────────────────── */
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      html {
-        scroll-behavior: smooth;
-      }
-      body {
-        font-family: "Inter", sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        min-height: 100vh;
-        line-height: 1.6;
-        -webkit-font-smoothing: antialiased;
-      }
-      ::selection {
-        background: var(--gold-soft);
-        color: var(--gold);
-      }
-
-      /* ── Scrollbar ─────────────────────────────────────── */
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.12);
-        border-radius: 3px;
-      }
-
-      /* ── Layout ────────────────────────────────────────── */
-      .container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 0 24px;
-      }
-
-      /* ── Header ────────────────────────────────────────── */
-      header {
-        border-bottom: 1px solid var(--border);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        background: rgba(11, 12, 26, 0.85);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-      }
-      .header-inner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 24px;
-        max-width: 1100px;
-        margin: 0 auto;
-      }
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-      }
-      .logo-icon {
-        font-size: 24px;
-        line-height: 1;
-      }
-      .logo-text {
-        font-family: "Cinzel", serif;
-        font-size: 15px;
-        font-weight: 600;
-        color: var(--gold);
-        letter-spacing: 0.05em;
-      }
-      .logo-sub {
-        font-size: 11px;
-        color: var(--muted);
-        font-weight: 400;
-        letter-spacing: 0.03em;
-      }
-      .status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 500;
-        border: 1px solid var(--border);
-        background: var(--surface);
-        transition: all 0.3s;
-      }
-      .status-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--muted);
-        flex-shrink: 0;
-      }
-      .status-pill.ready .status-dot {
-        background: var(--green);
-        box-shadow: 0 0 6px var(--green);
-      }
-      .status-pill.building .status-dot {
-        background: var(--gold);
-        animation: pulse 1.2s ease-in-out infinite;
-      }
-      .status-pill.error .status-dot {
-        background: var(--red);
-      }
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.3;
-        }
-      }
-
-      /* ── Hero ──────────────────────────────────────────── */
-      .hero {
-        padding: 64px 24px 48px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-      }
-      .hero::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          radial-gradient(
-            ellipse 60% 40% at 50% 0%,
-            rgba(212, 168, 71, 0.07) 0%,
-            transparent 70%
-          ),
-          radial-gradient(
-            ellipse 40% 60% at 20% 100%,
-            rgba(91, 155, 213, 0.05) 0%,
-            transparent 60%
-          );
-        pointer-events: none;
-      }
-      .hero-eyebrow {
-        font-family: "Cinzel", serif;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.2em;
-        color: var(--gold);
-        text-transform: uppercase;
-        margin-bottom: 18px;
-        opacity: 0.9;
-      }
-      .hero-title {
-        font-family: "Cinzel", serif;
-        font-size: clamp(28px, 5vw, 48px);
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1.15;
-        margin-bottom: 14px;
-        letter-spacing: -0.01em;
-      }
-      .hero-title span {
-        color: var(--gold);
-      }
-      .hero-subtitle {
-        font-size: 16px;
-        color: var(--muted);
-        max-width: 520px;
-        margin: 0 auto 40px;
-        font-weight: 400;
-      }
-
-      /* ── Search bar ────────────────────────────────────── */
-      .search-wrap {
-        position: relative;
-        max-width: 680px;
-        margin: 0 auto;
-      }
-      .search-box {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1.5px solid var(--border-hov);
-        border-radius: var(--radius-l);
-        padding: 6px 6px 6px 22px;
-        transition:
-          border-color 0.25s,
-          box-shadow 0.25s;
-      }
-      .search-box:focus-within {
-        border-color: var(--gold);
-        box-shadow:
-          0 0 0 3px var(--gold-soft),
-          0 4px 24px rgba(212, 168, 71, 0.15);
-      }
-      #query-input {
-        flex: 1;
-        background: transparent;
-        border: none;
-        outline: none;
-        font-family: "Inter", sans-serif;
-        font-size: 16px;
-        color: var(--text);
-        padding: 10px 0;
-        caret-color: var(--gold);
-      }
-      #query-input::placeholder {
-        color: var(--muted);
-      }
-      #search-btn {
-        flex-shrink: 0;
-        background: linear-gradient(135deg, #c99b38, #d4a847);
-        color: #1a1200;
-        border: none;
-        border-radius: var(--radius-m);
-        padding: 10px 24px;
-        font-family: "Inter", sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition:
-          transform 0.15s,
-          opacity 0.15s;
-        letter-spacing: 0.02em;
-      }
-      #search-btn:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-      }
-      #search-btn:active {
-        transform: translateY(0);
-      }
-      #search-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-      }
-
-      /* ── Index loading banner ──────────────────────────── */
-      #index-banner {
-        margin: 0 24px 0;
-        max-width: 680px;
-        margin: 8px auto 0;
-        display: none;
-      }
-      .index-progress {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-s);
-        padding: 10px 16px;
-        font-size: 13px;
-        color: var(--muted);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .progress-bar-wrap {
-        flex: 1;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 2px;
-        overflow: hidden;
-      }
-      .progress-bar-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--gold), #e8c96a);
-        border-radius: 2px;
-        transition: width 0.4s ease;
-        width: 0%;
-      }
-
-      /* ── Example chips ─────────────────────────────────── */
-      .examples {
-        margin-top: 20px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-      }
-      .example-chip {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 6px 14px;
-        font-size: 12.5px;
-        color: var(--muted);
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-      .example-chip:hover {
-        border-color: var(--gold);
-        color: var(--gold);
-        background: var(--gold-soft);
-      }
-
-      /* ── Search history ─────────────────────────────────── */
-      #history-section {
-        margin-top: 16px;
-        display: none; /* shown by JS when history exists */
-      }
-      .history-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        max-width: 680px;
-        margin: 0 auto 8px;
-        padding: 0 2px;
-      }
-      .history-label {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted);
-      }
-      #history-clear-btn {
-        background: transparent;
-        border: none;
-        font-size: 11px;
-        color: var(--muted);
-        cursor: pointer;
-        padding: 2px 4px;
-        transition: color 0.15s;
-        font-family: 'Inter', sans-serif;
-      }
-      #history-clear-btn:hover {
-        color: var(--red);
-      }
-      .history-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-      }
-      .history-chip {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 6px 14px 6px 10px;
-        font-size: 12.5px;
-        color: var(--muted);
-        cursor: pointer;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .history-chip::before {
-        content: '↺';
-        font-size: 11px;
-        opacity: 0.6;
-      }
-      .history-chip:hover {
-        border-color: var(--blue);
-        color: var(--blue);
-        background: var(--blue-soft);
-      }
-
-      /* ── Main content ──────────────────────────────────── */
-      main {
-        padding: 0 24px 80px;
-      }
-
-      /* ── Keyword pills ─────────────────────────────────── */
-      #keyword-section {
-        max-width: 860px;
-        margin: 0 auto 28px;
-        display: none;
-      }
-      .keyword-label {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: 10px;
-      }
-      .keyword-pills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 7px;
-      }
-      .kw-pill {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12.5px;
-        font-weight: 500;
-        border: 1px solid;
-      }
-      .kw-pill.original {
-        border-color: rgba(91, 155, 213, 0.4);
-        background: var(--blue-soft);
-        color: var(--blue);
-      }
-      .kw-pill.german {
-        border-color: rgba(212, 168, 71, 0.4);
-        background: var(--gold-soft);
-        color: var(--gold);
-      }
-
-      /* ── Results header ────────────────────────────────── */
-      #results-header {
-        max-width: 860px;
-        margin: 0 auto 16px;
-        display: none;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .results-count {
-        font-size: 13px;
-        color: var(--muted);
-      }
-      .results-count strong {
-        color: var(--text);
-      }
-
-      /* ── Result card ───────────────────────────────────── */
-      #results-list {
-        max-width: 860px;
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-      .result-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-m);
-        padding: 22px 24px;
-        transition:
-          border-color 0.2s,
-          background 0.2s,
-          transform 0.15s;
-        cursor: default;
-        animation: cardIn 0.35s ease both;
-      }
-      @keyframes cardIn {
-        from {
-          opacity: 0;
-          transform: translateY(12px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .result-card:hover {
-        border-color: var(--border-hov);
-        background: var(--surface-hov);
-      }
-      .card-top {
-        display: flex;
-        align-items: flex-start;
-        gap: 16px;
-        margin-bottom: 14px;
-      }
-      .law-badge {
-        flex-shrink: 0;
-        font-family: "Cinzel", serif;
-        font-size: 13px;
-        font-weight: 700;
-        color: #1a1200;
-        background: linear-gradient(135deg, #c99b38, #d4a847);
-        border-radius: var(--radius-s);
-        padding: 4px 10px;
-        letter-spacing: 0.04em;
-        white-space: nowrap;
-      }
-      .law-info {
-        flex: 1;
-        min-width: 0;
-      }
-      .law-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--text);
-        margin-bottom: 3px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .law-meta {
-        font-size: 12px;
-        color: var(--muted);
-        display: flex;
-        gap: 14px;
-        flex-wrap: wrap;
-      }
-      .relevance-wrap {
-        flex-shrink: 0;
-        text-align: right;
-      }
-      .relevance-pct {
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--gold);
-        margin-bottom: 4px;
-      }
-      .relevance-bar {
-        width: 64px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 2px;
-        overflow: hidden;
-      }
-      .relevance-fill {
-        height: 100%;
-        border-radius: 2px;
-        background: linear-gradient(90deg, var(--gold), #e8c96a);
-        transition: width 0.6s ease;
-      }
-      /* Norm list inside card */
-      .norm-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
-      .norm-item {
-        border-left: 2px solid rgba(212, 168, 71, 0.25);
-        padding-left: 14px;
-      }
-      .norm-id {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--gold);
-        margin-bottom: 2px;
-      }
-      .norm-title-text {
-        font-size: 13px;
-        color: var(--text);
-        margin-bottom: 3px;
-      }
-      .norm-preview {
-        font-size: 12px;
-        color: var(--muted);
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-      mark {
-        background: rgba(212, 168, 71, 0.25);
-        color: var(--gold);
-        border-radius: 2px;
-        padding: 0 1px;
-      }
-      .card-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-top: 14px;
-        border-top: 1px solid var(--border);
-      }
-      .more-norms {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .view-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: transparent;
-        border: 1px solid var(--border-hov);
-        border-radius: var(--radius-s);
-        padding: 7px 16px;
-        font-family: "Inter", sans-serif;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--text);
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-      .view-btn:hover {
-        border-color: var(--gold);
-        color: var(--gold);
-        background: var(--gold-soft);
-      }
-
-      /* ── Tab navigation ─────────────────────────────────── */
-      .tab-bar {
-        max-width: 860px;
-        margin: 0 auto 24px;
-        display: flex;
-        gap: 4px;
-        border-bottom: 2px solid var(--border);
-        padding-bottom: 0;
-      }
-      .tab-btn {
-        background: transparent;
-        border: none;
-        border-bottom: 3px solid transparent;
-        margin-bottom: -2px; /* sit on top of border-bottom */
-        padding: 12px 20px;
-        font-family: 'Inter', sans-serif;
-        font-size: 13.5px;
-        font-weight: 500;
-        color: var(--muted);
-        cursor: pointer;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.03); }
-      .tab-btn.active {
-        color: var(--gold);
-        border-bottom-color: var(--gold);
-        background: rgba(212, 168, 71, 0.05);
-      }
-
-      /* ── Statistics Panel ────────────────────────────────── */
-      .stats-container {
-        max-width: 860px;
-        margin: 0 auto 40px;
-      }
-      .stats-label {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: 16px;
-        display: block;
-      }
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-      }
-      .stat-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-m);
-        padding: 24px;
-        position: relative;
-        overflow: hidden;
-      }
-      .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; height: 2px;
-        background: linear-gradient(90deg, transparent, var(--gold), transparent);
-        opacity: 0.3;
-      }
-      .stat-val {
-        font-family: 'Cinzel', serif;
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--gold);
-        margin-bottom: 4px;
-      }
-      .stat-title {
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--text);
-        margin-bottom: 8px;
-      }
-      .stat-desc {
-        font-size: 11px;
-        color: var(--muted);
-        line-height: 1.5;
-      }
-      .stat-link {
-        color: var(--gold);
-        text-decoration: underline;
-        cursor: pointer;
-      }
-      
-      @media (max-width: 768px) {
-        .stats-grid { grid-template-columns: 1fr; }
-      }
-
-      /* ── Category Browser ────────────────────────────────── */
-      .category-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 16px;
-        max-width: 860px;
-        margin: 0 auto;
-      }
-      .category-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-m);
-        padding: 24px 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-      }
-      .category-card:hover {
-        background: var(--surface-hov);
-        border-color: var(--gold);
-        transform: translateY(-4px);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
-      }
-      .cat-icon {
-        font-size: 32px;
-        margin-bottom: 4px;
-        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
-      }
-      .cat-title {
-        font-family: 'Cinzel', serif;
-        font-size: 15px;
-        font-weight: 700;
-        color: var(--text);
-        margin: 0;
-      }
-      .cat-desc {
-        font-size: 12px;
-        color: var(--muted);
-        line-height: 1.4;
-      }
-      .tab-badge {
-        background: var(--gold-soft);
-        color: var(--gold);
-        border-radius: 10px;
-        padding: 1px 7px;
-        font-size: 11px;
-        font-weight: 600;
-        min-width: 18px;
-        text-align: center;
-      }
-      .tab-panel { display: none; }
-      .tab-panel.active { display: block; }
-
-      /* ── Star / bookmark button ───────────────────────────── */
-      .star-btn {
-        background: transparent;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-s);
-        padding: 7px 10px;
-        font-size: 15px;
-        line-height: 1;
-        cursor: pointer;
-        color: var(--muted);
-        transition: all 0.2s;
-        flex-shrink: 0;
-      }
-      .star-btn:hover {
-        border-color: var(--gold);
-        color: var(--gold);
-        background: var(--gold-soft);
-      }
-      .star-btn.starred {
-        border-color: rgba(212,168,71,0.5);
-        color: var(--gold);
-        background: var(--gold-soft);
-      }
-
-      /* ── Saved tab header ───────────────────────────────── */
-      .saved-header {
-        max-width: 860px;
-        margin: 0 auto 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .saved-count {
-        font-size: 13px;
-        color: var(--muted);
-      }
-      .saved-count strong { color: var(--text); }
-      #clear-bookmarks-btn {
-        background: transparent;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-s);
-        padding: 5px 12px;
-        font-family: 'Inter', sans-serif;
-        font-size: 12px;
-        color: var(--muted);
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-      #clear-bookmarks-btn:hover {
-        border-color: var(--red);
-        color: var(--red);
-      }
-      #saved-list {
-        max-width: 860px;
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      /* ── Empty / skeleton states ───────────────────────── */
-      .empty-state {
-        text-align: center;
-        padding: 64px 24px;
-        animation: fadeIn 0.5s ease;
-      }
-      
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-
-      .empty-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-      }
-      .empty-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: var(--text);
-      }
-      .empty-sub {
-        font-size: 14px;
-        color: var(--muted);
-      }
-
-      .skeleton {
-        background: linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.04) 25%,
-          rgba(255, 255, 255, 0.08) 50%,
-          rgba(255, 255, 255, 0.04) 75%
-        );
-        background-size: 200% 100%;
-        animation: shimmer 1.4s infinite;
-        border-radius: 4px;
-      }
-      @keyframes shimmer {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
-      }
-      .sk-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-m);
-        padding: 22px 24px;
-      }
-      .sk-row {
-        height: 14px;
-        margin-bottom: 10px;
-      }
-      .sk-row.wide {
-        width: 60%;
-      }
-      .sk-row.mid {
-        width: 40%;
-      }
-      .sk-row.short {
-        width: 25%;
-      }
-
-      /* ── Law Reader Modal ──────────────────────────────── */
-      #modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(6px);
-        z-index: 200;
-        display: none;
-        align-items: stretch;
-        justify-content: flex-end;
-      }
-      #modal-overlay.open {
-        display: flex;
-      }
-      #law-modal {
-        background: var(--bg2);
-        width: min(740px, 100vw);
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        border-left: 1px solid var(--border);
-        animation: slideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-      }
-      @keyframes slideIn {
-        from {
-          transform: translateX(100%);
-        }
-        to {
-          transform: translateX(0);
-        }
-      }
-      .modal-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        padding: 24px 28px 20px;
-        border-bottom: 1px solid var(--border);
-        flex-shrink: 0;
-        gap: 16px;
-      }
-      .modal-law-badge {
-        font-family: "Cinzel", serif;
-        font-size: 11px;
-        font-weight: 700;
-        color: #1a1200;
-        background: linear-gradient(135deg, #c99b38, #d4a847);
-        border-radius: 6px;
-        padding: 3px 9px;
-        display: inline-block;
-        margin-bottom: 8px;
-      }
-      .modal-law-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--text);
-        margin-bottom: 4px;
-      }
-      .modal-law-meta {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      /* flex wrapper for law title block inside modal header */
-      .modal-header-info {
-        flex: 1;
-        min-width: 0;
-      }
-      #modal-close {
-        flex-shrink: 0;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-s);
-        color: var(--muted);
-        font-size: 20px;
-        line-height: 1;
-        padding: 6px 10px;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-      #modal-close:hover {
-        border-color: var(--border-hov);
-        color: var(--text);
-      }
-
-      .modal-search-bar {
-        padding: 14px 28px;
-        border-bottom: 1px solid var(--border);
-        flex-shrink: 0;
-      }
-      #modal-search {
-        width: 100%;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-s);
-        padding: 9px 14px;
-        font-family: "Inter", sans-serif;
-        font-size: 14px;
-        color: var(--text);
-        outline: none;
-        transition: border-color 0.2s;
-      }
-      #modal-search::placeholder {
-        color: var(--muted);
-      }
-      #modal-search:focus {
-        border-color: var(--gold);
-      }
-
-      #modal-body {
-        flex: 1;
-        overflow-y: auto;
-        padding: 20px 28px 40px;
-      }
-
-      /* Norm accordion */
-      .modal-norm {
-        border: 1px solid var(--border);
-        border-radius: var(--radius-s);
-        margin-bottom: 8px;
-        overflow: hidden;
-        transition: border-color 0.2s;
-      }
-      .modal-norm.highlighted {
-        border-color: rgba(212, 168, 71, 0.4);
-      }
-      .norm-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 13px 16px;
-        cursor: pointer;
-        background: var(--surface);
-        transition: background 0.15s;
-        user-select: none;
-      }
-      .norm-header:hover {
-        background: var(--surface-hov);
-      }
-      .norm-header-id {
-        font-family: "Cinzel", serif;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--gold);
-        flex-shrink: 0;
-        min-width: 60px;
-      }
-      .norm-header-title {
-        flex: 1;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--text);
-      }
-      .norm-chevron {
-        font-size: 10px;
-        color: var(--muted);
-        transition: transform 0.2s;
-        flex-shrink: 0;
-      }
-      .norm-chevron.open {
-        transform: rotate(180deg);
-      }
-      .norm-content {
-        display: none;
-        padding: 0 16px 16px;
-        border-top: 1px solid var(--border);
-      }
-      .norm-content.open {
-        display: block;
-      }
-      .paragraph-block {
-        padding: 12px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      }
-      .paragraph-block:last-child {
-        border-bottom: none;
-      }
-      .para-meta {
-        font-size: 11px;
-        color: var(--muted);
-        margin-bottom: 6px;
-        display: flex;
-        gap: 12px;
-      }
-      .para-content {
-        font-size: 14px;
-        color: var(--text);
-        line-height: 1.7;
-      }
-
-      /* Spinner */
-      .spinner {
-        width: 32px;
-        height: 32px;
-        border: 3px solid rgba(255, 255, 255, 0.08);
-        border-top-color: var(--gold);
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
-        margin: 40px auto;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      /* ── Responsive ────────────────────────────────────── */
-      @media (max-width: 600px) {
-        .hero {
-          padding: 40px 20px 32px;
-        }
-        .hero-subtitle {
-          font-size: 14px;
-        }
-        .card-top {
-          flex-wrap: wrap;
-        }
-        .relevance-wrap {
-          display: none;
-        }
-        #law-modal {
-          width: 100vw;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="/static/css/main.css" />
   </head>
-
   <body>
     <!-- ── Header ──────────────────────────────────────────── -->
     <header>
@@ -1142,13 +25,21 @@
         <a class="logo" href="/">
           <span class="logo-icon">⚖</span>
           <div>
-            <div class="logo-text">Deutsches Rechtsportal</div>
-            <div class="logo-sub">German Federal Law Search</div>
+            <div class="logo-text" aria-label="German Law Vault">
+              <span class="logo-main">German Law</span>
+              <span class="logo-sub">Vault</span>
+            </div>
           </div>
         </a>
-        <div id="status-pill" class="status-pill">
-          <span class="status-dot"></span>
-          <span id="status-text">Loading…</span>
+        <div class="header-controls" style="display: flex; align-items: center; gap: 16px;">
+            <button id="btn-rebuild-index" class="settings-btn" title="Suchindex neu aufbauen">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              <span>Index neu aufbauen</span>
+            </button>
+          <div id="status-pill" class="status-pill">
+            <span class="status-dot"></span>
+            <span id="status-text">Loading...</span>
+          </div>
         </div>
       </div>
     </header>
@@ -1157,11 +48,10 @@
     <section class="hero">
       <p class="hero-eyebrow">All 6,000+ Federal Laws</p>
       <h1 class="hero-title">
-        Search German Law<br /><span>in Plain Language</span>
+        Understand German Law<br /><span>in a simple way</span>
       </h1>
       <p class="hero-subtitle">
-        Describe your situation in English or German — we'll find the relevant
-        laws and paragraphs.
+        Describe your situation in English or German — we will find the relevant laws and paragraphs.
       </p>
 
       <!-- Search -->
@@ -1170,14 +60,14 @@
           <input
             id="query-input"
             type="text"
-            placeholder="e.g. My landlord is increasing the rent…"
+            placeholder="Explain your situation... (e.g. My boss fired me)"
             autocomplete="off"
             spellcheck="false"
-            aria-label="Search German laws"
+            aria-label="Ask AI about German Law"
           />
-          <button id="search-btn" aria-label="Search">Search</button>
+          <button id="search-btn" aria-label="Search" style="background: linear-gradient(135deg, #c99b38, #d4a847); color: #111;">✨ Ask AI</button>
         </div>
-        <div id="index-banner">
+        <div id="index-banner" style="display: none;">
           <div class="index-progress">
             <span id="index-progress-text">Indexing laws…</span>
             <div class="progress-bar-wrap">
@@ -1185,22 +75,32 @@
             </div>
           </div>
         </div>
-        <!-- Search history (shown when history exists, hides examples) -->
-        <div id="history-section">
-          <div class="history-header">
-            <span class="history-label">Recent searches</span>
-            <button id="history-clear-btn" aria-label="Clear search history">Clear</button>
-          </div>
-          <div class="history-chips" id="history-chips"></div>
+
+        <!-- Search History -->
+        <div id="history-section" style="display: none;">
+          <div class="examples" id="history-chips"></div>
+          <button id="history-clear-btn" style="display: block; margin: 12px auto 0; background: transparent; border: none; color: #a0aec0; font-size: 12px; cursor: pointer; text-decoration: underline;">Clear history</button>
         </div>
-        <!-- Example chips (shown only on blank history) -->
+
+        <!-- Example Search Chips -->
         <div class="examples" id="examples">
-          <span class="example-chip" data-query="My landlord is increasing the rent">My landlord is increasing the rent</span>
-          <span class="example-chip" data-query="I was fired without notice">I was fired without notice</span>
-          <span class="example-chip" data-query="Car accident liability">Car accident liability</span>
-          <span class="example-chip" data-query="Erbschaft und Testament">Erbschaft und Testament</span>
-          <span class="example-chip" data-query="Consumer warranty defective product">Consumer warranty defective product</span>
-          <span class="example-chip" data-query="Datenschutz am Arbeitsplatz">Datenschutz am Arbeitsplatz</span>
+          <span class="example-chip" data-query="My landlord refuses to return my security deposit"> landlord deposit</span>
+          <span class="example-chip" data-query="I was fired without notice"> fired without notice</span>
+          <span class="example-chip" data-query="Car accident without insurance"> car accident</span>
+          <span class="example-chip" data-query="Neighbor plays loud music at night"> loud neighbor</span>
+          <span class="example-chip" data-query="I want to divorce my spouse"> divorce</span>
+          <span class="example-chip" data-query="Startup investment terms"> startup investment</span>
+        </div>
+
+        <!-- Common Citation Shortcuts -->
+        <div class="shortcuts">
+          <div class="shortcut-label">Citation Shortcuts</div>
+          <span class="shortcut-chip" data-query="BGB">BGB</span>
+          <span class="shortcut-chip" data-query="StGB">StGB</span>
+          <span class="shortcut-chip" data-query="GG">GG</span>
+          <span class="shortcut-chip" data-query="EGBGB">EGBGB</span>
+          <span class="shortcut-chip" data-query="StPO">StPO</span>
+          <span class="shortcut-chip" data-query="ZPO">ZPO</span>
         </div>
       </div>
     </section>
@@ -1210,15 +110,30 @@
       <!-- Tab bar -->
       <div class="tab-bar" role="tablist">
         <button id="tab-btn-search" class="tab-btn active" aria-selected="true"  role="tab">Search</button>
-        <button id="tab-btn-browse" class="tab-btn"        aria-selected="false" role="tab">Browse</button>
+        <button id="tab-btn-browse" class="tab-btn"        aria-selected="false" role="tab">Library</button>
         <button id="tab-btn-saved"  class="tab-btn"        aria-selected="false" role="tab">
           Saved
           <span class="tab-badge" id="bookmark-count">0</span>
         </button>
+        <button id="tab-btn-settings" class="tab-btn"      aria-selected="false" role="tab">Settings</button>
       </div>
 
       <!-- Search tab panel -->
       <div id="tab-search" class="tab-panel active" role="tabpanel">
+        
+        <!-- Main AI Chat Integration -->
+        <div id="main-ai-chat-panel" style="display: none; background: #000d1a; padding: 24px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 204, 0, 0.2); padding-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">✨</span>
+                    <div style="font-size: 16px; font-weight: 600; color: #ffcc00; letter-spacing: 0.05em; font-family: 'Cinzel', serif;">AI Legal Situation Analysis</div>
+                </div>
+                <button id="close-main-ai" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 18px;">✕</button>
+            </div>
+            <div id="main-ai-chat-output" style="color: #ffffff; font-size: 15px; line-height: 1.7; white-space: pre-wrap; max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
+            <div id="main-ai-status" style="margin-top: 12px; font-size: 12px; color: #a0aec0; font-style: italic;"></div>
+        </div>
+
         <!-- Keyword translation display -->
         <div id="keyword-section">
           <div class="keyword-label">Search terms used</div>
@@ -1234,20 +149,20 @@
         <div id="results-list"></div>
       </div>
 
-      <!-- Browse tab panel -->
+      <!-- Browse tab panel (The Vault) -->
       <div id="tab-browse" class="tab-panel" role="tabpanel">
         <div class="stats-container" id="stats-panel" style="display: none;">
-          <span class="stats-label">Database Insights</span>
+          <span class="stats-label">Database Statistics</span>
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-val" id="stat-laws">0</div>
               <div class="stat-title">Federal Laws</div>
-              <div class="stat-desc">Complete acts and ordinances currently indexed.</div>
+              <div class="stat-desc">Complete laws and regulations currently indexed.</div>
             </div>
             <div class="stat-card">
               <div class="stat-val" id="stat-norms">0</div>
               <div class="stat-title">Legal Paragraphs</div>
-              <div class="stat-desc">Individual norms, paragraphs, and sections processed.</div>
+              <div class="stat-desc">Individual norms, clauses, and sections processed.</div>
             </div>
             <div class="stat-card">
               <div class="stat-val" id="stat-largest-norms">0</div>
@@ -1257,9 +172,37 @@
           </div>
         </div>
         
-        <span class="stats-label" style="max-width: 860px; margin: 0 auto 16px;">Legal Domains</span>
-        <div class="category-grid" id="category-grid">
-          <!-- Populated by JS -->
+        <div class="vault-layout">
+          <!-- Sidebar: Categories -->
+          <aside class="vault-sidebar">
+            <div class="vault-filter-group">
+              <div class="filter-title">Categories</div>
+              <div id="vault-categories">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </aside>
+
+          <!-- Main: Laws Grid -->
+          <div class="vault-main">
+            <div class="vault-search-wrap">
+              <div class="vault-search-box">
+                <span style="opacity: 0.5;">🔍</span>
+                <input type="text" id="vault-q" placeholder="Filter by name or abbreviation..." autocomplete="off">
+              </div>
+            </div>
+
+            <div class="laws-grid" id="laws-grid">
+              <!-- Populated by JS -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="vault-pagination" id="vault-pagination">
+              <button id="vault-prev" class="page-btn" disabled>← Previous</button>
+              <span id="vault-page-info" style="font-size: 13px; color: #a0aec0;">Page 1</span>
+              <button id="vault-next" class="page-btn">Next →</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1267,18 +210,77 @@
       <div id="tab-saved" class="tab-panel" role="tabpanel">
         <div class="saved-header">
           <div class="saved-count" id="saved-count"></div>
-          <button id="clear-bookmarks-btn">Clear all</button>
+          <button class="settings-btn" id="clear-bookmarks-btn" title="Alle Lesezeichen entfernen">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Alle löschen</span>
+            </button>
         </div>
         <div id="saved-list"></div>
       </div>
+
+      <!-- Settings tab panel -->
+      <div id="tab-settings" class="tab-panel" role="tabpanel" style="padding-top: 24px; max-width: 1000px; margin: 0 auto;">
+        <div class="settings-content">
+          <!-- ── Dev Dashboard Header ── -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+            <div>
+               <h2 style="font-size: 24px; margin-bottom: 4px;">System Control</h2>
+               <p style="color: var(--muted); font-size: 13px;">Observe app health and manage AI core state.</p>
+            </div>
+            <div id="dev-uptime" style="font-family: monospace; font-size: 12px; color: #a0aec0; background: rgba(255, 255, 255, 0.035); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1);">Uptime: --:--</div>
+          </div>
+
+          <!-- ── Health Grid ── -->
+          <div class="dev-grid">
+             <div id="health-api" class="health-card">
+               <div class="health-header">Backend API <div class="status-dot"></div></div>
+               <div class="health-value">Operational</div>
+               <div class="health-sub">Ping: <span id="metrics-ping">--</span>ms</div>
+             </div>
+             <div id="health-index" class="health-card">
+               <div class="health-header">Search Index <div class="status-dot"></div></div>
+               <div id="val-index" class="health-value">Building...</div>
+               <div class="health-sub"><span id="metrics-laws">0</span> Laws Local</div>
+             </div>
+             <div id="health-ai" class="health-card">
+               <div class="health-header">AI Service <div class="status-dot"></div></div>
+               <div id="val-ai" class="health-value">Disconnected</div>
+               <div class="health-sub">Model: Ollama/Llama3</div>
+             </div>
+          </div>
+
+          <!-- ── Controls ── -->
+          <div class="dev-controls">
+            <div>
+              <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                ✨ AI Assistant Module 
+                <span id="ai-kill-status" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #34d399;">Active</span>
+              </div>
+              <div style="font-size: 13px; color: var(--muted);">Disable AI to save resources or troubleshoot generation issues. Search remains functional.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="ai-toggle" checked onchange="handleAIToggle(this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- ── Maintenance ── -->
+          <div class="settings-section" style="margin-top: 48px;">
+            <div class="settings-section-title" style="font-size: 12px; margin-bottom: 16px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;">Maintenance Vault</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <button class="settings-button" onclick="sidebarAdminAction('rebuild')">🔄 Full Index Rebuild</button>
+              <button class="settings-button" onclick="sidebarAdminAction('toggle_debug')">🐛 Toggle Console Debug</button>
+            </div>
+            <div id="admin-output-sidebar" style="margin-top: 16px; background: #000; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; min-height: 120px; font-size: 12px; font-family: 'Source Code Pro', monospace; color: #00e676; white-space: pre-wrap; overflow-y: auto;">Terminal ready...</div>
+          </div>
+        </div>
+      </div>
     </main>
 
-    <!-- ── Law Reader Modal ─────────────────────────────────── -->
-    <div
+    <!-- ── Modal Overlay ────────────────────────────────────── -->
+    <dialog
       id="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Law Reader"
+      aria-label="Gesetzesleser"
     >
       <div id="law-modal">
         <div class="modal-header">
@@ -1287,766 +289,66 @@
             <div class="modal-law-title" id="modal-title"></div>
             <div class="modal-law-meta" id="modal-meta"></div>
           </div>
-          <button id="modal-close" aria-label="Close">✕</button>
+          <button id="modal-close" aria-label="Schließen">✕</button>
         </div>
         <div class="modal-search-bar">
           <input
             id="modal-search"
             type="text"
-            placeholder="Search within this law…"
+            placeholder="Search within this law, or ask a question to AI..."
             autocomplete="off"
           />
+          <button id="btn-ask-ai" aria-label="Ask AI Assistant">✨ Ask AI</button>
+          <div id="modal-lang-toggle" class="dict-toggles">
+            <button class="dict-toggle-btn active" data-target="modal-title" data-lang="de">DE</button>
+            <button class="dict-toggle-btn" data-target="modal-title" data-lang="en">EN</button>
+          </div>
         </div>
+        <div id="ai-chat-panel" style="display: none;">
+            <div class="ai-chat-header">
+                <div class="ai-chat-title">AI Legal Analysis & Translation</div>
+            </div>
+            <div id="ai-chat-output"></div>
+        </div>
+        
+        <div id="modal-insights" style="display: none;">
+          <div class="insight-row summary-box">
+             <div class="insight-label">
+                <svg class="insight-header-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Plain-Language Summary
+             </div>
+             <div id="ins-summary" class="insight-content"></div>
+          </div>
+          <div class="insight-grid">
+            <div class="insight-pill risk-box">
+               <div class="insight-label">Risk/Caution</div>
+               <div id="ins-risk" class="insight-content"></div>
+            </div>
+            <div class="insight-pill exclusion-box">
+               <div class="insight-label">What it DOES NOT cover</div>
+               <div id="ins-exclusions" class="insight-content"></div>
+            </div>
+          </div>
+          <div class="insight-row scenario-box">
+             <div class="insight-label">Common Scenario</div>
+             <div id="ins-scenarios" class="insight-content"></div>
+          </div>
+        </div>
+
         <div id="modal-body"></div>
       </div>
-    </div>
-
-    <!-- ── Scripts ──────────────────────────────────────────── -->
-    <script>
-      "use strict";
-
-      // ── State ───────────────────────────────────────────────
-      let currentKeywords   = [];
-      let currentGermanTerms = [];
-      let currentLawKey     = null;
-      let indexReady        = false;
-      let statusInterval    = null;
-      let activeTab         = 'search'; // 'search' | 'saved'
-
-      // ── Bookmarks (localStorage) ────────────────────────────
-      const BOOKMARKS_KEY = 'glsd_bookmarks';
-
-      function loadBookmarks() {
-        try { return JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]'); }
-        catch { return []; }
-      }
-
-      function _persistBookmarks(list) {
-        try { localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(list)); }
-        catch { /* quota exceeded — silent */ }
-      }
-
-      function isBookmarked(key) {
-        return loadBookmarks().some(b => b.key === key);
-      }
-
-      function saveBookmark(entry) {
-        // entry: {key, title, alt_title, last_changed, total_norms}
-        const list = loadBookmarks().filter(b => b.key !== entry.key);
-        list.unshift(entry);
-        _persistBookmarks(list);
-        _updateBookmarkBadge();
-      }
-
-      function removeBookmark(key) {
-        _persistBookmarks(loadBookmarks().filter(b => b.key !== key));
-        _updateBookmarkBadge();
-      }
-
-      function _updateBookmarkBadge() {
-        const n = loadBookmarks().length;
-        document.getElementById('bookmark-count').textContent = n || '0';
-      }
-
-      // ── Tab switching ───────────────────────────────────────
-      function setActiveTab(name) {
-        activeTab = name;
-        const isSearch = name === 'search';
-        const isBrowse = name === 'browse';
-        const isSaved  = name === 'saved';
-
-        document.getElementById('tab-search').classList.toggle('active', isSearch);
-        document.getElementById('tab-browse').classList.toggle('active', isBrowse);
-        document.getElementById('tab-saved').classList.toggle('active', isSaved);
-        
-        document.getElementById('tab-btn-search').classList.toggle('active', isSearch);
-        document.getElementById('tab-btn-browse').classList.toggle('active', isBrowse);
-        document.getElementById('tab-btn-saved').classList.toggle('active', isSaved);
-        
-        document.getElementById('tab-btn-search').setAttribute('aria-selected', String(isSearch));
-        document.getElementById('tab-btn-browse').setAttribute('aria-selected', String(isBrowse));
-        document.getElementById('tab-btn-saved').setAttribute('aria-selected', String(isSaved));
-
-        // Hide keyword pills when not on search tab
-        if (keywordSection) keywordSection.style.display = isSearch ? '' : 'none';
-
-        if (isSaved) renderSaved();
-        if (isBrowse) renderCategories();
-      }
-
-      // ── Category Browser ───────────────────────────────────
-      const CATEGORIES = [
-        { id: 'civil',    icon: '🏠', title: 'Civil Law',        desc: 'Bürgerliches Recht, BGB, Contracts, Torts', query: 'Bürgerliches Gesetzbuch BGB Zivilrecht' },
-        { id: 'criminal', icon: '⚖️', title: 'Criminal Law',     desc: 'Strafrecht, StGB, Criminal Procedure',     query: 'Strafgesetzbuch StGB Strafrecht' },
-        { id: 'public',   icon: '🏛️', title: 'Public Law',       desc: 'Constitutional & Administrative Law',      query: 'Grundgesetz VwVfG Verwaltungsrecht' },
-        { id: 'labor',    icon: '👷', title: 'Labor Law',        desc: 'Arbeitsrecht, Employment, Workplace',      query: 'Arbeitsrecht BUrlG KSchG' },
-        { id: 'comm',     icon: '💼', title: 'Commercial',       desc: 'Handelsrecht, HGB, Business Law',          query: 'Handelsgesetzbuch HGB AGG' },
-        { id: 'social',   icon: '🤝', title: 'Social Law',       desc: 'SGB, Insurance, Welfare, Healthcare',     query: 'Sozialgesetzbuch SGB Rentenversicherung' },
-        { id: 'road',     icon: '🚗', title: 'Road Traffic',     desc: 'StVO, StVG, Driving Laws',                 query: 'Straßenverkehrsordnung StVO StVZO' },
-        { id: 'tax',      icon: '💶', title: 'Tax Law',          desc: 'Abgabenordnung, Income, VAT',              query: 'Abgabenordnung AO Einkommensteuer' },
-        { id: 'family',   icon: '👨‍👩‍👧', title: 'Family Law',       desc: 'Marriage, Divorce, Inheritance',           query: 'Familienrecht Erbrecht Adoptionsrecht' },
-        { id: 'proc',     icon: '📜', title: 'Procedure',        desc: 'ZPO, StPO, Legal Actions',                 query: 'Zivilprozessordnung ZPO Strafprozessordnung' }
-      ];
-
-      function renderCategories() {
-        const grid = document.getElementById('category-grid');
-        grid.innerHTML = '';
-        
-        CATEGORIES.forEach((cat, i) => {
-          const card = document.createElement('div');
-          card.className = 'category-card';
-          card.style.animation = `fadeInUp 0.4s ease forwards ${i * 0.05}s`;
-          card.style.opacity = '0';
-          card.innerHTML = `
-            <div class="cat-icon">${cat.icon}</div>
-            <h3 class="cat-title">${cat.title}</h3>
-            <p class="cat-desc">${cat.desc}</p>
-          `;
-          card.onclick = () => {
-            setActiveTab('search');
-            runQuery(cat.query);
-          };
-          grid.appendChild(card);
-        });
-      }
-
-      // ── Render saved tab ───────────────────────────────────
-      function renderSaved() {
-        const list     = loadBookmarks();
-        const savedList = document.getElementById('saved-list');
-        const savedCount = document.getElementById('saved-count');
-
-        if (list.length) {
-          const suffix = list.length === 1 ? '' : 's';
-          savedCount.innerHTML = `<strong>${list.length}</strong> saved law${suffix}`;
-        } else {
-          savedCount.innerHTML = '';
-        }
-
-        if (!list.length) {
-          savedList.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-icon">★</div>
-              <div class="empty-title">No saved laws yet</div>
-              <div class="empty-sub">Click the ☆ star on any search result to pin it here.</div>
-            </div>`;
-          return;
-        }
-
-        savedList.innerHTML = '';
-        list.forEach((law, i) => {
-          const card = document.createElement('div');
-          card.className = 'result-card';
-          card.style.animationDelay = `${i * 40}ms`;
-          card.innerHTML = `
-            <div class="card-top">
-              <div class="law-badge">${escapeHTML(law.key)}</div>
-              <div class="law-info">
-                <div class="law-title">${escapeHTML(law.title || 'Untitled')}</div>
-                <div class="law-meta">
-                  ${law.alt_title   ? `<span>${escapeHTML(law.alt_title)}</span>` : ''}
-                  ${law.last_changed ? `<span>In force: ${formatDate(law.last_changed)}</span>` : ''}
-                  <span>${law.total_norms} norms</span>
-                </div>
-              </div>
-            </div>
-            <div class="card-footer">
-              <button class="star-btn starred" data-key="${escapeHTML(law.key)}" aria-label="Remove bookmark" title="Remove bookmark">★</button>
-              <button class="view-btn" data-key="${escapeHTML(law.key)}" aria-label="View ${escapeHTML(law.key)}">View Law →</button>
-            </div>`;
-          savedList.appendChild(card);
-        });
-      }
-
-      // ── Set star state on a card already in the DOM ──────────
-      function setStar(key, starred, btn) {
-        btn.textContent  = starred ? '★' : '☆';
-        btn.title        = starred ? 'Remove bookmark' : 'Save this law';
-        btn.setAttribute('aria-label', starred ? 'Remove bookmark' : 'Save this law');
-        btn.classList.toggle('starred', starred);
-      }
-
-      // ── Search history (localStorage) ───────────────────────
-      const HISTORY_KEY = 'glsd_search_history'; // glsd = german law search dashboard
-      const HISTORY_MAX = 10;
-
-      function loadHistory() {
-        try {
-          return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-        } catch {
-          return [];
-        }
-      }
-
-      function saveToHistory(query) {
-        // query is already trimmed and non-empty at this call site
-        let history = loadHistory();
-        // Remove existing identical entry so the new one goes to the front
-        history = history.filter(q => q !== query);
-        history.unshift(query);
-        // Cap at max
-        if (history.length > HISTORY_MAX) history.length = HISTORY_MAX;
-        try {
-          localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-        } catch {
-          // localStorage full or unavailable — silently ignore
-        }
-        renderHistory();
-      }
-
-      function clearHistory() {
-        try {
-          localStorage.removeItem(HISTORY_KEY);
-        } catch { /* ignore */ }
-        renderHistory();
-      }
-
-      function renderHistory() {
-        const history = loadHistory();
-        const historySection = document.getElementById('history-section');
-        const historyChips   = document.getElementById('history-chips');
-        const examplesDiv    = document.getElementById('examples');
-
-        if (!history.length) {
-          historySection.style.display = 'none';
-          examplesDiv.style.display    = 'flex';
-          return;
-        }
-
-        // Build chips
-        historyChips.innerHTML = '';
-        history.forEach(q => {
-          const chip = document.createElement('span');
-          chip.className = 'history-chip';
-          chip.textContent = q;
-          chip.dataset.query = q;
-          chip.setAttribute('role', 'button');
-          chip.setAttribute('tabindex', '0');
-          chip.setAttribute('aria-label', `Search again: ${q}`);
-          chip.addEventListener('keydown', e => {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); runQuery(q); }
-          });
-          historyChips.appendChild(chip);
-        });
-
-        historySection.style.display = 'block';
-        examplesDiv.style.display    = 'none';
-      }
-
-      // ── DOM refs ────────────────────────────────────────────
-      const queryInput = document.getElementById("query-input");
-      const searchBtn = document.getElementById("search-btn");
-      const resultsList = document.getElementById("results-list");
-      const resultsHeader = document.getElementById("results-header");
-      const resultsCount = document.getElementById("results-count");
-      const keywordSection = document.getElementById("keyword-section");
-      const keywordPills = document.getElementById("keyword-pills");
-      const statusPill = document.getElementById("status-pill");
-      const statusText = document.getElementById("status-text");
-      const indexBanner = document.getElementById("index-banner");
-      const progressFill = document.getElementById("progress-fill");
-      const indexProgText = document.getElementById("index-progress-text");
-      const modalOverlay = document.getElementById("modal-overlay");
-      const modalBadge = document.getElementById("modal-badge");
-      const modalTitle = document.getElementById("modal-title");
-      const modalMeta = document.getElementById("modal-meta");
-      const modalBody = document.getElementById("modal-body");
-      const modalClose = document.getElementById("modal-close");
-      const modalSearch = document.getElementById("modal-search");
-
-      // ── Utilities ───────────────────────────────────────────
-      function escapeRegex(s) {
-        return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      }
-
-      function escapeHTML(s) {
-        return s
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
-      }
-
-      function highlight(text, terms) {
-        let result = escapeHTML(text);
-        for (const term of terms) {
-          if (!term || term.length < 3) continue;
-          const regex = new RegExp(`(${escapeRegex(term)})`, "gi");
-          result = result.replace(regex, "<mark>$1</mark>");
-        }
-        return result;
-      }
-
-      function formatDate(d) {
-        if (!d) return "unknown";
-        const [y, m, day] = (d + "").split("-");
-        const months = [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ];
-        return `${day ? day + " " : ""}${months[parseInt(m, 10) - 1] || m} ${y}`;
-      }
-
-      // ── Status polling ──────────────────────────────────────
-      async function pollStatus() {
-        try {
-          const r = await fetch("/api/status");
-          const d = await r.json();
-
-          if (d.ready) {
-            // Index ready
-            clearInterval(statusInterval);
-            indexReady = true;
-            indexBanner.style.display = "none";
-            searchBtn.disabled = false;
-            statusPill.className = "status-pill ready";
-            statusText.textContent = `${d.laws.toLocaleString()} laws indexed`;
-            
-            // Populate stats panel
-            document.getElementById('stats-panel').style.display = 'block';
-            document.getElementById('stat-laws').textContent = d.laws.toLocaleString();
-            document.getElementById('stat-norms').textContent = d.total_norms.toLocaleString();
-            
-            if (d.largest_law) {
-              document.getElementById('stat-largest-norms').textContent = d.largest_law.norms.toLocaleString();
-              document.getElementById('stat-largest-desc').innerHTML = `
-                The <strong>${d.largest_law.key}</strong> contains the highest volume of norms.<br>
-                <span class="stat-link" onclick="openLawModal('${d.largest_law.key}')">View details →</span>
-              `;
-            }
-          } else {
-            // Still building
-            statusPill.className = "status-pill building";
-            statusText.textContent = "Indexing…";
-            searchBtn.disabled = true;
-
-            if (d.total > 0) {
-              indexBanner.style.display = "block";
-              const pct = Math.round((d.indexed / d.total) * 100);
-              progressFill.style.width = pct + "%";
-              indexProgText.textContent = `Indexing ${d.indexed.toLocaleString()} / ${d.total.toLocaleString()} laws…`;
-            }
-
-            if (d.total === 0 && d.indexed === 0) {
-              // No data at all
-              clearInterval(statusInterval);
-              statusPill.className = "status-pill error";
-              statusText.textContent = "No data found";
-              showNoDataState();
-            }
-          }
-        } catch (e) {
-          statusPill.className = "status-pill error";
-          statusText.textContent = "Server unreachable";
-        }
-      }
-
-      function showNoDataState() {
-        resultsList.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📂</div>
-        <div class="empty-title">No law data found</div>
-        <div class="empty-sub">Run <strong>run.bat</strong> first to download and process the laws,<br>then restart this app.</div>
-      </div>`;
-      }
-
-      // ── Search ──────────────────────────────────────────────
-      let searchTimeout = null;
-
-      // ── Shared query runner ─────────────────────────────────
-      // All search entry-points (button, Enter, chip clicks) call runQuery().
-      // doSearch() is the async core; runQuery() is the synchronous entry gate.
-      function runQuery(q) {
-        if (!q || !q.trim()) return;
-        queryInput.value = q.trim();
-        doSearch();
-      }
-
-      async function doSearch() {
-        const q = queryInput.value.trim();
-        if (!q) return;
-        if (!indexReady) return;
-        saveToHistory(q);  // persist before fetch so it's saved even if search errors
-
-        // Show skeleton
-        resultsList.innerHTML = Array(3)
-          .fill(
-            `
-      <div class="sk-card">
-        <div class="skeleton sk-row wide"></div>
-        <div class="skeleton sk-row mid"></div>
-        <div class="skeleton sk-row" style="width:80%;margin-top:16px"></div>
-        <div class="skeleton sk-row short" style="margin-top:6px"></div>
-      </div>`,
-          )
-          .join("");
-        resultsHeader.style.display = "none";
-        keywordSection.style.display = "none";
-
-        try {
-          const resp = await fetch("/api/search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: q }),
-          });
-          const data = await resp.json();
-
-          currentKeywords = data.keywords || [];
-          currentGermanTerms = data.german_terms || [];
-
-          renderKeywords(currentKeywords, currentGermanTerms);
-          renderResults(data.results || [], currentGermanTerms);
-        } catch (e) {
-          resultsList.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Search failed</div><div class="empty-sub">Could not reach the server.</div></div>`;
-        }
-      }
-
-      // ── Render keywords ─────────────────────────────────────
-      function renderKeywords(original, german) {
-        if (!original.length && !german.length) {
-          keywordSection.style.display = "none";
-          return;
-        }
-        keywordSection.style.display = "block";
-        keywordPills.innerHTML = "";
-        for (const k of original) {
-          const el = document.createElement("span");
-          el.className = "kw-pill original";
-          el.textContent = k;
-          keywordPills.appendChild(el);
-        }
-        for (const k of german) {
-          const el = document.createElement("span");
-          el.className = "kw-pill german";
-          el.textContent = k;
-          keywordPills.appendChild(el);
-        }
-      }
-
-      // ── Render results ────────────────────────────────────
-      function renderResults(results, terms) {
-        if (!results.length) {
-          resultsList.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <div class="empty-title">No laws found</div>
-          <div class="empty-sub">Try different keywords or rephrase your situation.</div>
-        </div>`;
-          resultsHeader.style.display = 'none';
-          return;
-        }
-
-        resultsHeader.style.display = 'flex';
-        resultsCount.innerHTML = `Found <strong>${results.length}</strong> relevant law${results.length !== 1 ? 's' : ''}`;
-
-        resultsList.innerHTML = '';
-        results.forEach((law, i) => {
-          const card = document.createElement('div');
-          card.className = 'result-card';
-          card.style.animationDelay = `${i * 50}ms`;
-
-          const normsHTML = (law.top_norms || [])
-            .map(n => `
-        <div class="norm-item">
-          <div class="norm-id">${escapeHTML(n.norm_id)}</div>
-          ${n.title   ? `<div class="norm-title-text">${highlight(n.title, terms)}</div>` : ''}
-          ${n.preview ? `<div class="norm-preview">${highlight(n.preview, terms)}</div>`  : ''}
-        </div>`)
-            .join('');
-
-          const extra    = law.total_norms - (law.top_norms || []).length;
-          const starred  = isBookmarked(law.key);
-
-          card.innerHTML = `
-        <div class="card-top">
-          <div class="law-badge">${escapeHTML(law.key)}</div>
-          <div class="law-info">
-            <div class="law-title">${escapeHTML(law.title || 'Untitled')}</div>
-            <div class="law-meta">
-              ${law.alt_title   ? `<span>${escapeHTML(law.alt_title)}</span>` : ''}
-              ${law.last_changed ? `<span>In force: ${formatDate(law.last_changed)}</span>` : ''}
-              <span>${law.total_norms} norms</span>
-            </div>
-          </div>
-          <div class="relevance-wrap">
-            <div class="relevance-pct">${law.relevance}%</div>
-            <div class="relevance-bar"><div class="relevance-fill" style="width:${law.relevance}%"></div></div>
-          </div>
-        </div>
-        ${normsHTML ? `<div class="norm-list">${normsHTML}</div>` : ''}
-        <div class="card-footer">
-          <div class="more-norms">${extra > 0 ? `+${extra} more norms` : ''}</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <button class="star-btn${starred ? ' starred' : ''}" data-key="${escapeHTML(law.key)}"
-              data-title="${escapeHTML(law.title || '')}"
-              data-alt="${escapeHTML(law.alt_title || '')}"
-              data-changed="${escapeHTML(law.last_changed || '')}"
-              data-norms="${law.total_norms}"
-              aria-label="${starred ? 'Remove bookmark' : 'Save this law'}"
-              title="${starred ? 'Remove bookmark' : 'Save this law'}">${starred ? '★' : '☆'}</button>
-            <button class="view-btn" data-key="${escapeHTML(law.key)}" aria-label="View ${escapeHTML(law.key)}">
-              View Law →
-            </button>
-          </div>
-        </div>`;
-
-          resultsList.appendChild(card);
-        });
-      }
-
-      // Delegated click handler for results list — outside renderResults so it
-      // is attached once, not re-attached on every search.
-      resultsList.addEventListener('click', e => {
-        // View button
-        const viewBtn = e.target.closest('.view-btn');
-        if (viewBtn) { openLawModal(viewBtn.dataset.key); return; }
-
-        // Star button (search results panel)
-        const starBtn = e.target.closest('.star-btn');
-        if (starBtn) {
-          const key     = starBtn.dataset.key;
-          const already = isBookmarked(key);
-          if (already) {
-            removeBookmark(key);
-            setStar(key, false, starBtn);
-          } else {
-            saveBookmark({
-              key,
-              title:        starBtn.dataset.title,
-              alt_title:    starBtn.dataset.alt,
-              last_changed: starBtn.dataset.changed,
-              total_norms:  Number(starBtn.dataset.norms),
-            });
-            setStar(key, true, starBtn);
-          }
-        }
-      });
-
-      // Delegated click handler for saved list
-      document.getElementById('saved-list').addEventListener('click', e => {
-        const viewBtn = e.target.closest('.view-btn');
-        if (viewBtn) { openLawModal(viewBtn.dataset.key); return; }
-
-        const starBtn = e.target.closest('.star-btn');
-        if (starBtn) {
-          removeBookmark(starBtn.dataset.key);
-          // Re-render the saved tab in place
-          renderSaved();
-          // If current search results have this key, sync its star
-          const searchStar = resultsList.querySelector(`.star-btn[data-key="${CSS.escape(starBtn.dataset.key)}"]`);
-          if (searchStar) setStar(starBtn.dataset.key, false, searchStar);
-        }
-      });
-
-      // Clear all bookmarks button
-      document.getElementById('clear-bookmarks-btn').addEventListener('click', () => {
-        _persistBookmarks([]);
-        _updateBookmarkBadge();
-        // Sync any starred cards in the search results
-        resultsList.querySelectorAll('.star-btn.starred').forEach(btn => setStar(btn.dataset.key, false, btn));
-        renderSaved();
-      });
-
-      // Tab buttons
-      document.getElementById('tab-btn-search').addEventListener('click', () => setActiveTab('search'));
-      document.getElementById('tab-btn-browse').addEventListener('click', () => setActiveTab('browse'));
-      document.getElementById('tab-btn-saved').addEventListener('click',  () => setActiveTab('saved'));
-
-      // ── Law Reader Modal ────────────────────────────────────
-      async function openLawModal(key) {
-        currentLawKey = key;
-        modalOverlay.classList.add("open");
-        document.body.style.overflow = "hidden";
-        modalBadge.textContent = key;
-        modalTitle.textContent = "Loading…";
-        modalMeta.textContent = "";
-        modalSearch.value = "";
-        modalBody.innerHTML = '<div class="spinner"></div>';
-
-        try {
-          const resp = await fetch(`/api/law/${encodeURIComponent(key)}`);
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const law = await resp.json();
-
-          const meta = law.meta || {};
-          modalTitle.textContent = meta.title || key;
-          modalMeta.textContent = [
-            meta.last_changed
-              ? `In force since: ${formatDate(meta.last_changed)}`
-              : "",
-            meta.source ? `Source: ${meta.source}` : "",
-          ]
-            .filter(Boolean)
-            .join("  ·  ");
-
-          renderModalNorms(law.norms || [], currentGermanTerms);
-        } catch (e) {
-          modalBody.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Failed to load</div><div class="empty-sub">${e.message}</div></div>`;
-        }
-      }
-
-      function renderModalNorms(norms, terms, filterText = "") {
-        if (!norms.length) {
-          modalBody.innerHTML =
-            '<div class="empty-state"><div class="empty-icon">📄</div><div class="empty-title">No norms found</div></div>';
-          return;
-        }
-
-        const filterLower = filterText.toLowerCase();
-        let firstHighlightedOpened = false;
-        const frags = [];
-
-        norms.forEach((norm, i) => {
-          const normId = norm.meta?.norm_id || "";
-          const normTitle = norm.meta?.title || "";
-          const paras = norm.paragraphs || [];
-
-          // Filter by modal search
-          if (filterLower) {
-            const combined = (
-              normId +
-              " " +
-              normTitle +
-              " " +
-              paras.map((p) => p.content).join(" ")
-            ).toLowerCase();
-            if (!combined.includes(filterLower)) return;
-          }
-
-          // Determine if this norm matches the query terms (auto-expand it)
-          const normText = (normId + " " + normTitle).toLowerCase();
-          const isHighlighted =
-            terms.length > 0 &&
-            terms.some((t) => normText.includes(t.toLowerCase().slice(0, 4)));
-          const shouldOpen = isHighlighted && !firstHighlightedOpened;
-          if (shouldOpen) firstHighlightedOpened = true;
-
-          const parasHTML = paras
-            .map((p) => {
-              const content = p.content || "";
-              const tokenCnt = p.meta?.token ?? "";
-              const paraId = p.meta?.paragraph_id ?? "";
-              return `
-          <div class="paragraph-block">
-            <div class="para-meta">
-              <span>Abs. ${escapeHTML(String(paraId))}</span>
-              ${tokenCnt ? `<span>${tokenCnt} tokens</span>` : ""}
-            </div>
-            <div class="para-content">${highlight(content, [...terms, filterText].filter(Boolean))}</div>
-          </div>`;
-            })
-            .join("");
-
-          frags.push(`
-        <div class="modal-norm${isHighlighted ? " highlighted" : ""}" data-norm-idx="${i}">
-          <div class="norm-header" tabindex="0" role="button" aria-expanded="${shouldOpen}">
-            <span class="norm-header-id">${escapeHTML(normId)}</span>
-            <span class="norm-header-title">${normTitle ? highlight(normTitle, terms) : ""}</span>
-            <span class="norm-chevron${shouldOpen ? " open" : ""}">▼</span>
-          </div>
-          <div class="norm-content${shouldOpen ? " open" : ""}">${parasHTML}</div>
-        </div>`);
-        });
-
-        modalBody.innerHTML =
-          frags.join("") ||
-          '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No matching norms</div></div>';
-
-        // Scroll to first highlighted norm
-        const firstHL = modalBody.querySelector(".modal-norm.highlighted");
-        if (firstHL)
-          setTimeout(
-            () =>
-              firstHL.scrollIntoView({ behavior: "smooth", block: "start" }),
-            100,
-          );
-
-        // Accordion toggle
-        modalBody.querySelectorAll(".norm-header").forEach((hdr) => {
-          hdr.addEventListener("click", () => {
-            const content = hdr.nextElementSibling;
-            const chevron = hdr.querySelector(".norm-chevron");
-            const isOpen = content.classList.contains("open");
-            content.classList.toggle("open", !isOpen);
-            chevron.classList.toggle("open", !isOpen);
-            hdr.setAttribute("aria-expanded", String(!isOpen));
-          });
-          hdr.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              hdr.click();
-            }
-          });
-        });
-      }
-
-      // Close modal
-      function closeLawModal() {
-        modalOverlay.classList.remove("open");
-        document.body.style.overflow = "";
-        currentLawKey = null;
-      }
-
-      modalClose.addEventListener("click", closeLawModal);
-      modalOverlay.addEventListener("click", (e) => {
-        if (e.target === modalOverlay) closeLawModal();
-      });
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && currentLawKey) closeLawModal();
-      });
-
-      // Search within modal
-      let modalSearchTimeout = null;
-      modalSearch.addEventListener("input", () => {
-        clearTimeout(modalSearchTimeout);
-        modalSearchTimeout = setTimeout(async () => {
-          if (!currentLawKey) return;
-          const filterText = modalSearch.value.trim();
-          // Re-render from cached data (we need to refetch or cache — use fetch)
-          try {
-            const resp = await fetch(
-              `/api/law/${encodeURIComponent(currentLawKey)}`,
-            );
-            const law = await resp.json();
-            renderModalNorms(law.norms || [], currentGermanTerms, filterText);
-          } catch {}
-        }, 300);
-      });
-
-      // ── Shared chip click handler (examples + history) ──────
-      // Both chip types carry data-query; one delegated handler covers both.
-      document.querySelector('.search-wrap').addEventListener('click', e => {
-        // History chip
-        const hChip = e.target.closest('.history-chip');
-        if (hChip && hChip.dataset.query) { runQuery(hChip.dataset.query); return; }
-        // Example chip
-        const eChip = e.target.closest('.example-chip');
-        if (eChip && eChip.dataset.query) { runQuery(eChip.dataset.query); return; }
-        // Clear history button
-        if (e.target.id === 'history-clear-btn') { clearHistory(); }
-      });
-
-      // ── Search triggers ─────────────────────────────────────
-      searchBtn.addEventListener('click', doSearch);
-      queryInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') doSearch();
-      });
-
-      // ── Boot ────────────────────────────────────────────────
-      searchBtn.disabled = true;
-      statusInterval = setInterval(pollStatus, 1200);
-      pollStatus();
-      renderHistory(); // populate history chips from localStorage immediately
-    </script>
+    </dialog>
+
+    <!-- ── JS Modules (load order matters) ─────────────────── -->
+    <script src="/static/js/state.js"></script>
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/bookmarks.js"></script>
+    <script src="/static/js/vault.js"></script>
+    <script src="/static/js/search.js"></script>
+    <script src="/static/js/translation.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/ai.js"></script>
+    <script src="/static/js/dev.js"></script>
+    <script src="/static/js/app.js"></script>
   </body>
 </html>

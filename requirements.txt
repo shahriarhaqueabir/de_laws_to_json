@@ -15,3 +15,19 @@ tiktoken>=0.12.0       # OpenAI BPE tokenizer (cl100k_base encoding)
 
 # --- app.py (dashboard) ---
 flask>=3.1.0           # Web server for the search dashboard
+deep-translator>=1.11.4 # AI translation for bilingual view
+
+# --- dictionary/ (German-English legal dictionary) ---
+# Optional: Only required if building the TEI-based dictionary database
+# Install: pip install -r requirements.txt  (all dependencies already listed above)
+# The dictionary module uses only standard library + existing dependencies:
+#   - xml.etree.ElementTree (standard library) - TEI parsing
+#   - sqlite3 (standard library) - Database storage
+#   - json (standard library) - Data serialization
+#   - re (standard library) - Regular expressions
+#
+# To build the dictionary database:
+#   1. Ensure templates/eng-deu.tei exists (FreeDict English-German dictionary)
+#   2. Run: python dictionary/parse_tei_dictionary.py
+#   3. Run: python dictionary/reverse_dictionary.py
+#   4. Run: python dictionary/build_dictionary_db.py --rebuild

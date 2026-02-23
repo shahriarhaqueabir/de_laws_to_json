@@ -1,6 +1,6 @@
 <div align="center">
-  <h3 align="center">Deutsches Rechtsportal</h3>
-  <p align="center">German Law Search Dashboard with AI Assistance</p>
+  <h3 align="center">Midnight Magistrate</h3>
+  <p align="center">Digital Legal Grimoire & German Law Insight Engine</p>
 </div>
 
 ---
@@ -9,14 +9,12 @@
 
 **German Law Search** is a comprehensive legal search system that enables natural language search across 6,500+ German federal laws. It features bilingual (English/German) query support, AI-powered legal explanations, and a modern web dashboard.
 
-### Key Features
-
-- **Complete Coverage:** All 6,500+ German federal laws from [gesetze-im-internet.de](https://www.gesetze-im-internet.de/)
-- **Bilingual Search:** Query in English or German with automatic translation and synonym expansion
-- **AI Assistance:** Local AI (Ollama) provides legal explanations and translations
-- **Fast Search:** TF-IDF-based inverted index with sub-50ms query response
-- **Modern UI:** Dark-themed, responsive web dashboard with category filtering
-- **Offline-First:** All data stored locally; no external API dependencies (except optional AI)
+- **Cyborg Strategic Synthesis:** AI-powered legal insights (summaries, risks, exclusions) for every law.
+- **Midnight Magistrate Aesthetic:** Professional deep-blue "legal grimoire" theme with gold accents.
+- **Bilingual Search:** Query in English or German with automatic translation and synonym expansion.
+- **Fast Search:** Hybrid BM25 & Keyword scoring with sub-50ms query response.
+- **Dev Control Dashboard:** Live system health monitoring (API, Index, AI) and global AI kill switch.
+- **Offline-First:** All data stored locally; no external API dependencies (except local LLM).
 
 ### Example Output
 
@@ -138,7 +136,7 @@ German Law/
 │   └── README.md               # Dictionary documentation
 │
 ├── templates/
-│   └── index.html              # Frontend dashboard (3,182 lines)
+│   └── index.html              # Frontend dashboard (3,230+ lines)
 │
 ├── de_federal_raw/             # Downloaded XML files (auto-generated)
 ├── de_federal_json/            # Processed JSON laws (auto-generated)

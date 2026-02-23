@@ -125,8 +125,8 @@ def process_law(law: dict) -> tuple[bool, str]:
         if os.path.exists(zip_path):
             try:
                 os.remove(zip_path)
-            except Exception:
-                pass
+            except Exception as exc:
+                logging.warning("Could not remove zip file %s: %s", zip_path, exc)
 
     return True, link
 
@@ -209,12 +209,12 @@ def main() -> None:
 
     # --- Summary ---
     succeeded = total - len(errors)
-    print(f"\n✓ {succeeded}/{total} laws downloaded successfully.")
+    print(f"\n[OK] {succeeded}/{total} laws downloaded successfully.")
     if errors:
         error_log = os.path.join(RAW_DIR, "download_errors.txt")
         with open(error_log, "w", encoding="utf-8") as fh:
             fh.write("\n".join(errors))
-        print(f"✗ {len(errors)} errors — see {error_log}")
+        print(f"[WARN] {len(errors)} errors - see {error_log}")
 
 
 if __name__ == "__main__":
