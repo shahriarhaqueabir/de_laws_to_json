@@ -9,14 +9,22 @@
 # --- project outputs (generated, not committed) ---
 de_federal_json/
 de_federal_raw/
+de_federal_translations/
 de_federal.json
 de_federal_unprocessed_absatze.txt
 de_federal_missing_files.txt
+search_index.json
+ai_translations.json
 download_errors.txt
 examples/
-search_index.json
 *.zip
 *.log
+
+# Recovery and scripts
+extract_*.py
+app_from_pyc.py
+app_recovered*.py
+
 # Virtual environments
 .venv/
 venv/
@@ -24,6 +32,15 @@ env/
 event.json
 .env*
 *.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+dictionary/dictionary.db
+
 
 ### Linux ###
 *~
