@@ -5,18 +5,18 @@ cd /d "%~dp0"
 color 0A
 cls
 echo ===================================================
-echo     German Law Search - Setup ^& Launch Sequence
+echo     German Law Search - Setup and Launch Sequence
 echo ===================================================
 echo.
 
 :: 1. Virtual Environment Setup
 echo [1/8] Checking Virtual Environment...
 if not exist ".venv\Scripts\python.exe" (
-    echo       Creating virtual environment (.venv)...
+    echo       Creating virtual environment...
     python -m venv .venv
     if errorlevel 1 (
         echo.
-        echo [ERROR] Failed to create .venv.
+        echo [ERROR] Failed to create virtual environment.
         echo        Ensure Python 3.10+ is installed and in PATH.
         echo        Download Python from: https://www.python.org/downloads/
         pause
@@ -33,7 +33,7 @@ set "PIP=.venv\Scripts\pip.exe"
 echo.
 echo [2/8] Installing/Updating Dependencies...
 "%PIP%" install --upgrade pip -q
-echo       Installing requirements (this may take a few minutes)...
+echo       Installing requirements - this may take a few minutes...
 "%PIP%" install -r requirements.txt
 if errorlevel 1 (
     echo.
@@ -108,44 +108,24 @@ if "%NEEDS_PROCESSING%"=="1" (
 
 :processing_done
 
-:: 5. Ollama Installation Check
+:: 5. Ollama Installation Check (Background)
 echo.
 echo [5/8] Checking AI Engine (Ollama)...
 where ollama >nul 2>&1
-if not errorlevel 1 (
-    echo       Ollama is installed.
-    goto :ollama_installed
+if errorlevel 1 (
+    echo       Ollama not found. Download in background...
+    powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://ollama.com/download/OllamaSetup.exe' -OutFile 'OllamaSetup.exe'"
+    if exist "OllamaSetup.exe" (
+        start OllamaSetup.exe
+        del OllamaSetup.exe 2>nul
+        echo       Please install Ollama when the installer opens.
+    )
+    goto :ollama_done
 )
 
-echo       Ollama not found. Installing...
-echo       Downloading Ollama installer...
-powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://ollama.com/download/OllamaSetup.exe' -OutFile 'OllamaSetup.exe'"
-if exist "OllamaSetup.exe" (
-    echo       Launching Ollama installer. Please complete the installation!
-    start /wait OllamaSetup.exe
-    del OllamaSetup.exe 2>nul
-) else (
-    echo       [WARNING] Could not download OllamaSetup.exe
-    echo                 AI features will be unavailable.
-    goto :ollama_skip
-)
-
-echo       Waiting for Ollama to become available...
-:wait_ollama
-timeout /t 5 /nobreak >nul
-where ollama >nul 2>&1
-if errorlevel 1 goto wait_ollama
-echo       Ollama successfully installed!
-
-:ollama_installed
-:: Pull the AI model
-echo       Downloading AI model (llama3.2)...
-echo       First-time download may take several minutes...
-ollama pull llama3.2
-goto :ollama_done
-
-:ollama_skip
-echo       Skipping AI setup.
+echo       Ollama is installed.
+echo       Downloading AI model in background (llama3.2)...
+start "Ollama Model Download" cmd /c "ollama pull llama3.2 & pause"
 
 :ollama_done
 
@@ -206,41 +186,22 @@ powershell -NoProfile -Command "Start-Process -FilePath '%BROWSER_EXE%' -Argumen
 
 echo.
 echo ===================================================
-echo   ^> DASHBOARD OPENED IN BROWSER
-echo   ^> CLOSE THE BROWSER WINDOW TO SHUT DOWN
+echo   DASHBOARD IS OPEN!
+echo   Close the browser window when done.
+echo   The server will continue running in background.
 echo ===================================================
 echo.
-echo       Waiting for browser to close...
-
-:: Wait for browser to close (polling)
-:wait_browser
-timeout /t 3 /nobreak >nul
-powershell -NoProfile -Command "try { $r = Invoke-RestMethod -Uri '%URL%api/status' -TimeoutSec 2 -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if errorlevel 1 goto :browser_closed
-goto :wait_browser
-
-:browser_closed
-echo       Browser closed.
-
-:manual_close
-echo       Shutting down server...
-call :stop_server
-
+echo   To stop the server later, close the 'German Law Server' window
+echo   or run: taskkill /F /IM python.exe
 echo.
-echo ===================================================
-echo   Server stopped. Goodbye!
-echo ===================================================
 pause
 exit /b 0
 
-:fail
+:manual_close
 echo.
-echo [ERROR] Setup sequence failed!
-call :stop_server
+echo ===================================================
+echo   Dashboard opened. Close your browser when done.
+echo ===================================================
+echo.
 pause
-exit /b 1
-
-:stop_server
-:: Kill Flask server processes
-powershell -NoProfile -Command "Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*app.py*' } | Stop-Process -Force" >nul 2>&1
 exit /b 0
