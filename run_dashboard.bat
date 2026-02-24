@@ -2,41 +2,60 @@
 setlocal EnableExtensions
 cd /d "%~dp0"
 
+color 0A
+cls
 echo ===================================================
 echo     German Law Search - Setup ^& Launch Sequence
 echo ===================================================
+echo.
 
 :: 1. Virtual Environment Setup
-echo.
-echo [1/9] Checking Virtual Environment...
+echo [1/8] Checking Virtual Environment...
 if not exist ".venv\Scripts\python.exe" (
-    echo       Creating .venv...
+    echo       Creating virtual environment (.venv)...
     python -m venv .venv
     if errorlevel 1 (
-        echo [ERROR] Failed to create .venv. Ensure Python is installed and in PATH.
+        echo.
+        echo [ERROR] Failed to create .venv.
+        echo        Ensure Python 3.10+ is installed and in PATH.
+        echo        Download Python from: https://www.python.org/downloads/
+        pause
         exit /b 1
     )
+    echo       Virtual environment created successfully.
+) else (
+    echo       Virtual environment found.
 )
 set "PY=.venv\Scripts\python.exe"
 set "PIP=.venv\Scripts\pip.exe"
-echo       Virtual Environment Ready.
 
-:: 2. Dependencies
+:: 2. Dependencies Installation
 echo.
-echo [2/9] Checking Dependencies...
-if exist "requirements.txt" (
-    "%PIP%" install -q -r requirements.txt
-) else (
-    "%PIP%" install -q flask beautifulsoup4 lxml requests tqdm
+echo [2/8] Installing/Updating Dependencies...
+"%PIP%" install --upgrade pip -q
+echo       Installing requirements (this may take a few minutes)...
+"%PIP%" install -r requirements.txt
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Failed to install dependencies.
+    echo        Check your internet connection and try again.
+    pause
+    exit /b 1
 )
-echo       Dependencies Installed.
+echo       Dependencies installed successfully.
 
-:: 3. DB Download
+:: 3. Download Federal Laws Database
 echo.
-echo [3/8] Downloading/Updating Federal Laws (XML Database)...
+echo [3/8] Downloading Federal Laws (XML Database)...
+echo       This may take several minutes on first run...
 "%PY%" download_de_laws.py
+if errorlevel 1 (
+    echo.
+    echo [WARNING] Download script encountered issues.
+    echo          Continuing with existing data if available...
+)
 
-:: 4. DB Processing (only if needed)
+:: 4. Process XML to JSON (if needed)
 echo.
 echo [4/8] Checking processed files...
 set "NEEDS_PROCESSING=0"
@@ -66,15 +85,22 @@ if "%1"=="--force" (
 )
 
 :: Skip processing
-echo       JSON files up-to-date. Skipping XML processing.
+echo       JSON files up-to-date.
 goto :processing_done
 
 :process_xml
 if "%NEEDS_PROCESSING%"=="1" (
     echo       Processing XML into JSON...
+    echo       This may take several minutes on first run...
     "%PY%" process_de_laws.py
-    
-    echo       Removing Duplicate/Redundant Data...
+    if errorlevel 1 (
+        echo.
+        echo [ERROR] Failed to process XML files.
+        pause
+        exit /b 1
+    )
+
+    echo       Removing duplicate/redundant data...
     if exist "dedupe_processed_data.py" (
         "%PY%" dedupe_processed_data.py
     )
@@ -84,21 +110,24 @@ if "%NEEDS_PROCESSING%"=="1" (
 
 :: 5. Ollama Installation Check
 echo.
-echo [5/8] Checking Local AI Engine (Ollama)...
+echo [5/8] Checking AI Engine (Ollama)...
 where ollama >nul 2>&1
 if not errorlevel 1 (
     echo       Ollama is installed.
     goto :ollama_installed
 )
 
-echo       [INFO] Ollama is not installed.
-echo       Downloading Ollama Installer...
+echo       Ollama not found. Installing...
+echo       Downloading Ollama installer...
 powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://ollama.com/download/OllamaSetup.exe' -OutFile 'OllamaSetup.exe'"
 if exist "OllamaSetup.exe" (
-    echo       Launching Ollama setup. Please complete the installer!
+    echo       Launching Ollama installer. Please complete the installation!
     start /wait OllamaSetup.exe
+    del OllamaSetup.exe 2>nul
 ) else (
-    echo       [ERROR] Could not download OllamaSetup.exe
+    echo       [WARNING] Could not download OllamaSetup.exe
+    echo                 AI features will be unavailable.
+    goto :ollama_skip
 )
 
 echo       Waiting for Ollama to become available...
@@ -106,87 +135,112 @@ echo       Waiting for Ollama to become available...
 timeout /t 5 /nobreak >nul
 where ollama >nul 2>&1
 if errorlevel 1 goto wait_ollama
-echo       Ollama successfully installed and detected!
+echo       Ollama successfully installed!
 
 :ollama_installed
-
-:: 6. Ollama Model Pull
-echo.
-echo [6/8] Ensuring llama3.2 model is downloaded...
-echo       (First time download may take a few minutes)
+:: Pull the AI model
+echo       Downloading AI model (llama3.2)...
+echo       First-time download may take several minutes...
 ollama pull llama3.2
+goto :ollama_done
 
-:: 7. Start Backend & Dashboard with Auto-Restart Watchdog
+:ollama_skip
+echo       Skipping AI setup.
+
+:ollama_done
+
+:: 6. Create Logs Directory
 echo.
-echo [7/8] Starting Backend and Launching Dashboard...
-set "SERVER_PID="
-set "URL=http://127.0.0.1:5000/"
-
-:: Create Logs folder if it doesn't exist
+echo [6/8] Preparing log files...
 if not exist "Logs" mkdir "Logs"
 
-:: Start Server Watchdog (which will start and monitor the Flask server)
-:: The watchdog handles auto-restart if the server crashes
+:: 7. Start Backend Server
+echo.
+echo [7/8] Starting Backend Server...
+set "URL=http://127.0.0.1:5000/"
+
+:: Clear old watchdog log
 set "WATCHDOG_LOG_FILE=%~dp0Logs\watchdog.log"
 echo. > "%WATCHDOG_LOG_FILE%"
-start "German Law — Server Watchdog" powershell -NoProfile -Command "& '%PY%' server_watchdog.py | Tee-Object -FilePath '%WATCHDOG_LOG_FILE%'"
 
-:: Wait a brief moment for the server to start
-timeout /t 5 /nobreak >nul
+:: Start Server Watchdog (monitors and auto-restarts Flask server)
+start "German Law Server" powershell -NoProfile -Command "& '%PY%' server_watchdog.py"
 
-:: Open a log viewer window showing server, AI, and dictionary health logs
-start "German Law — Live Logs" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0view_logs.ps1" -LogsDir "%~dp0Logs"
-
-
-echo       Waiting for Backend to become ready (max 90 seconds)...
-for /l %%I in (1,1,90) do (
-    powershell -NoProfile -Command "try { $r = Invoke-RestMethod -Uri '%URL%api/status' -TimeoutSec 2; if ($null -ne $r) { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>&1
-    if not errorlevel 1 goto :ready
+echo       Waiting for server to start...
+for /l %%I in (1,1,60) do (
+    powershell -NoProfile -Command "try { $r = Invoke-RestMethod -Uri '%URL%api/status' -TimeoutSec 2 -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+    if not errorlevel 1 goto :server_ready
     timeout /t 1 /nobreak >nul
 )
-:ready
 
-:: Find Browser
+:server_ready
+echo       Server is running!
+
+:: Open log viewer
+start "Live Logs" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0view_logs.ps1" -LogsDir "%~dp0Logs"
+
+:: 8. Launch Dashboard in Browser
+echo.
+echo [8/8] Launching Dashboard...
+
+:: Find browser
 set "BROWSER_EXE="
 if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" set "BROWSER_EXE=%ProgramFiles%\Google\Chrome\Application\chrome.exe"
 if not defined BROWSER_EXE if exist "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" set "BROWSER_EXE=%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
 if not defined BROWSER_EXE if exist "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" set "BROWSER_EXE=%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"
 if not defined BROWSER_EXE if exist "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" set "BROWSER_EXE=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
+if not defined BROWSER_EXE if exist "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" set "BROWSER_EXE=%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"
+if not defined BROWSER_EXE if exist "%LOCALAPPDATA%\Microsoft\Edge\Application\msedge.exe" set "BROWSER_EXE=%LOCALAPPDATA%\Microsoft\Edge\Application\msedge.exe"
 
 if not defined BROWSER_EXE (
-    echo [ERROR] Chrome/Edge not found. Cannot launch dashboard.
-    goto :fail
+    echo.
+    echo [WARNING] Chrome/Edge browser not found.
+    echo          Opening dashboard in default browser...
+    start %URL%
+    goto :manual_close
 )
 
+:: Launch browser in app mode
 set "PROFILE_DIR=%TEMP%\glsd_profile_%RANDOM%"
-set "BROWSER_PID="
-
-:: Use a temporary file to capture the PID from powershell, which is more reliable than direct for-loop assignment
-powershell -NoProfile -Command "$args = @('--user-data-dir=%PROFILE_DIR%','--new-window','--app=%URL%'); $p = Start-Process -FilePath '%BROWSER_EXE%' -ArgumentList $args -PassThru; $p.Id | Out-File -FilePath pid.tmp -Encoding ascii"
-set /p BROWSER_PID=<pid.tmp
-del pid.tmp
-
-if not defined BROWSER_PID (
-    echo [ERROR] Failed to launch browser process.
-    goto :fail
-)
+powershell -NoProfile -Command "Start-Process -FilePath '%BROWSER_EXE%' -ArgumentList '--user-data-dir=%PROFILE_DIR%','--new-window','--app=%URL%'"
 
 echo.
 echo ===================================================
-echo   DASHBOARD OPENED! CLOSE THE BROWSER TO SHUT DOWN
+echo   ^> DASHBOARD OPENED IN BROWSER
+echo   ^> CLOSE THE BROWSER WINDOW TO SHUT DOWN
 echo ===================================================
-powershell -NoProfile -Command "Wait-Process -Id %BROWSER_PID%" >nul 2>&1
-echo       Browser closed. Shutting down system...
+echo.
+echo       Waiting for browser to close...
+
+:: Wait for browser to close (polling)
+:wait_browser
+timeout /t 3 /nobreak >nul
+powershell -NoProfile -Command "try { $r = Invoke-RestMethod -Uri '%URL%api/status' -TimeoutSec 2 -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if errorlevel 1 goto :browser_closed
+goto :wait_browser
+
+:browser_closed
+echo       Browser closed.
+
+:manual_close
+echo       Shutting down server...
 call :stop_server
+
+echo.
+echo ===================================================
+echo   Server stopped. Goodbye!
+echo ===================================================
+pause
 exit /b 0
 
 :fail
-echo [ERROR] Run Sequence Failed!
+echo.
+echo [ERROR] Setup sequence failed!
 call :stop_server
 pause
 exit /b 1
 
 :stop_server
-:: Kill any python process currently running app.py
-powershell -NoProfile -Command "Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'python.exe' -and $_.CommandLine -like '*app.py*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }" >nul 2>&1
+:: Kill Flask server processes
+powershell -NoProfile -Command "Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*app.py*' } | Stop-Process -Force" >nul 2>&1
 exit /b 0
