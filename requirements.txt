@@ -16,7 +16,7 @@ beautifulsoup4>=4.14.3
 lxml>=6.0.2
 
 # Tokenization
-tiktoken>=0.14.0
+tiktoken>=0.12.0
 
 # Optional: AI Translation (if using Ollama or external translation services)
 # deep-translator>=1.11.4
