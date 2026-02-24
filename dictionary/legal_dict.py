@@ -54,8 +54,10 @@ class LegalDictionary:
         self.db_path = db_path
         self._cache: OrderedDict[str, List[Dict]] = OrderedDict()
         self._cache_lock = threading.Lock()
-        self._conn_lock = threading.Lock()
-
+        
+        # Use thread-local storage for database connections (one per thread)
+        self._local = threading.local()
+        
         # Verify database exists
         if not os.path.exists(db_path):
             logger.warning(f"Dictionary database not found: {db_path}")
@@ -66,11 +68,19 @@ class LegalDictionary:
             logger.info(f"Dictionary loaded: {db_path}")
 
     def _get_connection(self) -> sqlite3.Connection:
-        """Get thread-local database connection."""
-        # Simple connection per call (could be optimized with connection pooling)
-        conn = sqlite3.connect(self.db_path, timeout=QUERY_TIMEOUT)
-        conn.row_factory = sqlite3.Row
-        return conn
+        """Get thread-local database connection (connection per thread)."""
+        if not hasattr(self._local, 'connection') or self._local.connection is None:
+            self._local.connection = sqlite3.connect(
+                self.db_path, 
+                timeout=30,  # Increased timeout for concurrent access
+                check_same_thread=False
+            )
+            self._local.connection.row_factory = sqlite3.Row
+            # Enable WAL mode for better concurrent access
+            self._local.connection.execute("PRAGMA journal_mode=WAL")
+            # Set busy timeout to wait up to 30 seconds for locks
+            self._local.connection.execute("PRAGMA busy_timeout=30000")
+        return self._local.connection
 
     def _add_to_cache(self, key: str, value: List[Dict]):
         """Add item to LRU cache."""
@@ -176,50 +186,48 @@ class LegalDictionary:
 
         results = []
         try:
-            with self._conn_lock:
-                conn = self._get_connection()
-                cursor = conn.cursor()
+            conn = self._get_connection()
+            cursor = conn.cursor()
 
-                # 1. Try exact match in legal priority terms (reversed)
-                cursor.execute(
-                    """
-                    SELECT german_term, priority_level
-                    FROM legal_priority_terms
-                    WHERE english_translation LIKE ?
-                    OR alternative_translations LIKE ?
-                    ORDER BY priority_level ASC
-                    LIMIT ?
-                """,
-                    (f"%{english_word}%", f"%{english_word}%", limit),
+            # 1. Try exact match in legal priority terms (reversed)
+            cursor.execute(
+                """
+                SELECT german_term, priority_level
+                FROM legal_priority_terms
+                WHERE english_translation LIKE ?
+                OR alternative_translations LIKE ?
+                ORDER BY priority_level ASC
+                LIMIT ?
+            """,
+                (f"%{english_word}%", f"%{english_word}%", limit),
+            )
+
+            for row in cursor.fetchall():
+                results.append(
+                    {
+                        "german": row["german_term"],
+                        "score": 100 - row["priority_level"] * 10,
+                    }
                 )
 
-                for row in cursor.fetchall():
-                    results.append(
-                        {
-                            "german": row["german_term"],
-                            "score": 100 - row["priority_level"] * 10,
-                        }
-                    )
+            # 2. Try FTS search on main dictionary
+            cursor.execute(
+                """
+                SELECT german_word, frequency
+                FROM de_en_fts
+                JOIN de_en_dictionary ON de_en_fts.rowid = de_en_dictionary.id
+                WHERE english_translation MATCH ?
+                ORDER BY frequency DESC
+                LIMIT ?
+            """,
+                (english_word, limit),
+            )
 
-                # 2. Try FTS search on main dictionary
-                cursor.execute(
-                    """
-                    SELECT german_word, frequency
-                    FROM de_en_fts
-                    JOIN de_en_dictionary ON de_en_fts.rowid = de_en_dictionary.id
-                    WHERE english_translation MATCH ?
-                    ORDER BY frequency DESC
-                    LIMIT ?
-                """,
-                    (english_word, limit),
+            for row in cursor.fetchall():
+                results.append(
+                    {"german": row["german_word"], "score": row["frequency"]}
                 )
 
-                for row in cursor.fetchall():
-                    results.append(
-                        {"german": row["german_word"], "score": row["frequency"]}
-                    )
-
-                conn.close()
         except Exception as e:
             logger.debug(f"Reverse lookup error for {english_word}: {e}")
 
@@ -242,34 +250,32 @@ class LegalDictionary:
     def _lookup_exact(self, normalized: str) -> List[Dict]:
         """Exact match lookup in main dictionary."""
         try:
-            with self._conn_lock:
-                conn = self._get_connection()
-                cursor = conn.cursor()
+            conn = self._get_connection()
+            cursor = conn.cursor()
 
-                cursor.execute(
-                    """
-                    SELECT english_translation, frequency, part_of_speech
-                    FROM de_en_dictionary
-                    WHERE german_word_normalized = ?
-                    ORDER BY frequency DESC
-                    LIMIT 10
-                """,
-                    (normalized,),
+            cursor.execute(
+                """
+                SELECT english_translation, frequency, part_of_speech
+                FROM de_en_dictionary
+                WHERE german_word_normalized = ?
+                ORDER BY frequency DESC
+                LIMIT 10
+            """,
+                (normalized,),
+            )
+
+            results = []
+            for row in cursor.fetchall():
+                results.append(
+                    {
+                        "english": row["english_translation"],
+                        "frequency": row["frequency"],
+                        "pos": row["part_of_speech"],
+                        "source": "dictionary",
+                    }
                 )
 
-                results = []
-                for row in cursor.fetchall():
-                    results.append(
-                        {
-                            "english": row["english_translation"],
-                            "frequency": row["frequency"],
-                            "pos": row["part_of_speech"],
-                            "source": "dictionary",
-                        }
-                    )
-
-                conn.close()
-                return results
+            return results
 
         except Exception as e:
             logger.debug(f"Exact lookup error: {e}")
@@ -278,47 +284,45 @@ class LegalDictionary:
     def _lookup_legal_priority(self, normalized: str) -> List[Dict]:
         """Lookup in legal priority terms."""
         try:
-            with self._conn_lock:
-                conn = self._get_connection()
-                cursor = conn.cursor()
+            conn = self._get_connection()
+            cursor = conn.cursor()
 
-                cursor.execute(
-                    """
-                    SELECT english_translation, alternative_translations, 
-                           priority_level, context_category
-                    FROM legal_priority_terms
-                    WHERE german_term_normalized = ?
-                    ORDER BY priority_level ASC
-                    LIMIT 5
-                """,
-                    (normalized,),
+            cursor.execute(
+                """
+                SELECT english_translation, alternative_translations,
+                       priority_level, context_category
+                FROM legal_priority_terms
+                WHERE german_term_normalized = ?
+                ORDER BY priority_level ASC
+                LIMIT 5
+            """,
+                (normalized,),
+            )
+
+            results = []
+            for row in cursor.fetchall():
+                # Parse alternative translations
+                alts = []
+                if row["alternative_translations"]:
+                    try:
+                        alts = json.loads(row["alternative_translations"])
+                    except json.JSONDecodeError:
+                        alts = [row["alternative_translations"]]
+
+                results.append(
+                    {
+                        "english": row["english_translation"],
+                        "alternatives": alts,
+                        "frequency": 100
+                        - row["priority_level"]
+                        * 10,  # Higher priority = higher score
+                        "pos": None,
+                        "category": row["context_category"],
+                        "source": "legal_priority",
+                    }
                 )
 
-                results = []
-                for row in cursor.fetchall():
-                    # Parse alternative translations
-                    alts = []
-                    if row["alternative_translations"]:
-                        try:
-                            alts = json.loads(row["alternative_translations"])
-                        except json.JSONDecodeError:
-                            alts = [row["alternative_translations"]]
-
-                    results.append(
-                        {
-                            "english": row["english_translation"],
-                            "alternatives": alts,
-                            "frequency": 100
-                            - row["priority_level"]
-                            * 10,  # Higher priority = higher score
-                            "pos": None,
-                            "category": row["context_category"],
-                            "source": "legal_priority",
-                        }
-                    )
-
-                conn.close()
-                return results
+            return results
 
         except Exception as e:
             logger.debug(f"Legal priority lookup error: {e}")
@@ -327,37 +331,34 @@ class LegalDictionary:
     def _lookup_prefix(self, prefix: str) -> List[Dict]:
         """Prefix match lookup."""
         try:
-            with self._conn_lock:
-                conn = self._get_connection()
-                cursor = conn.cursor()
+            conn = self._get_connection()
+            cursor = conn.cursor()
 
-                cursor.execute(
-                    """
-                    SELECT english_translation, frequency, part_of_speech,
-                           german_word_normalized
-                    FROM de_en_dictionary
-                    WHERE german_word_normalized LIKE ?
-                    ORDER BY frequency DESC, LENGTH(german_word_normalized) ASC
-                    LIMIT 5
-                """,
-                    (prefix + "%",),
+            cursor.execute(
+                """
+                SELECT english_translation, frequency, part_of_speech,
+                       german_word_normalized
+                FROM de_en_dictionary
+                WHERE german_word_normalized LIKE ?
+                ORDER BY frequency DESC, LENGTH(german_word_normalized) ASC
+                LIMIT 5
+            """,
+                (prefix + "%",),
+            )
+
+            results = []
+            for row in cursor.fetchall():
+                results.append(
+                    {
+                        "english": row["english_translation"],
+                        "frequency": row["frequency"] * 0.7,
+                        "pos": row["part_of_speech"],
+                        "matched_word": row["german_word_normalized"],
+                        "source": "prefix",
+                    }
                 )
 
-                results = []
-                for row in cursor.fetchall():
-                    results.append(
-                        {
-                            "english": row["english_translation"],
-                            "frequency": row["frequency"]
-                            * 0.7,  # Reduce score for prefix matches
-                            "pos": row["part_of_speech"],
-                            "matched_word": row["german_word_normalized"],
-                            "source": "prefix",
-                        }
-                    )
-
-                conn.close()
-                return results
+            return results
 
         except Exception as e:
             logger.debug(f"Prefix lookup error: {e}")
@@ -368,35 +369,31 @@ class LegalDictionary:
         Attempt compound word decomposition.
         e.g., "Kündigungsschutzfrist" → "Kündigung" + "Schutz" + "Frist"
         """
-        # Check if compound is in database
         try:
-            with self._conn_lock:
-                conn = self._get_connection()
-                cursor = conn.cursor()
+            conn = self._get_connection()
+            cursor = conn.cursor()
 
-                cursor.execute(
-                    """
-                    SELECT components, english_translation
-                    FROM compound_words
-                    WHERE full_word = ?
-                """,
-                    (word,),
-                )
+            cursor.execute(
+                """
+                SELECT components, english_translation
+                FROM compound_words
+                WHERE full_word = ?
+            """,
+                (word,),
+            )
 
-                row = cursor.fetchone()
-                if row:
-                    conn.close()
-                    return [
-                        {
-                            "english": row["english_translation"] or "[compound word]",
-                            "frequency": 50,
-                            "pos": None,
-                            "components": json.loads(row["components"]),
-                            "source": "compound",
-                        }
-                    ]
+            row = cursor.fetchone()
+            if row:
+                return [
+                    {
+                        "english": row["english_translation"] or "[compound word]",
+                        "frequency": 50,
+                        "pos": None,
+                        "components": json.loads(row["components"]),
+                        "source": "compound",
+                    }
+                ]
 
-                conn.close()
         except Exception as e:
             logger.debug(f"Compound lookup error: {e}")
 
@@ -438,18 +435,14 @@ class LegalDictionary:
         return translations
 
     def _fallback_translation(self, word: str) -> List[Dict]:
-        """Fallback when database is not available."""
-        # Use the existing EN_DE dictionary from app.py
-        from app import EN_DE
-
-        normalized = self.normalize_word(word)
-
-        if normalized in EN_DE:
-            return [
-                {"english": t, "frequency": 10, "pos": None, "source": "fallback_en_de"}
-                for t in EN_DE[normalized]
-            ]
-
+        """Fallback when database is not available.
+        
+        Returns empty list - no fallback to avoid circular dependency with app.py.
+        """
+        # Note: Previously tried to import from app.py here, but that creates
+        # a circular dependency. If you need fallback translations, pass them
+        # as a parameter or use memory_dict.py instead.
+        logger.debug(f"No fallback translations available for '{word}'")
         return []
 
     def translate_phrase(self, german_text: str) -> str:
@@ -490,28 +483,30 @@ class LegalDictionary:
             return {"error": "Database not found"}
 
         try:
-            with self._conn_lock:
-                conn = self._get_connection()
-                cursor = conn.cursor()
+            conn = self._get_connection()
+            cursor = conn.cursor()
 
-                stats = {}
+            stats = {}
 
-                cursor.execute("SELECT COUNT(*) FROM de_en_dictionary")
-                stats["total_entries"] = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM de_en_dictionary")
+            stats["total_entries"] = cursor.fetchone()[0]
 
-                cursor.execute(
-                    "SELECT COUNT(DISTINCT german_word_normalized) FROM de_en_dictionary"
-                )
-                stats["unique_words"] = cursor.fetchone()[0]
+            cursor.execute(
+                "SELECT COUNT(DISTINCT german_word_normalized) FROM de_en_dictionary"
+            )
+            stats["unique_words"] = cursor.fetchone()[0]
 
-                cursor.execute("SELECT COUNT(*) FROM legal_priority_terms")
-                stats["legal_terms"] = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM legal_priority_terms")
+            stats["legal_terms"] = cursor.fetchone()[0]
 
+            # Check if cache_size table exists before querying
+            try:
                 cursor.execute("SELECT COUNT(*) FROM cache_size")
+                stats["cache_size"] = cursor.fetchone()[0]
+            except sqlite3.OperationalError:
                 stats["cache_size"] = len(self._cache)
 
-                conn.close()
-                return stats
+            return stats
 
         except Exception as e:
             return {"error": str(e)}

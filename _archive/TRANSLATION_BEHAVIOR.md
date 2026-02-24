@@ -1,7 +1,7 @@
 # Translation Behavior Clarification
 
-**Date:** February 23, 2026  
-**Status:** ✅ Clarified and Implemented
+**Date:** February 24, 2026  
+**Status:** ✅ Clarified, Implemented, and Refactored
 
 ---
 
@@ -9,9 +9,9 @@
 
 ### ✅ Translations Happen ONLY When:
 
-1. **User clicks "Translate" button** on a law paragraph
+1. **User clicks EN toggle** on a law/norm
 2. **User toggles DE/EN switch** in the law detail view
-3. **User explicitly calls** `/api/ai_translate` endpoint
+3. **User explicitly calls** `/api/ai_translate` or `/api/fast_translate` endpoint
 
 ### ❌ Translations NEVER Happen:
 
@@ -24,32 +24,23 @@
 
 ## Translation Flow
 
-### User-Initiated Translation
+### User-Initiated Translation (Hybrid: Dictionary + AI)
 
 ```
-User Action (Click "Translate" button)
+User clicks EN toggle
     │
     ▼
-Frontend calls: POST /api/ai_translate
+Frontend calls: POST /api/fast_translate (dictionary - instant)
+    │
+    ├─ Has translation?
+    │   ├─ YES: Apply immediately (partial translation)
+    │   │   ├─ is_final = true? → Done (complete translation)
+    │   │   └─ is_final = false? → Call /api/ai_translate → Refine
+    │   │
+    │   └─ NO: Call /api/ai_translate directly
     │
     ▼
-Backend checks cache
-    │
-    ├─ Cached? → Return cached translation (instant)
-    │
-    └─ Not cached?
-        │
-        ├─ Single word? → Dictionary lookup (<5ms)
-        │
-        ├─ Short phrase? → Dictionary + AI refinement (~1-2s)
-        │
-        └─ Full paragraph? → AI translation (~2-5s)
-            │
-            ▼
-        Save to cache + Return
-            │
-            ▼
-        Frontend displays translation
+Frontend displays translation
 ```
 
 ### Search Query Expansion (Internal Only)
@@ -74,7 +65,7 @@ Returns German law results
 User sees: German text (NOT translated)
     │
     ▼
-User can: Click "Translate" button if needed
+User can: Click EN toggle if needed
 ```
 
 **Key Point:** Search uses dictionary for better results, but doesn't show translations automatically.
@@ -83,12 +74,43 @@ User can: Click "Translate" button if needed
 
 ## API Endpoints
 
-### `/api/ai_translate` (On-Demand Translation)
+### `/api/fast_translate` (Dictionary-Based Translation)
 
-**Purpose:** Manual translation when user requests it
+**Purpose:** Instant dictionary-based translation
 
 **Request:**
-```javascript
+```
+json
+POST /api/fast_translate
+{
+  "text": "Der Mieter kann das Mietverhältnis kündigen",
+  "is_title": false
+}
+```
+
+**Response:**
+```
+json
+{
+  "translation": "Der Tenant can/may das Mietverhaeltnis kuendigen",
+  "is_final": false
+}
+```
+
+**Notes:**
+- Returns partial translation (word-by-word substitution)
+- `is_final: false` means AI refinement is needed
+- Use for instant feedback, then refine with AI
+
+---
+
+### `/api/ai_translate` (AI Refinement)
+
+**Purpose:** Full AI-powered translation with refinement
+
+**Request:**
+```
+json
 POST /api/ai_translate
 {
   "text": "Der Mieter kann das Mietverhältnis kündigen",
@@ -97,7 +119,8 @@ POST /api/ai_translate
 ```
 
 **Response:**
-```json
+```
+json
 {
   "translation": "The tenant can terminate the lease agreement",
   "source": "ai_refined",
@@ -106,7 +129,7 @@ POST /api/ai_translate
 }
 ```
 
-**Usage:** Called by frontend when user clicks "Translate" button
+**Usage:** Called by frontend for complete translation
 
 ---
 
@@ -115,7 +138,8 @@ POST /api/ai_translate
 **Purpose:** Explain German law, answer legal questions
 
 **Request:**
-```javascript
+```
+json
 POST /api/ai_chat
 {
   "query": "What are my rights as a tenant facing eviction?",
@@ -124,7 +148,7 @@ POST /api/ai_chat
 ```
 
 **Response:** (streaming)
-```
+
 1. **Summary**: As a tenant in Germany, you have strong protection...
 
 2. **Legal Basis**: § 573 BGB requires legitimate interest...
@@ -132,7 +156,6 @@ POST /api/ai_chat
 3. **Explanation**: The landlord must prove...
 
 4. **Practical Guidance**: Check if the notice meets formal requirements...
-```
 
 **Usage:** AI assistant for legal questions, NOT for translation
 
@@ -143,7 +166,8 @@ POST /api/ai_chat
 ### Internal (Not Visible to User)
 
 **Search Query Expansion:**
-```python
+```
+python
 # In expand_query() - used for search only
 translations = legal_dict.get_translations("tenant")
 # Returns: ["mieter", "mieterin"]
@@ -153,9 +177,10 @@ translations = legal_dict.get_translations("tenant")
 
 ### User-Visible (On-Demand)
 
-**Translation Button:**
-```python
-# In api_ai_translate() - called by user action
+**Translation Toggle:**
+```
+python
+# In api_fast_translate() - called by user action
 translations = legal_dict.get_translations("Mieter")
 # Returns: ["tenant"]
 # User sees: "tenant" (translated text)
@@ -186,7 +211,7 @@ Search Results:
 
 **NOT Translated:** Law text remains in German
 
-**User Option:** Click on a law → Click "Translate" button if needed
+**User Option:** Click on a law → Click EN toggle if needed
 
 ---
 
@@ -201,7 +226,7 @@ Search Results:
 (1) Durch den Mietvertrag wird der Vermieter verpflichtet...
 ```
 
-**User Clicks "Translate" Button:**
+**User Clicks EN Toggle:**
 
 **Translated View (English):**
 ```
@@ -210,7 +235,7 @@ Search Results:
 (1) By the lease agreement, the landlord is obligated...
 ```
 
-**Translation Trigger:** User action (button click)
+**Translation Trigger:** User action (EN toggle click)
 
 ---
 
@@ -219,7 +244,6 @@ Search Results:
 **User Action:** Asks "Can my landlord evict me without notice?"
 
 **AI Response:**
-```
 1. **Summary**: In Germany, landlords cannot evict tenants without 
    proper notice except in rare circumstances.
 
@@ -234,7 +258,6 @@ Search Results:
    - Check if the eviction notice cites a valid legal ground
    - Verify the notice period matches § 573c BGB
    - Consider seeking advice from a tenant association...
-```
 
 **Purpose:** Legal explanation, NOT translation
 
@@ -242,30 +265,59 @@ Search Results:
 
 ## Implementation Details
 
-### Frontend (index.html)
+### Frontend (static/js/translation.js)
 
-**Translation Button Handler:**
-```javascript
-// Only translate when user clicks button
-async function translateParagraph(paragraphId) {
-    const germanText = document.getElementById(`para-${paragraphId}`).textContent;
-    
-    // Call translation API
-    const response = await fetch('/api/ai_translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: germanText })
-    });
-    
-    const data = await response.json();
-    
-    // Display translation
-    document.getElementById(`para-${paragraphId}`).textContent = data.translation;
-}
+The frontend handles translations with a hybrid approach: dictionary lookup first (instant), then AI refinement if needed.
+
+**Translation Flow:**
+```
+User clicks EN toggle
+    │
+    ▼
+Call /api/fast_translate (dictionary - instant)
+    │
+    ├─ Has translation?
+    │   ├─ YES: Apply immediately (partial translation)
+    │   │   ├─ is_final = true? → Done (complete translation)
+    │   │   └─ is_final = false? → Call /api/ai_translate → Refine
+    │   │
+    │   └─ NO: Call /api/ai_translate directly
+    │
+    ▼
+Display translation
+```
+
+**Helper Functions (refactored for maintainability):**
+- `callAIForRefinement(text, isTitle)` - Calls AI translation API
+- `callDictionaryTranslation(text, isTitle)` - Calls dictionary API  
+- `translateToEnglish(textElement, sourceText, targetId)` - Main EN translation logic
+- `translateToGerman(textElement, sourceText)` - Restores German text
+- `getOrStoreOriginalText(textElement)` - Gets/saves original German text
+- `updateToggleState(toggleBtn)` - Updates toggle button states
+
+**Code Structure:**
+```
+javascript
+// Extracted helper functions for better maintainability
+async function callAIForRefinement(text, isTitle) { ... }
+async function callDictionaryTranslation(text, isTitle) { ... }
+async function translateToEnglish(textElement, sourceText, targetId) { ... }
+function translateToGerman(textElement, sourceText) { ... }
+function getOrStoreOriginalText(textElement) { ... }
+function updateToggleState(toggleBtn) { ... }
+
+// Main event handler (simplified)
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.addEventListener('click', async (e) => {
+    // Handle DE/EN toggle clicks
+    // Call appropriate translation function
+  });
+});
 ```
 
 **Search Handler (No Translation):**
-```javascript
+```
+javascript
 // Search uses dictionary internally, but doesn't show translations
 async function search(query) {
     const response = await fetch('/api/search', {
@@ -285,8 +337,22 @@ async function search(query) {
 
 ### Backend (app.py)
 
-**Translation Endpoint (On-Demand):**
-```python
+**Fast Translation Endpoint (Dictionary):**
+```
+python
+@app.route("/api/fast_translate", methods=["POST"])
+def api_fast_translate():
+    """Translates text using dictionary only.
+    
+    Returns partial translation instantly.
+    Frontend should call /api/ai_translate if is_final is False.
+    """
+    # ... dictionary lookup logic ...
+```
+
+**AI Translation Endpoint (Full):**
+```
+python
 @app.route("/api/ai_translate", methods=["POST"])
 def api_ai_translate():
     """Translates text using dictionary + Ollama refinement.
@@ -299,12 +365,13 @@ def api_ai_translate():
 ```
 
 **Query Expansion (Internal Only):**
-```python
+```
+python
 def expand_query(raw: str):
     """Translate English keywords to German for search.
     
     NOTE: This is for search query expansion only, NOT for UI translation.
-    UI translations happen on-demand via /api/ai_translate endpoint.
+    UI translations happen on-demand via /api/fast_translate or /api/ai_translate.
     """
     # ... uses dictionary internally ...
 ```
@@ -315,7 +382,8 @@ def expand_query(raw: str):
 
 ### Environment Variables
 
-```bash
+```
+bash
 # Translation rate limiting
 RATE_LIMIT_TRANSLATE=60      # 60 translations per minute
 RATE_PERIOD_TRANSLATE=60
@@ -338,7 +406,7 @@ OLLAMA_TIMEOUT=120
 **Location:** `ai_translations.json`
 
 **Behavior:**
-- Cached on user request (when user clicks "Translate")
+- Cached on user request (when user clicks EN toggle)
 - Saved every 30 seconds (background thread)
 - Saved on application exit
 - Loaded on startup
@@ -362,7 +430,7 @@ Second request (same text):
 |---------|----------|
 | **Search** | Uses dictionary internally, shows German results |
 | **Law Display** | German by default |
-| **Translation Button** | On-demand translation (dictionary + AI) |
+| **EN Toggle** | On-demand translation (dictionary + AI) |
 | **AI Chat** | Legal explanation, NOT translation |
 | **UI Language** | English (not translated) |
 | **Caching** | Only for user-requested translations |

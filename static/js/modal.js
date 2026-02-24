@@ -80,6 +80,8 @@ async function openLawModal(key, targetSection = "") {
       meta.source       ? `Quelle: ${meta.source}` : "",
     ].filter(Boolean).join("  ·  ");
 
+    modalTitle.dataset.originalDe = meta.title || key;
+    
     modalLangToggle.style.display = "flex";
     const titleToggleGroup = document.getElementById("modal-lang-toggle");
     if (titleToggleGroup) {
@@ -89,7 +91,6 @@ async function openLawModal(key, targetSection = "") {
       const deBtn = titleToggleGroup.querySelector('[data-lang="de"]');
       if (deBtn) deBtn.classList.add('active');
     }
-    modalTitle.dataset.originalDe = "";
 
     renderModalNorms(law.norms || [], currentGermanTerms, targetSection);
   } catch (e) {

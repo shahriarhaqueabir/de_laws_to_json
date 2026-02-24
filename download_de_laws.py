@@ -27,6 +27,7 @@ import xml.etree.ElementTree as ET
 import re
 import multiprocessing
 import logging
+from datetime import datetime
 from tqdm import tqdm
 import requests
 from requests.adapters import HTTPAdapter
@@ -210,6 +211,17 @@ def main() -> None:
     # --- Summary ---
     succeeded = total - len(errors)
     print(f"\n[OK] {succeeded}/{total} laws downloaded successfully.")
+    
+    # Write status file for run_dashboard.bat to check
+    status_file = os.path.join(RAW_DIR, "download_status.txt")
+    with open(status_file, "w", encoding="utf-8") as f:
+        if to_download:
+            f.write(f"NEW_FILES_DOWNLOADED={len(to_download)}\n")
+            f.write(f"TIMESTAMP={datetime.now().isoformat()}\n")
+        else:
+            f.write(f"ALL_FILES_EXIST=1\n")
+            f.write(f"TIMESTAMP={datetime.now().isoformat()}\n")
+    
     if errors:
         error_log = os.path.join(RAW_DIR, "download_errors.txt")
         with open(error_log, "w", encoding="utf-8") as fh:

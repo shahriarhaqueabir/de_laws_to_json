@@ -31,15 +31,51 @@ from typing import Dict, List, Optional, Tuple
 
 from flask import Flask, jsonify, render_template, request, Response
 
-# Legal Dictionary integration
-try:
-    from dictionary.legal_dict import get_legal_dictionary
+# Import centralized logging configuration
+from logging_config import (
+    get_server_logger,
+    get_error_logger,
+    get_indexing_logger,
+    get_dictionary_logger,
+    get_ai_logger,
+    get_ratelimit_logger,
+)
 
-    legal_dict = get_legal_dictionary()
-except ImportError:
-    logging.warning("dictionary.legal_dict not found. Hybrid features will be limited.")
+# Initialize all loggers
+logger = get_server_logger()
+error_logger = get_error_logger()
+indexing_logger = get_indexing_logger()
+dictionary_logger = get_dictionary_logger()
+ai_logger = get_ai_logger()
+ratelimit_logger = get_ratelimit_logger()
+
+# Legal Dictionary integration - IN-MEMORY VERSION (no SQLite!)
+# Uses pre-generated de_en_reversed.json for instant lookups
+try:
+    from dictionary.memory_dict import get_memory_legal_dictionary
+
+    legal_dict = get_memory_legal_dictionary()
+    if legal_dict:
+        dictionary_logger.info("In-memory legal dictionary loaded successfully")
+        stats = legal_dict.get_stats()
+        dictionary_logger.info(f"Stats: {stats}")
+    else:
+        dictionary_logger.warning("In-memory dictionary returned None")
+        legal_dict = None
+except Exception as e:
+    dictionary_logger.error(f"Error loading in-memory dictionary: {e}")
     legal_dict = None
 
+# Unified AI Translation System
+# Uses in-memory dictionary by default for dictionary hints
+try:
+    from unified_translator import get_unified_translator, translate_text
+    # Pass None - unified_translator will load its own in-memory dictionary
+    unified_translator = get_unified_translator(None)
+    dictionary_logger.info("Unified AI translator initialized")
+except Exception as e:
+    dictionary_logger.error(f"Failed to initialize unified translator: {e}")
+    unified_translator = None
 
 # Thread-safe locks
 _index_lock = threading.Lock()
@@ -53,22 +89,22 @@ _dev_lock = threading.Lock()
 # Translation support removed - display German-only
 HAS_TRANSLATOR = False
 
-
 app = Flask(__name__)
-
-# Force logging to console even when running in background
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
 
 @app.after_request
 def _log_response(response):
     """Log every HTTP request with status and brief reason for easy debugging."""
+    # Add CORS headers for API endpoints
+    if request.path.startswith('/api/'):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Admin-Token'
+        
+        # Handle OPTIONS preflight request
+        if request.method == 'OPTIONS':
+            response.status_code = 200
+            return response
+
     status = response.status_code
     method = request.method
     path = request.path
@@ -118,7 +154,6 @@ def _log_response(response):
     logger.log(level, "HTTP %d | %s %s%s | %s", status, method, path, qs, reason)
     return response
 
-
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -143,14 +178,12 @@ _expansion_lock = threading.Lock()
 _rate_store: Dict[Tuple[str, str], deque] = {}
 _rate_lock = threading.Lock()
 
-
 def _get_client_id() -> str:
     # Prefer X-Forwarded-For when behind a proxy, else remote_addr
     xf = request.headers.get("X-Forwarded-For")
     if xf:
         return xf.split(",")[0].strip()
     return request.remote_addr or "unknown"
-
 
 def _cleanup_rate_store():
     """Remove expired entries from the rate limit store to prevent memory growth."""
@@ -164,7 +197,6 @@ def _cleanup_rate_store():
                 to_delete.append(key)
         for key in to_delete:
             del _rate_store[key]
-
 
 def rate_limit(max_calls: int, per_seconds: int):
     """Decorator to rate-limit Flask endpoints per client IP.
@@ -212,7 +244,6 @@ def rate_limit(max_calls: int, per_seconds: int):
 
     return decorator
 
-
 # Legal Jargon & Abbreviation Mapping (Deterministic Fast-Path)
 FRAGMENT_MAP = {
     # Core Laws
@@ -253,7 +284,6 @@ FRAGMENT_MAP = {
     "a.f.": "old version",
     "n.f.": "new version",
 }
-
 
 # ---------------------------------------------------------------------------
 # Law Categorization
@@ -535,14 +565,12 @@ CATEGORIES = {
     },
 }
 
-
 def _categorize(title: str, key: str) -> str:
     text = (title + " " + key).lower()
     for cat_id, meta in CATEGORIES.items():
         if any(kw in text for kw in meta["keywords"]):
             return cat_id
     return "other"
-
 
 # ---------------------------------------------------------------------------
 # Stop words (German + English)
@@ -902,18 +930,15 @@ _indexed_files = 0
 # Security
 ADMIN_API_KEY = secrets.token_hex(16)
 
-
 # ---------------------------------------------------------------------------
 # Text helpers
 # ---------------------------------------------------------------------------
-
 
 def tokenize(text: str) -> List[str]:
     """Lowercase, strip punctuation, remove stop words."""
     text = text.lower()
     text = re.sub(r"[^\w\s]", " ", text, flags=re.UNICODE)
     return [t for t in text.split() if t and t not in STOPWORDS and len(t) > 2]
-
 
 def expand_query(raw: str) -> Tuple[List[str], List[str]]:
     """Translate English keywords to German and expand German synonyms with caching."""
@@ -964,11 +989,9 @@ def expand_query(raw: str) -> Tuple[List[str], List[str]]:
             pass
     return res
 
-
 # ---------------------------------------------------------------------------
 # Index building
 # ---------------------------------------------------------------------------
-
 
 def _extract_summary(fpath: str) -> Optional[Dict]:
     """Extract lightweight metadata from a single law JSON file."""
@@ -1044,7 +1067,6 @@ def _extract_summary(fpath: str) -> Optional[Dict]:
         "has_translation": bool(en_title or en_norms),
     }
 
-
 def _populate_inverted_pure(
     summaries: List[Dict],
 ) -> Tuple[Dict, Dict[int, int], float]:
@@ -1089,7 +1111,6 @@ def _populate_inverted_pure(
 
     avgdl = total_len / max(len(summaries), 1)
     return dict(inv), doc_lengths, avgdl
-
 
 def _fast_load_index(path: str) -> bool:
     """Try to load a pre-built search index with BM25 metadata. Returns True on success."""
@@ -1150,7 +1171,6 @@ def _fast_load_index(path: str) -> bool:
             _avgdl = 0.0
         return False
 
-
 def _build_from_source() -> List[Dict]:
     """Scan JSON_DIR and build summaries from individual law files."""
     global _total_files, _indexed_files
@@ -1164,7 +1184,6 @@ def _build_from_source() -> List[Dict]:
             summaries.append(summary)
         _indexed_files = i + 1
     return summaries
-
 
 def _persist_index(
     summaries: List[Dict], local_inverted: Dict, doc_lengths: Dict, avgdl: float
@@ -1200,14 +1219,15 @@ def _persist_index(
             pass
         return False
 
-
 def build_index(force: bool = False) -> None:
     global _law_summaries, _inverted, _sorted_terms, _indexed_files, _total_files
+    start_time = time.time()
     try:
+        indexing_logger.info("=" * 50)
+        indexing_logger.info("Index build started")
+        
         if not os.path.isdir(JSON_DIR):
-            logging.warning(
-                "'%s' not found — run the download/process pipeline first.", JSON_DIR
-            )
+            indexing_logger.error("'%s' not found — run the download/process pipeline first.", JSON_DIR)
             return
 
         _indexing_done.clear()
@@ -1215,11 +1235,13 @@ def build_index(force: bool = False) -> None:
 
         # Fast path: pre-built lightweight index exists (only if not forcing)
         if not force and os.path.exists(SEARCH_INDEX_FILE):
-            logging.info("Loading pre-built search index from %s …", SEARCH_INDEX_FILE)
+            indexing_logger.info("Loading pre-built search index from %s …", SEARCH_INDEX_FILE)
             if _fast_load_index(SEARCH_INDEX_FILE):
+                indexing_logger.info("Index loaded successfully from cache")
                 return
 
         # Slow path: scan individual JSON files
+        indexing_logger.info("Building index from source JSON files...")
         summaries = _build_from_source()
         new_inverted, new_doc_lengths, new_avgdl = _populate_inverted_pure(summaries)
         new_sorted_terms = sorted(new_inverted.keys())
@@ -1227,7 +1249,7 @@ def build_index(force: bool = False) -> None:
         # Persist to disk before swapping global references
         persisted = _persist_index(summaries, new_inverted, new_doc_lengths, new_avgdl)
         if not persisted:
-            logging.warning("Index persistence failed; using in-memory only.")
+            indexing_logger.warning("Index persistence failed; using in-memory only.")
 
         # Swapping global references
         with _index_lock:
@@ -1237,17 +1259,19 @@ def build_index(force: bool = False) -> None:
             _doc_lengths = new_doc_lengths
             _avgdl = new_avgdl
 
-        logging.info("Indexing complete: %d laws ready.", len(summaries))
+        duration = time.time() - start_time
+        indexing_logger.info("Indexing complete: %d laws ready in %.2fs", len(summaries), duration)
+        indexing_logger.info(f"Index statistics: {len(new_inverted)} unique terms, {len(new_sorted_terms)} sorted terms")
     except Exception as e:
-        logging.error(f"FATAL: Index build failed: {e}")
+        indexing_logger.error(f"FATAL: Index build failed: {e}")
+        error_logger.error(f"Index build failed: {e}")
     finally:
         _indexing_done.set()
-
+        indexing_logger.info("Index build finished (success or failure)")
 
 # ---------------------------------------------------------------------------
 # Search
 # ---------------------------------------------------------------------------
-
 
 def _detect_citation(query: str) -> Tuple[str, str]:
     """Extract law key and section number from query if it looks like a citation."""
@@ -1261,7 +1285,6 @@ def _detect_citation(query: str) -> Tuple[str, str]:
     if match:
         return match.group(1).lower(), match.group(2)
     return "", ""
-
 
 def _extract_cyborg_metadata(law: dict) -> dict:
     """Infer legal authority, status, and jurisdiction from law metadata."""
@@ -1317,7 +1340,6 @@ def _extract_cyborg_metadata(law: dict) -> dict:
         "jurisdiction": jurisdiction,
         "category": category,
     }
-
 
 def search_laws(query: str, top_k: int = 20, category: str = "") -> Dict:
     """Search for laws matching the query (returns laws only, not norms)."""
@@ -1394,7 +1416,6 @@ def search_laws(query: str, top_k: int = 20, category: str = "") -> Dict:
         matched_map=matched_map,
     )
 
-
 def _get_matching_docs(inverted, sorted_terms, term):
     """Retrieve documents matching a term, including prefix expansion if needed."""
     matching_docs = inverted.get(term, [])
@@ -1407,13 +1428,11 @@ def _get_matching_docs(inverted, sorted_terms, term):
             s_idx += 1
     return matching_docs
 
-
 def _calculate_term_idf(matching_docs, num_docs):
     """Calculate Inverse Document Frequency (IDF) for a term."""
     unique_docs = {idx for idx, _ in matching_docs}
     n_q = len(unique_docs)
     return math.log((num_docs - n_q + 0.5) / (n_q + 0.5) + 1.0)
-
 
 def _apply_bm25_scoring(
     scores,
@@ -1448,7 +1467,6 @@ def _apply_bm25_scoring(
             if matched_map is not None:
                 if term not in matched_map[idx]:
                     matched_map[idx].append(term)
-
 
 def _format_search_results(
     scores, summaries, top_k, keywords, german_terms, matched_map=None
@@ -1485,21 +1503,51 @@ def _format_search_results(
         )
     return {"results": results, "keywords": keywords, "german_terms": german_terms}
 
-
 # ---------------------------------------------------------------------------
 # Flask routes
 # ---------------------------------------------------------------------------
-
 
 @app.route("/")
 def index_page():
     return render_template("index.html", admin_key=ADMIN_API_KEY)
 
-
 @app.route("/favicon.ico")
 def favicon():
     return "", 204
 
+@app.route("/api/dev/health")
+def api_dev_health():
+    """Health check endpoint for development/debugging."""
+    try:
+        url = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434/api/tags")
+        req = urllib.request.Request(url)
+        urllib.request.urlopen(req, timeout=5)
+        ollama_status = "connected"
+        ai_logger.info(f"AI health check: Ollama is {ollama_status} at {url}")
+    except Exception as e:
+        ollama_status = "disconnected"
+        ai_logger.warning(f"AI health check: Ollama is {ollama_status} - {e}")
+
+    # Determine index status
+    index_status = "ready" if _indexing_done.is_set() else "building"
+
+    # Get indexed laws count
+    with _index_lock:
+        indexed_laws = len(_law_summaries)
+
+    return jsonify({
+        "status": "ok",
+        "ai_enabled": _dev_state["ai_enabled"],
+        "ollama": ollama_status,
+        "uptime": int(time.time() - _dev_state["start_time"]),
+        "dependencies": {
+            "search_index": index_status,
+            "ai_service": ollama_status
+        },
+        "metrics": {
+            "indexed_laws": indexed_laws
+        }
+    })
 
 @app.route("/api/status")
 def api_status():
@@ -1541,7 +1589,6 @@ def api_status():
         logging.error(f"API STATUS ERROR: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @app.route("/api/search", methods=["POST"])
 @rate_limit(
     max_calls=int(os.environ.get("RATE_LIMIT_SEARCH", "30")),
@@ -1560,7 +1607,6 @@ def api_search():
         if key:
             _increment_view(key)
     return jsonify(results)
-
 
 @app.route("/api/laws")
 @rate_limit(
@@ -1666,7 +1712,6 @@ def api_laws():
         logging.error(f"API LAWS ERROR: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @app.route("/api/law/<path:key>")
 @rate_limit(
     max_calls=int(os.environ.get("RATE_LIMIT_GENERIC", "60")),
@@ -1698,7 +1743,6 @@ def api_law(key: str):
         return jsonify(raw)
     except OSError as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/law-insights/<path:key>")
 @rate_limit(
@@ -1749,29 +1793,24 @@ def api_law_insights(key: str):
             "Return ONLY the JSON object."
         )
 
-        payload = {
-            "model": os.environ.get("OLLAMA_MODEL", "llama3"),
-            "prompt": prompt,
-            "stream": False,
-            "format": "json",
-        }
+        if unified_translator:
+            insights = unified_translator.call_ollama_json(prompt)
+            if insights:
+                return jsonify(insights)
 
-        resp = _ollama_request(payload)
-        ai_raw = json.loads(resp.read().decode("utf-8"))
-        insights = json.loads(ai_raw.get("response", "{}"))
-
-        return jsonify(insights)
     except Exception as e:
         logging.error(f"Law evaluation failed for {key}: {e}")
-        return jsonify(
-            {
-                "summary": f"Official provisions of {match['title']}. Use for primary reference.",
-                "risk": "Interpretation often requires case law context not fully captured here.",
-                "exclusions": "Procedural details may be superseded by specific state-level regulations.",
-                "scenarios": "Referencing this statute during initial legal research or drafting.",
-            }
-        )
 
+    # Fallback if AI fails or exception occurred
+    logging.warning(f"Law evaluation using fallback for {key}")
+    return jsonify(
+        {
+            "summary": f"Official provisions of {match['title']}. Use for primary reference.",
+            "risk": "Interpretation often requires case law context not fully captured here.",
+            "exclusions": "Procedural details may be superseded by specific state-level regulations.",
+            "scenarios": "Referencing this statute during initial legal research or drafting.",
+        }
+    )
 
 # ---------------------------------------------------------------------------
 # AI Translation System
@@ -1790,7 +1829,6 @@ _view_counts: Dict[str, int] = {}
 _view_counts_lock = threading.Lock()
 _view_counts_dirty = False
 
-
 def _load_view_counts():
     global _view_counts
     if os.path.exists(VIEW_COUNTS_FILE):
@@ -1800,7 +1838,6 @@ def _load_view_counts():
             logging.info("Loaded %d law view counts.", len(_view_counts))
         except Exception as e:
             logging.warning("Could not load view counts: %s", e)
-
 
 def _save_view_counts():
     global _view_counts_dirty
@@ -1813,7 +1850,6 @@ def _save_view_counts():
         except Exception as e:
             logging.warning("Could not save view counts: %s", e)
 
-
 def _increment_view(key: str):
     """Thread-safe view count increment."""
     global _view_counts_dirty
@@ -1821,15 +1857,12 @@ def _increment_view(key: str):
         _view_counts[key] = _view_counts.get(key, 0) + 1
         _view_counts_dirty = True
 
-
 def _view_counts_background_saver():
     while True:
         time.sleep(60)
         _save_view_counts()
 
-
 threading.Thread(target=_view_counts_background_saver, daemon=True).start()
-
 
 def _atomic_write_json(path: str, data) -> bool:
     try:
@@ -1849,7 +1882,6 @@ def _atomic_write_json(path: str, data) -> bool:
             pass
         return False
 
-
 def load_ai_translations():
     global _translation_cache
     if os.path.exists(AI_TRANSLATION_FILE):
@@ -1859,7 +1891,6 @@ def load_ai_translations():
             logging.info("Loaded %d AI translations.", len(_translation_cache))
         except Exception as e:
             logging.warning("Could not load AI translations: %s", e)
-
 
 def save_ai_translations():
     with _translation_lock:
@@ -1875,11 +1906,9 @@ def save_ai_translations():
         except Exception as e:
             logging.warning("Could not save AI translations: %s", e)
 
-
 # Load cache on startup
 load_ai_translations()
 _load_view_counts()
-
 
 # Periodic background saver to reduce lost translations on crash
 def _translation_background_saver():
@@ -1892,14 +1921,11 @@ def _translation_background_saver():
         except Exception:
             pass
 
-
 threading.Thread(target=_translation_background_saver, daemon=True).start()
-
 
 # Ensure translations are saved on exit
 atexit.register(save_ai_translations)
 atexit.register(_save_view_counts)
-
 
 # ---------------------------------------------------------------------------
 # Background Translation Pre-warmer
@@ -1910,7 +1936,7 @@ def _prewarm_translations():
     """Low-priority background thread: pre-translate top-50 viewed law titles."""
     _indexing_done.wait()
     time.sleep(10)  # let server stabilise after startup
-    logging.info("PREWARM: Starting translation pre-warming for popular laws.")
+    ai_logger.info("PREWARM: Starting translation pre-warming for popular laws.")
 
     # Collect top candidates by view count
     with _view_counts_lock:
@@ -1934,44 +1960,23 @@ def _prewarm_translations():
             if title in _translation_cache:
                 continue
 
-        # Build and send the Ollama request
-        try:
-            hint_str = _extract_translation_hints(title, is_title=True)
-            if hint_str.startswith("MATCH:"):
-                translation = hint_str.split(":", 1)[1].strip()
-            else:
-                prompt = _build_translation_prompt(
-                    title, is_title=True, hint_str=hint_str
-                )
-                model = os.environ.get("OLLAMA_MODEL", "llama3.2")
-                payload = {"model": model, "prompt": prompt, "stream": False}
-                resp = _ollama_request(payload)
-                res_data = json.loads(resp.read().decode("utf-8"))
-                translation = res_data.get("response", "").strip()
-                if translation.startswith('"') and translation.endswith('"'):
-                    translation = translation[1:-1]
+        # Use unified translator
+        if unified_translator:
+            try:
+                translation, from_cache = unified_translator.translate(title, is_title=True)
+                if translation and translation != title:
+                    warmed += 1
+                    ai_logger.info(
+                        "PREWARM [%d]: '%s' → '%s'", warmed, title[:40], translation[:40]
+                    )
+            except Exception as e:
+                ai_logger.debug("PREWARM skip '%s': %s", title[:30], e)
 
-            if translation:
-                with _translation_lock:
-                    _translation_cache[title] = translation
-                    global _translation_dirty
-                    _translation_dirty = True
-                warmed += 1
-                logging.info(
-                    "PREWARM [%d]: '%s' → '%s'", warmed, title[:40], translation[:40]
-                )
+            time.sleep(2)  # low priority — don't flood Ollama
 
-        except Exception as e:
-            logging.debug("PREWARM skip '%s': %s", title[:30], e)
-
-        time.sleep(2)  # low priority — don't flood Ollama
-
-    save_ai_translations()
-    logging.info("PREWARM: Done. %d law titles pre-translated.", warmed)
-
+    ai_logger.info("PREWARM: Done. %d law titles pre-translated.", warmed)
 
 threading.Thread(target=_prewarm_translations, daemon=True).start()
-
 
 @app.route("/api/dictionary_lookup", methods=["POST"])
 def api_dictionary_lookup():
@@ -1988,251 +1993,125 @@ def api_dictionary_lookup():
         logging.error(f"DICT LOOKUP ERROR: {e}")
         return jsonify({"error": str(e), "results": []}), 500
 
+# ---------------------------------------------------------------------------
+# Unified AI Translation Endpoint
+# ---------------------------------------------------------------------------
 
-def _match_case(original: str, replacement: str) -> str:
-    """Mirror the capitalisation of 'original' onto 'replacement'."""
-    if original.isupper():
-        return replacement.upper()
-    if original.istitle() or (original and original[0].isupper()):
-        return replacement.capitalize()
-    return replacement.lower()
-
-
-@app.route("/api/fast_translate", methods=["POST"])
-def api_fast_translate():
-    """Instant dictionary-only translation. No AI involved. Used by DE/EN toggles."""
-    data = request.get_json(force=True, silent=True) or {}
-    text = data.get("text", "").strip()
-    is_title = data.get("is_title", False)
-
-    if not text:
-        return jsonify({"translation": ""})
-
-    # 1. Check AI cache (built up from chatbox interactions)
-    with _translation_lock:
-        if text in _translation_cache:
-            return jsonify({"translation": _translation_cache[text], "is_final": True})
-
-    # 2. FRAGMENT_MAP — abbreviations and legal shorthand (e.g. "BGB", "Abs. 1")
-    text_lower = text.lower().strip()
-    fragment_pattern = re.match(r"^([A-Za-z\.]+)\s*(\d*[a-z]?)$", text_lower)
-
-    matched = None
-    if text_lower in FRAGMENT_MAP:
-        matched = FRAGMENT_MAP[text_lower]
-    elif fragment_pattern:
-        base = fragment_pattern.group(1).rstrip(".")
-        num = fragment_pattern.group(2)
-        key = base + "." if not base.endswith(".") else base
-        if key in FRAGMENT_MAP:
-            matched = f"{FRAGMENT_MAP[key]} {num}".strip()
-        elif base in FRAGMENT_MAP:
-            matched = f"{FRAGMENT_MAP[base]} {num}".strip()
-
-    if matched:
-        return jsonify({"translation": matched, "is_final": True})
-
-    # 3. Full-phrase dictionary lookup (best for titles and short clauses)
-    if legal_dict:
-        results = legal_dict.get_translations(text, limit=1)
-        if results and (results[0]["source"] == "legal_priority" or is_title):
-            return jsonify({"translation": results[0]["english"], "is_final": True})
-
-    # 4. Word-by-word substitution — covers full paragraphs of any length
-    # Splits on whitespace preserving separators, looks up each word in the dictionary.
-    tokens = re.split(r"(\s+)", text)
-    out_tokens = []
-    any_hit = False
-
-    for token in tokens:
-        if re.fullmatch(r"\s+", token):
-            out_tokens.append(token)
-            continue
-
-        # Separate leading/trailing punctuation from the word core
-        m = re.fullmatch(r"([^\w]*)([\w\-äöüÄÖÜß]+)([^\w]*)", token, re.UNICODE)
-        if not m:
-            out_tokens.append(token)
-            continue
-
-        lead, core, trail = m.group(1), m.group(2), m.group(3)
-
-        # Try FRAGMENT_MAP on the core word
-        core_low = core.lower()
-        if core_low in FRAGMENT_MAP:
-            frag = _match_case(core, FRAGMENT_MAP[core_low])
-            # Avoid double punctuation (e.g. "Para." + "." = "Para..")
-            if trail and frag.endswith(trail):
-                trail = ""
-            out_tokens.append(lead + frag + trail)
-            any_hit = True
-            continue
-
-        # Try dictionary on the core word
-        if legal_dict:
-            try:
-                hits = legal_dict.get_translations(core, limit=1)
-                if hits:
-                    out_tokens.append(
-                        lead + _match_case(core, hits[0]["english"]) + trail
-                    )
-                    any_hit = True
-                    continue
-            except Exception:
-                pass
-
-        out_tokens.append(token)  # keep original if no match
-
-    if any_hit:
-        return jsonify({"translation": "".join(out_tokens), "is_final": True})
-
-    # 5. Nothing matched — signal frontend to stay on DE
-    return jsonify({"translation": text, "is_final": False})
-
-
-@app.route("/api/ai_translate", methods=["POST"])
+@app.route("/api/translate", methods=["POST", "OPTIONS"])
 @rate_limit(
     max_calls=int(os.environ.get("RATE_LIMIT_TRANSLATE", "60")),
     per_seconds=int(os.environ.get("RATE_PERIOD_TRANSLATE", "60")),
 )
-def api_ai_translate():
-    """Translates text using Ollama with a local cache."""
-    global _translation_dirty
+def api_translate():
+    """
+    Unified AI-powered translation endpoint.
+    
+    All translation requests flow through here. The system:
+    1. Checks translation cache (instant)
+    2. Extracts dictionary hints for AI context
+    3. Calls Ollama LLM for accurate translation
+    4. Caches result for future requests
+    
+    Used by DE/EN toggle buttons throughout the UI.
+    """
+    if request.method == "OPTIONS":
+        response = jsonify({"status": "ok"})
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return response
+    
     data = request.get_json(force=True, silent=True) or {}
     text = data.get("text", "").strip()
     is_title = data.get("is_title", False)
-
-    logging.info(f"TRANSLATION REQUEST: text='{text[:50]}...' is_title={is_title}")
-
+    
+    ai_logger.info(f"TRANSLATE REQUEST: text='{text[:50]}...' is_title={is_title}")
+    
     if not text:
-        return jsonify({"translation": ""})
-
-    with _translation_lock:
-        if text in _translation_cache:
-            logging.info("TRANSLATION CACHE HIT")
-            return jsonify({"translation": _translation_cache[text]})
-
-    t0 = time.time()
-    hint_str = _extract_translation_hints(text, is_title)
-    logging.info(f"TRANSLATION HINTS ({time.time() - t0:.3f}s): {hint_str}")
-
-    if is_title and hint_str.startswith("MATCH:"):
-        translation = hint_str.split(":", 1)[1]
-        logging.info(f"TRANSLATION HINT MATCH: {translation}")
-        with _translation_lock:
-            _translation_cache[text] = translation
-            _translation_dirty = True
-        return jsonify({"translation": translation})
-
-    prompt = _build_translation_prompt(text, is_title, hint_str)
-    model = os.environ.get("OLLAMA_MODEL", "llama3.2")
-    payload = {"model": model, "prompt": prompt, "stream": False}
-
-    logging.info(f"OLLAMA START: model={model}")
-    try:
-        req_t0 = time.time()
-        resp = _ollama_request(payload)
-        resp_t = time.time() - req_t0
-
-        res_data = json.loads(resp.read().decode("utf-8"))
-        translation = res_data.get("response", "").strip()
-        logger.info(f"OLLAMA DONE ({resp_t:.2f}s): {translation[:50]}...")
-
-        if translation.startswith('"') and translation.endswith('"'):
-            translation = translation[1:-1]
-
-        if translation:
-            with _translation_lock:
-                _translation_cache[text] = translation
-                _translation_dirty = True
-        else:
-            logger.warning(f"OLLAMA RETURNED EMPTY TRANSLATION for '{text[:20]}...'")
-            translation = text  # Fail-safe: return original
-
-        return jsonify({"translation": translation})
-    except Exception as e:
-        logger.error(f"AI TRANSLATE ERROR: {e}", exc_info=True)
-        return jsonify({"translation": text, "error": str(e)}), 500
-
-
-def _extract_translation_hints(text: str, is_title: bool) -> str:
-    """Extract contextual hints from the legal dictionary."""
-    hints = []
-    if not legal_dict:
-        return ""
-    try:
-        if len(text) < 150:
-            dict_results = legal_dict.get_translations(text, limit=3)
-            if dict_results:
-                if is_title and dict_results[0]["source"] == "legal_priority":
-                    return f"MATCH:{dict_results[0]['english']}"
-                hints = [res["english"] for res in dict_results]
-
-        if not hints and len(text) > 50:
-            # Simple keyword extraction: find words >= 5 chars
-            words = re.findall(r"\b\w{5,}\b", text, flags=re.UNICODE)
-            for w in set(words[:10]):
-                w_trans = legal_dict.get_translations(w, limit=1)
-                if w_trans:
-                    hints.append(f"'{w}' -> '{w_trans[0]['english']}'")
-    except Exception as e:
-        logging.debug("Dictionary hint extraction failed: %s", e)
-    return f"\nHints (verified legal terms): {', '.join(hints[:5])}" if hints else ""
-
-
-def _build_translation_prompt(text: str, is_title: bool, hint_str: str) -> str:
-    """Construct the translation prompt for the AI."""
-    if is_title:
-        return (
-            "Translate this German law title or abbreviation into professional English. "
-            f"{hint_str}\nReturn ONLY the translation, no explanation.\n\n"
-            f"German: {text}\nEnglish:"
-        )
-    return (
-        "Translate this German legal norm/paragraph into professional, accurate English. "
-        "Maintain formal legal terminology and formatting. "
-        f"{hint_str}\nReturn ONLY the translated text.\n\n"
-        f"German: {text}\n\nEnglish Legal Translation:"
-    )
-
-
-def _ollama_request(payload: dict):
-    """Call the local Ollama HTTP API with retries and exponential backoff.
-
-    Returns the urllib response object on success or raises the last exception.
-    """
-    url = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
-    timeout = int(os.environ.get("OLLAMA_TIMEOUT", "120"))
-    max_retries = int(os.environ.get("OLLAMA_MAX_RETRIES", "3"))
-    backoff_base = float(os.environ.get("OLLAMA_RETRY_BACKOFF", "1.0"))
-
-    last_exc = None
-    for attempt in range(1, max_retries + 1):
+        return jsonify({"translation": "", "from_cache": False})
+    
+    # Use unified translator
+    if unified_translator:
         try:
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
-            )
-            resp = urllib.request.urlopen(req, timeout=timeout)
-            return resp
-        except (urllib.error.URLError, socket.timeout, ConnectionError) as e:
-            last_exc = e
-            logging.warning(
-                "Ollama request failed (attempt %d/%d): %s", attempt, max_retries, e
-            )
-            if attempt == max_retries:
-                break
-            sleep = backoff_base * (2 ** (attempt - 1))
-            time.sleep(sleep)
+            translation, from_cache = unified_translator.translate(text, is_title)
+            ai_logger.info(f"TRANSLATION {'(cache)' if from_cache else '(AI)'}: '{text[:30]}' -> '{translation[:50] if translation else 'N/A'}...'")
+            return jsonify({
+                "translation": translation,
+                "from_cache": from_cache,
+            })
         except Exception as e:
-            last_exc = e
-            logging.exception("Unexpected error calling Ollama: %s", e)
-            break
+            ai_logger.error(f"UNIFIED TRANSLATE ERROR: {e}", exc_info=True)
+            return jsonify({"translation": text, "error": str(e)}), 500
+    else:
+        # Fallback: return original text
+        ai_logger.warning("Unified translator not available, returning original text")
+        return jsonify({"translation": text, "error": "Translator unavailable"})
 
-    # Raise the last exception to the caller
-    raise last_exc
+@app.route("/api/translate/batch", methods=["POST", "OPTIONS"])
+@rate_limit(
+    max_calls=int(os.environ.get("RATE_LIMIT_TRANSLATE_BATCH", "10")),
+    per_seconds=int(os.environ.get("RATE_PERIOD_TRANSLATE_BATCH", "60")),
+)
+def api_translate_batch():
+    """
+    Batch translation endpoint for multiple texts.
+    
+    Efficient for translating multiple law titles/paragraphs at once.
+    """
+    if request.method == "OPTIONS":
+        response = jsonify({"status": "ok"})
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return response
+    
+    data = request.get_json(force=True, silent=True) or {}
+    texts = data.get("texts", [])
+    is_title = data.get("is_title", False)
+    
+    if not texts or not isinstance(texts, list):
+        return jsonify({"error": "Invalid input: expected 'texts' array"}), 400
+    
+    results = []
+    for text in texts[:50]:  # Limit batch size
+        if unified_translator:
+            translation, from_cache = unified_translator.translate(str(text), is_title)
+            results.append({
+                "original": text,
+                "translation": translation,
+                "from_cache": from_cache,
+            })
+        else:
+            results.append({
+                "original": text,
+                "translation": text,
+                "error": "Translator unavailable",
+            })
+    
+    return jsonify({"translations": results})
 
+@app.route("/api/translate/cache/stats", methods=["GET"])
+def api_translate_cache_stats():
+    """Get translation cache statistics."""
+    if unified_translator:
+        stats = unified_translator.get_cache_stats()
+        return jsonify(stats)
+    return jsonify({"error": "Translator unavailable"}), 500
+
+@app.route("/api/translate/cache/clear", methods=["POST"])
+def api_translate_cache_clear():
+    """Clear the translation cache (admin only)."""
+    if not _is_admin(request):
+        return jsonify({"error": "unauthorized"}), 403
+    
+    if unified_translator:
+        unified_translator.clear_cache()
+        return jsonify({"status": "ok", "message": "Translation cache cleared"})
+    return jsonify({"error": "Translator unavailable"}), 500
+
+# ---------------------------------------------------------------------------
+# AI Chat Endpoint
+# ---------------------------------------------------------------------------
 
 @app.route("/api/ai_chat", methods=["POST"])
 @rate_limit(
@@ -2245,7 +2124,6 @@ def api_ai_chat():
     query = data.get("query", "").strip()
     context = data.get("context", "").strip()
 
-    # Optional explicitly selected model, fallback to a fast standard
     model = os.environ.get("OLLAMA_MODEL", "llama3.2")
 
     prompt = (
@@ -2265,45 +2143,24 @@ def api_ai_chat():
     )
 
     def generate_stream():
-        payload = {"model": model, "prompt": prompt, "stream": True}
-        try:
-            resp = _ollama_request(payload)
-            for line in resp:
-                if line:
-                    try:
-                        chunk = json.loads(line)
-                        if "response" in chunk:
-                            yield chunk["response"]
-                    except Exception:
-                        # Non-JSON chunk; yield raw safely
-                        try:
-                            txt = (
-                                line.decode("utf-8")
-                                if isinstance(line, (bytes, bytearray))
-                                else str(line)
-                            )
-                            yield txt
-                        except Exception:
-                            continue
-        except Exception as e:
-            yield f"\n\n[Ollama Connection Error: {str(e)}. Ensure Ollama is running and model '{model}' is installed via `ollama run {model}`]"
+        if unified_translator:
+            for chunk in unified_translator.stream_ollama(prompt):
+                yield chunk
+        else:
+            yield "[AI chat unavailable - translator not initialized]"
 
     return Response(generate_stream(), mimetype="text/plain")
 
-
 # API endpoints section continues below
-
 
 # -----------------------------
 # Admin / Debug endpoints
 # -----------------------------
 
-
 def _is_admin(req) -> bool:
     # Require strictly identical ADMIN_API_KEY preventing network edge bypassing
     token = req.headers.get("X-Admin-Token")
     return token == ADMIN_API_KEY
-
 
 @app.route("/api/admin/info")
 def api_admin_info():
@@ -2319,7 +2176,6 @@ def api_admin_info():
             "log_level": logging.getLevelName(lvl),
         }
     )
-
 
 @app.route("/api/admin/rebuild_index", methods=["POST"])
 def api_admin_rebuild():
@@ -2347,7 +2203,6 @@ def api_admin_rebuild():
     threading.Thread(target=_guarded_rebuild, daemon=True).start()
     return jsonify({"status": "reindexing_started"}), 202
 
-
 @app.route("/api/admin/clear_translations", methods=["POST"])
 def api_admin_clear_translations():
     """Translation caching has been removed."""
@@ -2359,7 +2214,6 @@ def api_admin_clear_translations():
             "message": "Translation caching is no longer used",
         }
     )
-
 
 @app.route("/api/admin/toggle_debug", methods=["POST"])
 def api_admin_toggle_debug():
@@ -2373,13 +2227,38 @@ def api_admin_toggle_debug():
         {"debug": new_lvl == logging.DEBUG, "level": logging.getLevelName(new_lvl)}
     )
 
-
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    logger.info("=" * 60)
+    logger.info("German Law Search Dashboard - Server Starting")
+    logger.info("=" * 60)
+    logger.info(f"Server will be available at: http://{HOST}:{PORT}")
+    logger.info("Waiting for incoming connections...")
+    
+    # Log AI health status at startup
+    ai_logger.info("AI subsystem initializing...")
+    try:
+        url = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434/api/tags")
+        req = urllib.request.Request(url)
+        urllib.request.urlopen(req, timeout=3)
+        ai_logger.info("AI health check: Ollama is running")
+    except Exception as e:
+        ai_logger.warning(f"AI health check: Ollama unavailable at startup - {e}")
+    
+    # Start index build
+    indexing_logger.info("Starting index build in background...")
     threading.Thread(target=build_index, daemon=True).start()
+    
     print("  ---  German Law Search Dashboard")
     print(f"  ->   http://{HOST}:{PORT}\n")
-    app.run(host=HOST, port=PORT, debug=False, use_reloader=False)
+
+    @app.before_request
+    def log_connection():
+        """Log incoming connections for visibility."""
+        logger.info(f"Connection from {request.remote_addr} - {request.method} {request.path}")
+
+    logger.info("Flask app starting...")
+    app.run(host=HOST, port=PORT, debug=False, use_reloader=False, threaded=True)

@@ -1,9 +1,28 @@
 /**
- * translation.js — Dictionary-based DE/EN toggle handler.
- * AI (Ollama) is NOT used here. Translations are instant via /api/fast_translate.
- * AI is only used in the chatbox (/api/ai_chat).
+ * translation.js — Unified AI-powered DE/EN toggle handler.
+ * All translations flow through /api/translate endpoint.
+ * The backend handles caching, dictionary hints, and AI translation.
  */
 "use strict";
+
+// ── Helper: Call unified translation endpoint ────────────────────────────────
+async function translateText(text, isTitle) {
+  try {
+    const resp = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, is_title: isTitle })
+    });
+
+    if (!resp.ok) return null;
+
+    const data = await resp.json();
+    return data.translation || null;
+  } catch (err) {
+    console.error("Translation error:", err);
+    return null;
+  }
+}
 
 // ── Global Delegated Click Handler for DE/EN Toggles ─────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,24 +54,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // ── EN: instant dictionary translation only (no AI) ───────────────────────
+    // ── EN: unified AI translation ────────────────────────────────────────────
     textElement.classList.add('is-translating');
 
     try {
-      const resp = await fetch("/api/fast_translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: sourceText, is_title: targetId.includes('title') })
-      });
-
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-      const data = await resp.json();
-      const translation = data.translation;
+      const isTitle = targetId.includes('title');
+      const translation = await translateText(sourceText, isTitle);
 
       if (translation && translation !== sourceText) {
         textElement.textContent = translation;
         textElement.classList.add('is-translated');
+        console.log(`Translated: "${sourceText}" → "${translation}"`);
       } else {
         // No translation found; revert to DE
         textElement.textContent = sourceText;

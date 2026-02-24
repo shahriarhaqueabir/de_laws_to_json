@@ -1,26 +1,40 @@
 # Documentation Index
 
-**German Law Search System**  
-**Last Updated:** February 23, 2026
-
----
-
-## 📚 Documentation Overview
-
-This directory contains comprehensive documentation for the German Law Search System. Use this index to find the right documentation for your needs.
+**German Law Search System**
+**Last Updated:** 2026-02-24
+**Version:** 2.0 (Unified Translation System)
 
 ---
 
 ## 🎯 Quick Navigation
 
-| Document | Purpose | Audience | Priority |
-|----------|---------|----------|----------|
-| [README.md](README.md) | Getting started, setup, usage | All users | 🔴 Essential |
-| [AI_GUIDE.md](AI_GUIDE.md) | AI agent handover guide | AI agents, developers | 🔴 Essential |
-| [API_REFERENCE.md](API_REFERENCE.md) | Complete API documentation | Developers | 🔴 Essential |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System design & architecture | Developers, architects | 🟡 Important |
-| [BACKEND_FRONTEND_REVIEW.md](BACKEND_FRONTEND_REVIEW.md) | Code review status report | Developers, reviewers | 🟡 Important |
-| [TODO.md](TODO.md) | Pending tasks & roadmap | Developers, contributors | 🟡 Important |
+### Core Documentation
+
+| Document | Purpose | Priority |
+|----------|---------|----------|
+| [README.md](README.md) | Getting started, setup, usage | 🔴 Essential |
+| [AI_GUIDE.md](AI_GUIDE.md) | AI agent handover guide | 🔴 Essential |
+| [API_REFERENCE.md](API_REFERENCE.md) | Complete API documentation | 🔴 Essential |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System design & architecture | 🟡 Important |
+| [TODO.md](TODO.md) | Pending tasks & roadmap | 🟡 Important |
+
+### Translation System
+
+| Document | Purpose | Priority |
+|----------|---------|----------|
+| [UNIFIED_TRANSLATION.md](UNIFIED_TRANSLATION.md) | Translation system documentation | 🔴 Essential |
+| [TRANSLATION_SYSTEM_CHANGES.md](TRANSLATION_SYSTEM_CHANGES.md) | Recent translation changes | 🟡 Important |
+
+### Development & Operations
+
+| Document | Purpose | Priority |
+|----------|---------|----------|
+| [DevArea.md](DevArea.md) | Development notes | 🟢 Optional |
+| [JSON_DICTIONARY_SOLUTION.md](JSON_DICTIONARY_SOLUTION.md) | Dictionary implementation | 🟢 Optional |
+| [SYSTEM_CONTROL_REVIEW.md](SYSTEM_CONTROL_REVIEW.md) | System control review | 🟢 Optional |
+| [WATCHDOG_README.md](WATCHDOG_README.md) | Server watchdog docs | 🟢 Optional |
+| [CLEANUP_SUMMARY.md](CLEANUP_SUMMARY.md) | Cleanup summary | 🟢 Optional |
+| [requirements.txt](requirements.txt) | Python dependencies | 🔧 Config |
 
 ---
 
@@ -28,76 +42,92 @@ This directory contains comprehensive documentation for the German Law Search Sy
 
 ### [README.md](README.md) — User Guide
 
-**Purpose:** Getting started, setup instructions, basic usage  
-**Audience:** All users (technical and non-technical)  
-**Size:** ~400 lines
+**Purpose:** Getting started, setup instructions, basic usage
+**Audience:** All users (technical and non-technical)
 
 **Contents:**
-- Quick start guide (one-click setup)
-- Manual installation steps
-- Project structure overview
-- Configuration options
-- Basic usage examples
+- Quick start guide
+- Installation steps
+- Project structure
+- Configuration
+- Usage examples
 - Troubleshooting
-
-**When to use:**
-- First time setup
-- Quick reference for commands
-- Sharing with new team members
 
 ---
 
 ### [AI_GUIDE.md](AI_GUIDE.md) — AI Agent Handover
 
-**Purpose:** Comprehensive guide for AI agents taking over development  
-**Audience:** AI agents, LLMs, new developers  
-**Size:** ~600 lines
+**Purpose:** Comprehensive guide for AI agents
+**Audience:** AI agents, LLMs, new developers
 
 **Contents:**
-- Quick start for AI agents
-- System architecture overview
-- Search engine details (TF-IDF, query expansion)
-- AI integration (Ollama configuration)
+- System architecture
+- Search engine details
+- AI integration (Ollama)
 - Data schemas
 - Development guidelines
-- Common tasks and modifications
-- Troubleshooting
-
-**When to use:**
-- Handing over to AI agent
-- Understanding internal workings
-- Making code modifications
-- Debugging complex issues
 
 ---
 
 ### [API_REFERENCE.md](API_REFERENCE.md) — API Documentation
 
-**Purpose:** Complete API endpoint reference  
-**Audience:** Developers, API consumers  
-**Size:** ~700 lines
+**Purpose:** Complete API endpoint reference
+**Audience:** Developers, API consumers
 
 **Contents:**
 - All public endpoints
 - Request/response schemas
-- Error codes and handling
-- Rate limiting details
-- cURL, JavaScript, Python examples
-- Response time benchmarks
+- Error handling
+- Rate limiting
+- Examples (cURL, JS, Python)
 
-**Endpoints Documented:**
+**Endpoints:**
 - `GET /api/status` — System status
 - `POST /api/search` — Search laws
-- `GET /api/laws` — List laws
 - `GET /api/law/:key` — Get law details
-- `POST /api/ai_translate` — Translate text
+- `POST /api/translate` — Translate text (unified)
+- `POST /api/translate/batch` — Batch translation
 - `POST /api/ai_chat` — AI legal chat
 - `GET/POST /api/admin/*` — Admin endpoints
 
-**When to use:**
-- Building integrations
-- Understanding API behavior
-- Testing endpoints
+---
+
+### [ARCHITECTURE.md](ARCHITECTURE.md) — System Architecture
+
+**Purpose:** Technical architecture documentation
+**Audience:** Developers, architects
+
+**Contents:**
+- High-level architecture
+- Data flow diagrams
+- Component descriptions
+- Technology stack
+- Scalability considerations
+
+---
+
+### [TODO.md](TODO.md) — Task List
+
+**Purpose:** Pending tasks and roadmap
+**Audience:** Developers, contributors
+
+**Contents:**
+- Feature requests
+- Bug fixes
+- Improvements
+- Future enhancements
+
+---
+
+### [DevArea.md](DevArea.md) — Development Notes
+
+**Purpose:** Development scratchpad
+**Audience:** Developers
+
+**Contents:**
+- Work in progress
+- Experimental features
+- Temporary notes
 - Writing client code
 
 ---

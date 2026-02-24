@@ -269,7 +269,7 @@
             <div class="settings-section-title" style="font-size: 12px; margin-bottom: 16px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;">Maintenance Vault</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <button class="settings-button" onclick="sidebarAdminAction('rebuild')">🔄 Full Index Rebuild</button>
-              <button class="settings-button" onclick="sidebarAdminAction('toggle_debug')">🐛 Toggle Console Debug</button>
+              <button class="settings-button" onclick="sidebarAdminAction('reload')">⚡ Hard Reload</button>
             </div>
             <div id="admin-output-sidebar" style="margin-top: 16px; background: #000; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; min-height: 120px; font-size: 12px; font-family: 'Source Code Pro', monospace; color: #00e676; white-space: pre-wrap; overflow-y: auto;">Terminal ready...</div>
           </div>
@@ -348,6 +348,10 @@
     <script src="/static/js/translation.js"></script>
     <script src="/static/js/modal.js"></script>
     <script src="/static/js/ai.js"></script>
+    <!-- Admin key for dev.js (must load before dev.js) -->
+    <script>
+      window.ADMIN_API_KEY = '{{ admin_key }}';
+    </script>
     <script src="/static/js/dev.js"></script>
     <script src="/static/js/app.js"></script>
   </body>
