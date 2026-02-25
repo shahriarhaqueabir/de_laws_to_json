@@ -8,6 +8,24 @@ German Law Vault is a comprehensive search engine for German federal laws. It en
 ![Python](https://img.shields.io/badge/python-3.13+-blue.svg)
 ![Laws](https://img.shields.io/badge/laws-6000+-green.svg)
 
+## Screenshots
+
+<p align="center">
+  <img src="assets/screenshot 1.png" width="700"/>
+</p>
+<p align="center">
+  <img src="assets/screenshot 2.png" width="700"/>
+</p>
+<p align="center">
+  <img src="assets/screenshot 3.png" width="700"/>
+</p>
+<p align="center">
+  <img src="assets/screenshot 4.png" width="700"/>
+</p>
+<p align="center">
+  <img src="assets/screenshot 5.png" width="700"/>
+</p>
+
 ## ✨ Features
 
 - **Natural Language Search**: Search using everyday language in English or German
