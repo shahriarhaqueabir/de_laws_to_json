@@ -14,16 +14,16 @@ German Law Vault is a comprehensive search engine for German federal laws. It en
   <img src="assets/Screenshot%201.png" width="700"/>
 </p>
 <p align="center">
-  <img src="assets/screenshot%202.png" width="700"/>
+  <img src="assets/Screenshot%202.png" width="700"/>
 </p>
 <p align="center">
-  <img src="assets/screenshot%203.png" width="700"/>
+  <img src="assets/Screenshot%203.png" width="700"/>
 </p>
 <p align="center">
-  <img src="assets/screenshot%204.png" width="700"/>
+  <img src="assets/Screenshot%204.png" width="700"/>
 </p>
 <p align="center">
-  <img src="assets/screenshot%205.png" width="700"/>
+  <img src="assets/Screenshot%205.png" width="700"/>
 </p>
 
 ## ✨ Features
