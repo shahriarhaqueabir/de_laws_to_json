@@ -77,6 +77,28 @@ except Exception as e:
     dictionary_logger.error(f"Failed to initialize unified translator: {e}")
     unified_translator = None
 
+# Import AI Guardrails
+try:
+    from ai_guardrails import (
+        check_query_for_pii,
+        validate_ai_response,
+        get_pii_warning_response,
+        get_ambiguous_query_response,
+    )
+    GUARDRAILS_AVAILABLE = True
+    ai_logger.info("AI guardrails imported successfully")
+except ImportError as e:
+    GUARDRAILS_AVAILABLE = False
+    ai_logger.warning(f"Could not import AI guardrails: {e}")
+
+# Import version tracking
+try:
+    from version_tracking import get_version_tracker
+    VERSION_TRACKING_AVAILABLE = True
+except ImportError as e:
+    ai_logger.debug(f"Version tracking not available: {e}")
+    VERSION_TRACKING_AVAILABLE = False
+
 # Thread-safe locks
 _index_lock = threading.Lock()
 _indexing_done = threading.Event()
@@ -1597,15 +1619,33 @@ def api_status():
 def api_search():
     if not _indexing_done.is_set():
         return jsonify({"error": "Index still building.", "results": []}), 503
+    
     data = request.get_json(force=True, silent=True) or {}
     query = (data.get("query") or "").strip()
     category = data.get("category", "")
+    
+    # NEW: Check for PII in query
+    if GUARDRAILS_AVAILABLE and query:
+        has_pii, pii_types, warning = check_query_for_pii(query)
+        if has_pii:
+            indexing_logger.warning(
+                f"PII detected in search query: {pii_types}"
+            )
+            return jsonify({
+                "warning": warning,
+                "results": [],
+                "query": query,
+                "pii_detected": True
+            })
+    
     results = search_laws(query, category=category)
+    
     # Track view counts for returned laws (top results drive pre-warming)
     for result in (results.get("results") or [])[:10]:
         key = result.get("key")
         if key:
             _increment_view(key)
+    
     return jsonify(results)
 
 @app.route("/api/laws")
@@ -2150,6 +2190,141 @@ def api_ai_chat():
             yield "[AI chat unavailable - translator not initialized]"
 
     return Response(generate_stream(), mimetype="text/plain")
+
+# ---------------------------------------------------------------------------
+# AI Law Explanation Endpoint (with guardrails)
+# ---------------------------------------------------------------------------
+
+@app.route("/api/ai/explain", methods=["POST"])
+@rate_limit(
+    max_calls=int(os.environ.get("RATE_LIMIT_AI_EXPLAIN", "10")),
+    per_seconds=int(os.environ.get("RATE_PERIOD_AI_EXPLAIN", "60")),
+)
+def api_ai_explain():
+    """
+    Explain a law paragraph with AI and full guardrail enforcement.
+    
+    Expects JSON body:
+    {
+        "law_id": "bgb",
+        "paragraph": "§548",
+        "query": "What does this mean?"
+    }
+    
+    Returns:
+    {
+        "explanation": "...",
+        "warnings": [...],
+        "version_info": {...}
+    }
+    """
+    if not _is_admin(request):
+        return jsonify({"error": "unauthorized"}), 403
+    
+    data = request.get_json(force=True, silent=True) or {}
+    law_id = data.get("law_id", "")
+    paragraph = data.get("paragraph", "")
+    user_query = data.get("query", "")
+    
+    if not law_id or not paragraph:
+        return jsonify({"error": "law_id and paragraph required"}), 400
+    
+    # Find the law in search index
+    law_result = _find_law_by_id(law_id, paragraph)
+    if not law_result:
+        return jsonify({"error": "law_not_found", "law_id": law_id, "paragraph": paragraph}), 404
+    
+    # Get AI explanation with guardrails
+    try:
+        if unified_translator and hasattr(unified_translator, 'explain_law_with_context'):
+            explanation = unified_translator.explain_law_with_context(
+                law_result=law_result,
+                user_query=user_query,
+                language="en"  # Could be made configurable
+            )
+            
+            # Get version info
+            version_info = {}
+            if VERSION_TRACKING_AVAILABLE:
+                try:
+                    tracker = get_version_tracker()
+                    metadata = tracker.get_metadata(law_result)
+                    version_info = {
+                        "last_changed": metadata.last_changed,
+                        "status": metadata.status,
+                        "age_years": metadata.get_age_years(),
+                        "warning": metadata.get_staleness_warning()
+                    }
+                except Exception as e:
+                    ai_logger.debug(f"Could not get version info: {e}")
+            
+            return jsonify({
+                "explanation": explanation,
+                "law_id": law_id,
+                "paragraph": paragraph,
+                "version_info": version_info
+            })
+        else:
+            return jsonify({
+                "error": "ai_unavailable",
+                "message": "AI explanation with guardrails is not available"
+            }), 503
+    
+    except Exception as e:
+        ai_logger.error(f"AI explanation failed: {e}", exc_info=True)
+        return jsonify({
+            "error": "ai_unavailable",
+            "message": "AI explanation is currently unavailable"
+        }), 503
+
+
+def _find_law_by_id(law_id: str, paragraph: str) -> Optional[Dict]:
+    """
+    Find a law in the search index by ID and paragraph.
+    
+    Args:
+        law_id: Law identifier (e.g., 'bgb')
+        paragraph: Paragraph number (e.g., '§548')
+    
+    Returns:
+        Law result dictionary or None
+    """
+    # Search in the index
+    with _index_lock:
+        if _search_index is None:
+            return None
+        
+        # Look for exact match in laws
+        laws = _search_index.get("laws", [])
+        for result in laws:
+            if (result.get("law_id", "").lower() == law_id.lower() and 
+                result.get("paragraph", "") == paragraph):
+                return result
+        
+        # Try partial match
+        for result in laws:
+            if (law_id.lower() in result.get("law_id", "").lower() and 
+                paragraph in result.get("paragraph", "")):
+                return result
+        
+        # Try searching in law_summaries
+        for law in _law_summaries:
+            if law.get("key", "").lower() == law_id.lower():
+                # Found the law, now find the paragraph
+                for norm in law.get("norms", []):
+                    if str(norm.get("norm_id", "")) == paragraph.replace("§", "").strip():
+                        return {
+                            "law_id": law_id,
+                            "paragraph": paragraph,
+                            "content": norm.get("content", ""),
+                            "meta": {
+                                "last_changed": law.get("last_changed"),
+                                "status": "in_force"
+                            }
+                        }
+    
+    return None
+
 
 # API endpoints section continues below
 

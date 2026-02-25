@@ -18,9 +18,40 @@ import time
 import socket
 import urllib.request
 import urllib.error
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple, Any
+
+# Try to import yaml for config loading
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    YAML_AVAILABLE = False
 
 from logging_config import get_ai_logger, get_dictionary_logger
+
+# Import guardrails
+try:
+    from ai_guardrails import (
+        validate_ai_response,
+        inject_disclaimer,
+        extract_citations,
+        verify_citation,
+    )
+    GUARDRAILS_AVAILABLE = True
+except ImportError:
+    GUARDRAILS_AVAILABLE = False
+
+# Import version tracking
+try:
+    from version_tracking import (
+        get_version_tracker,
+        prepare_law_context,
+    )
+    VERSION_TRACKING_AVAILABLE = True
+except ImportError as e:
+    ai_logger.debug(f"Version tracking not available: {e}")
+    VERSION_TRACKING_AVAILABLE = False
 
 ai_logger = get_ai_logger()
 dictionary_logger = get_dictionary_logger()
@@ -70,6 +101,87 @@ class UnifiedTranslator:
             
         self._load_cache()
         self._start_background_saver()
+        self._system_prompt_cache = None  # Cache loaded system prompt
+
+    def _load_system_prompt(self) -> str:
+        """
+        Load system prompt from configuration file.
+        
+        Returns:
+            System prompt string
+        """
+        # Return cached version if available
+        if self._system_prompt_cache:
+            return self._system_prompt_cache
+        
+        config_paths = [
+            os.path.join(os.path.dirname(__file__), "Documentation and AI Instructions", "AI_CONFIG", "system_prompt.yaml"),
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "Documentation and AI Instructions", "AI_CONFIG", "system_prompt.yaml"),
+        ]
+        
+        for config_path in config_paths:
+            try:
+                if os.path.exists(config_path):
+                    with open(config_path, 'r', encoding='utf-8') as f:
+                        config = yaml.safe_load(f)
+                    
+                    # Build system prompt from config
+                    system = config.get('system', {})
+                    principles = config.get('principles', {})
+                    prohibited = config.get('prohibited_actions', [])
+                    
+                    prompt_parts = [
+                        system.get('identity', ''),
+                        "\n\nRESPONSE PRINCIPLES:",
+                    ]
+                    
+                    for name, settings in principles.items():
+                        if settings.get('enabled'):
+                            prompt_parts.append(f"- {settings.get('description', name)}")
+                    
+                    prompt_parts.append("\n\nPROHIBITED ACTIONS:")
+                    for action in prohibited:
+                        prompt_parts.append(f"- {action.get('description', action.get('action'))}")
+                    
+                    prompt_parts.append("\n\n⚠️ CRITICAL RULES:")
+                    prompt_parts.append("1. ONLY cite paragraphs from the provided context")
+                    prompt_parts.append("2. Verify every paragraph number before citing")
+                    prompt_parts.append("3. If context is empty, say 'No relevant laws found'")
+                    prompt_parts.append("4. Check LAST_UPDATED dates and warn if law is older than 2 years")
+                    prompt_parts.append("5. Include legal disclaimer at the end")
+                    prompt_parts.append("6. Do NOT request names, addresses, or case numbers")
+                    
+                    self._system_prompt_cache = "\n".join(prompt_parts)
+                    ai_logger.info(f"Loaded system prompt from config: {config_path}")
+                    return self._system_prompt_cache
+            
+            except Exception as e:
+                ai_logger.debug(f"Could not load system prompt config from {config_path}: {e}")
+                continue
+        
+        # Fallback to default
+        return self._get_default_system_prompt()
+
+    def _get_default_system_prompt(self) -> str:
+        """Fallback system prompt if config file unavailable."""
+        return """You are the German Law Vault AI Assistant, a specialized legal information system for German federal laws.
+
+⚠️ CRITICAL RULES:
+1. ONLY cite paragraphs from the provided context
+2. Verify every paragraph number before citing
+3. If context is empty, say 'No relevant laws found'
+4. Check LAST_UPDATED dates and warn if law is older than 2 years
+5. Include legal disclaimer at the end
+6. Do NOT request names, addresses, or case numbers
+
+RESPONSE PRINCIPLES:
+- Accuracy: Only cite paragraphs from provided context
+- Clarity: Use simple language, explain legal terms
+- Brevity: Be concise, under 300 words for explanations
+- Safety: Include disclaimers, protect PII
+- Transparency: Acknowledge uncertainty, suggest verification
+
+⚖️ This information does not constitute legal advice."""
     
     def _load_cache(self):
         """Load translation cache from disk."""
@@ -479,6 +591,161 @@ class UnifiedTranslator:
         
         ai_logger.error(f"Ollama JSON request failed after {OLLAMA_MAX_RETRIES} attempts")
         return None
+
+    def explain_law_with_context(
+        self,
+        law_result: Dict[str, Any],
+        user_query: str,
+        language: str = "en"
+    ) -> str:
+        """
+        Explain a law paragraph with full guardrail enforcement.
+        
+        This is the primary method for AI law explanations. It:
+        1. Builds prompt with version metadata
+        2. Calls Ollama with system prompt
+        3. Validates response for hallucinations
+        4. Injects version warnings
+        5. Adds legal disclaimer
+        
+        Args:
+            law_result: Law result dictionary with metadata
+            user_query: User's question about the law
+            language: Response language ('en' or 'de')
+        
+        Returns:
+            Explained text with all guardrails applied
+        """
+        # Get version tracker if available
+        tracker = None
+        if VERSION_TRACKING_AVAILABLE:
+            try:
+                tracker = get_version_tracker()
+            except Exception as e:
+                ai_logger.warning(f"Could not get version tracker: {e}")
+        
+        # Prepare context with metadata
+        if tracker:
+            context = prepare_law_context(law_result)
+        else:
+            # Fallback: manual context preparation
+            meta = law_result.get('meta', {})
+            context = {
+                "law_name": law_result.get("law_id", "unknown").upper(),
+                "paragraph": law_result.get("paragraph", ""),
+                "paragraph_text": law_result.get("content", ""),
+                "last_updated": meta.get("last_changed", "unknown"),
+                "status": meta.get("status", "in_force"),
+            }
+        
+        # Build prompt with all required elements
+        prompt = self._build_law_explanation_prompt(
+            context=context,
+            user_query=user_query,
+            language=language
+        )
+        
+        # Get system prompt
+        system_prompt = self._load_system_prompt()
+        
+        # Combine system prompt with user prompt
+        full_prompt = f"{system_prompt}\n\n{prompt}"
+        
+        # Call Ollama
+        ai_response = self._call_ollama(full_prompt)
+        
+        if not ai_response:
+            ai_logger.warning(f"Ollama returned empty explanation for: {user_query[:50]}")
+            ai_response = "AI explanation is currently unavailable. Please try again later."
+            return inject_disclaimer(ai_response, "explanation") if GUARDRAILS_AVAILABLE else ai_response
+        
+        # Validate response with guardrails
+        if GUARDRAILS_AVAILABLE:
+            law_context = [law_result]  # Context for citation verification
+            result = validate_ai_response(ai_response, law_context, user_query)
+            ai_response = result.sanitized_response
+            
+            # Log validation results
+            if result.warnings:
+                ai_logger.warning(f"Guardrail warnings: {result.warnings}")
+            if result.errors:
+                ai_logger.error(f"Guardrail errors: {result.errors}")
+        
+        # Inject version warning if tracker available
+        if tracker and VERSION_TRACKING_AVAILABLE:
+            try:
+                ai_response = tracker.inject_version_warning(ai_response, law_result)
+            except Exception as e:
+                ai_logger.debug(f"Could not inject version warning: {e}")
+        
+        # Ensure disclaimer is present
+        if GUARDRAILS_AVAILABLE:
+            ai_response = inject_disclaimer(ai_response, "explanation")
+        elif "⚖️" not in ai_response and "legal advice" not in ai_response.lower():
+            ai_response += "\n\n⚖️ This information does not constitute legal advice."
+        
+        return ai_response
+
+    def _build_law_explanation_prompt(
+        self,
+        context: Dict[str, Any],
+        user_query: str,
+        language: str
+    ) -> str:
+        """
+        Build prompt for law explanation with all required elements.
+        
+        Args:
+            context: Prepared law context with metadata
+            user_query: User's question
+            language: Response language
+        
+        Returns:
+            Formatted prompt string
+        """
+        # Check law age for version awareness
+        version_note = ""
+        if context.get('last_updated') != 'unknown':
+            try:
+                change_date = datetime.fromisoformat(context['last_updated'])
+                age_years = (datetime.now() - change_date).days / 365.25
+                if age_years > 2:
+                    version_note = f"\n\n⚠️ IMPORTANT: This law version is from {context['last_updated']} ({age_years:.1f} years old). Mention in your response that amendments may have occurred."
+                elif age_years > 1:
+                    version_note = f"\n\nℹ️ Note: This law version is from {context['last_updated']}. You may mention this."
+            except (ValueError, TypeError):
+                pass
+        
+        # Check if law is repealed
+        status_note = ""
+        if context.get('status') == 'repealed':
+            repealed_date = context.get('repealed_date', 'unknown date')
+            status_note = f"\n\n⚠️ CRITICAL: This law is NO LONGER IN FORCE. It was repealed on {repealed_date}. Make this very clear in your response."
+        
+        prompt_template = f"""You are explaining a German law paragraph to a user.
+
+LAW: {context['law_name']}
+PARAGRAPH: {context['paragraph']}
+CONTENT: {context['paragraph_text']}
+LAST_UPDATED: {context['last_updated']}
+STATUS: {context['status']}
+
+USER QUESTION: {user_query}
+
+Respond in {"English" if language == "en" else "German"}.
+
+⚠️ CRITICAL RULES:
+1. ONLY explain the paragraph provided above - do NOT invent or cite other paragraphs
+2. If the paragraph number in your response doesn't match the input, STOP
+3. Use simple, non-technical language where possible
+4. Explain legal terms when they appear
+5. Provide practical examples if relevant
+6. Do NOT provide legal advice - only information
+7. Keep response under 300 words{version_note}{status_note}
+
+Begin your explanation:"""
+        
+        return prompt_template
 
 
 # Singleton instance

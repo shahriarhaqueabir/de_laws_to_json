@@ -18,6 +18,9 @@ lxml>=6.0.2
 # Tokenization
 tiktoken>=0.12.0
 
+# YAML Configuration (for AI guardrails)
+PyYAML>=6.0
+
 # Optional: AI Translation (if using Ollama or external translation services)
 # deep-translator>=1.11.4
 
