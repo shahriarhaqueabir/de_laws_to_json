@@ -27,27 +27,19 @@ if errorlevel 1 (
 for /f "tokens=2" %%i in ('python --version 2^>^&1') do set "PYTHON_VERSION=%%i"
 echo       Python found: %PYTHON_VERSION%
 
-:: Parse version - remove any suffixes like -rc1, -beta, etc.
-set "PY_VER_CLEAN=%PYTHON_VERSION%"
-
-:: Extract major version (first number before dot)
-for /f "tokens=1 delims=." %%a in ("%PY_VER_CLEAN%") do set "PY_MAJOR=%%a"
-
-:: Extract minor version (second number)
-for /f "tokens=2 delims=." %%a in ("%PY_VER_CLEAN%") do set "PY_MINOR=%%a"
-
-:: Validate we got numbers
-if "%PY_MAJOR%"=="" goto :install_python
-if "%PY_MINOR%"=="" goto :install_python
-
-:: Check if version is 3.10 or higher
-if %PY_MAJOR% GTR 3 set "PYTHON_OK=1"
-if %PY_MAJOR% EQU 3 (
-    if %PY_MINOR% GEQ 10 set "PYTHON_OK=1"
+:: Check if version is 3.10 or higher using simple string comparison
+set "PYTHON_OK=0"
+echo %PYTHON_VERSION% | findstr /R "^3\.[0-9][0-9]*" >nul
+if not errorlevel 1 (
+    for /f "tokens=2 delims=." %%a in ("%PYTHON_VERSION%") do (
+        if %%a GEQ 10 set "PYTHON_OK=1"
+    )
 )
+echo %PYTHON_VERSION% | findstr /R "^[4-9]\." >nul
+if not errorlevel 1 set "PYTHON_OK=1"
 
 if "%PYTHON_OK%"=="1" (
-    echo       Python version OK (3.%PY_MINOR%+).
+    echo       Python version OK.
     goto :python_ok
 )
 
