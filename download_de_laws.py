@@ -187,6 +187,10 @@ def main() -> None:
 
     if not to_download:
         print("All laws are already downloaded.")
+        status_file = os.path.join(RAW_DIR, "download_status.txt")
+        with open(status_file, "w", encoding="utf-8") as f:
+            f.write(f"ALL_FILES_EXIST=1\n")
+            f.write(f"TIMESTAMP={datetime.now().isoformat()}\n")
         return
 
     print(

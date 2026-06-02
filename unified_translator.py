@@ -56,15 +56,17 @@ except ImportError as e:
 ai_logger = get_ai_logger()
 dictionary_logger = get_dictionary_logger()
 
+# Import database connection managers
+from database.db import get_connection, get_db
+
 # Configuration
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:1.5b")
 OLLAMA_TIMEOUT = int(os.environ.get("OLLAMA_TIMEOUT", "120"))
 OLLAMA_MAX_RETRIES = int(os.environ.get("OLLAMA_MAX_RETRIES", "3"))
 OLLAMA_RETRY_BACKOFF = float(os.environ.get("OLLAMA_RETRY_BACKOFF", "1.0"))
 
 # Cache configuration
-AI_TRANSLATION_FILE = "./ai_translations.json"
 TRANSLATION_SAVE_INTERVAL = int(os.environ.get("TRANSLATION_SAVE_INTERVAL", "30"))
 
 # Thread-safe cache
@@ -184,17 +186,19 @@ RESPONSE PRINCIPLES:
 ⚖️ This information does not constitute legal advice."""
     
     def _load_cache(self):
-        """Load translation cache from disk."""
-        if os.path.exists(AI_TRANSLATION_FILE):
-            try:
-                with open(AI_TRANSLATION_FILE, "r", encoding="utf-8") as f:
-                    global _translation_cache
-                    _translation_cache = json.load(f)
-                ai_logger.info(f"Loaded {len(_translation_cache)} AI translations from cache")
-            except Exception as e:
-                ai_logger.warning(f"Could not load AI translation cache: {e}")
-        else:
-            ai_logger.info("No existing translation cache found")
+        """Load translation cache from SQLite database."""
+        try:
+            conn = get_connection()
+            rows = conn.execute("SELECT source_text, translation FROM translations_cache").fetchall()
+            conn.close()
+            
+            global _translation_cache
+            with _translation_lock:
+                for r in rows:
+                    _translation_cache[r["source_text"]] = r["translation"]
+            ai_logger.info(f"Loaded {len(rows)} AI translations from SQLite translations_cache")
+        except Exception as e:
+            ai_logger.warning(f"Could not load AI translation cache from SQLite: {e}")
     
     def _start_background_saver(self):
         """Start background thread to periodically save cache."""
@@ -208,7 +212,7 @@ RESPONSE PRINCIPLES:
         ai_logger.info("Background translation cache saver started")
     
     def _save_cache(self):
-        """Save translation cache to disk atomically."""
+        """Save dirty translation cache records to SQLite database."""
         global _translation_dirty, _translation_cache
         
         with _translation_lock:
@@ -216,21 +220,71 @@ RESPONSE PRINCIPLES:
                 return
             
             try:
-                # Atomic write
-                import tempfile
-                fd, temp_path = tempfile.mkstemp(
-                    dir=os.path.dirname(os.path.abspath(AI_TRANSLATION_FILE)) or ".",
-                    suffix=".tmp"
-                )
-                with os.fdopen(fd, "w", encoding="utf-8") as fh:
-                    json.dump(_translation_cache, fh, ensure_ascii=False, indent=2)
+                conn = get_connection()
+                # Bulk insert or replace
+                records = []
+                now = datetime.utcnow().isoformat()
+                for src, trans in _translation_cache.items():
+                    records.append((src, trans, OLLAMA_MODEL, now))
                 
-                os.replace(temp_path, AI_TRANSLATION_FILE)
+                conn.executemany(
+                    """
+                    INSERT OR REPLACE INTO translations_cache (source_text, translation, model, cached_at)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    records
+                )
+                conn.commit()
+                conn.close()
+                
                 _translation_dirty = False
-                ai_logger.info(f"Saved {len(_translation_cache)} translations to cache")
+                ai_logger.info(f"Saved {len(records)} translations to SQLite translations_cache")
             except Exception as e:
-                ai_logger.warning(f"Could not save translation cache: {e}")
+                ai_logger.warning(f"Could not save translation cache to SQLite: {e}")
     
+    def translate_batch_parallel(self, texts: List[str], is_title: bool = False, max_workers: int = 4) -> Dict[str, str]:
+        """
+        Translate a list of German texts to English in parallel.
+        Checks SQLite cache first, then runs translation in ThreadPoolExecutor for cache misses.
+        """
+        if not texts:
+            return {}
+            
+        results = {}
+        misses = []
+        
+        with _translation_lock:
+            for text in texts:
+                text_str = str(text).strip()
+                if not text_str:
+                    continue
+                if text_str in _translation_cache:
+                    results[text_str] = _translation_cache[text_str]
+                else:
+                    misses.append(text_str)
+                    
+        if misses:
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+            ai_logger.info(f"Batch translate: {len(results)} hits, {len(misses)} misses. Translating misses in parallel...")
+            
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {
+                    executor.submit(self.translate, text, is_title): text
+                    for text in misses
+                }
+                for future in as_completed(futures):
+                    text = futures[future]
+                    try:
+                        translation, _ = future.result()
+                        results[text] = translation
+                    except Exception as e:
+                        ai_logger.warning(f"Failed to translate batch term '{text[:40]}': {e}")
+                        results[text] = text  # fallback to original
+            # Save newly translated terms to database
+            self._save_cache()
+            
+        return results
+
     def translate(self, text: str, is_title: bool = False) -> Tuple[str, bool]:
         """
         Translate German text to English using AI with dictionary assistance.

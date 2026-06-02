@@ -167,15 +167,15 @@ if errorlevel 1 (
 )
 
 :: =====================================================
-:: STEP 4: Process XML to JSON (if needed)
+:: STEP 4: Process XML into Database (if needed)
 :: =====================================================
 echo.
 echo [4/8] Checking processed files...
 set "NEEDS_PROCESSING=0"
 
-:: Check if JSON folder exists and has files
-if not exist "de_federal_json\*.json" (
-    echo       No JSON files found. Processing required.
+:: Check if database exists and has data
+if not exist "laws.db" (
+    echo       No database found. Processing required.
     set "NEEDS_PROCESSING=1"
     goto :process_xml
 )
@@ -198,12 +198,12 @@ if "%1"=="--force" (
 )
 
 :: Skip processing
-echo       JSON files up-to-date.
+echo       Database up-to-date.
 goto :processing_done
 
 :process_xml
 if "%NEEDS_PROCESSING%"=="1" (
-    echo       Processing XML into JSON...
+    echo       Processing XML into database...
     echo       This may take several minutes on first run...
     "%PY%" process_de_laws.py
     if errorlevel 1 (
@@ -239,8 +239,8 @@ if errorlevel 1 (
 )
 
 echo       Ollama is installed.
-echo       Downloading AI model in background (llama3.2)...
-start "Ollama Model Download" cmd /c "ollama pull llama3.2 & pause"
+echo       Downloading AI model in background (qwen2.5:1.5b)...
+start "Ollama Model Download" cmd /c "ollama pull qwen2.5:1.5b & pause"
 
 :ollama_done
 

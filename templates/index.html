@@ -17,6 +17,7 @@
     <script src="https://unpkg.com/dompurify@2.4.0/dist/purify.min.js"></script>
 
     <link rel="stylesheet" href="/static/css/main.css" />
+    <link rel="stylesheet" href="/static/css/glass.css" />
   </head>
   <body>
     <!-- ── Header ──────────────────────────────────────────── -->
@@ -335,6 +336,19 @@
           </div>
         </div>
 
+        <div id="modal-references" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 20px; padding: 16px; background: rgba(255, 255, 255, 0.02); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+              <div style="font-size: 13px; font-weight: 600; color: #ffcc00; margin-bottom: 8px;">⚖ References Outgoing (Cites)</div>
+              <div id="refs-outgoing" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; color: #a0aec0;">None found</div>
+            </div>
+            <div style="flex: 1; min-width: 250px;">
+              <div style="font-size: 13px; font-weight: 600; color: #ffcc00; margin-bottom: 8px;">🔗 References Incoming (Cited By)</div>
+              <div id="refs-incoming" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; color: #a0aec0;">None found</div>
+            </div>
+          </div>
+        </div>
+        
         <div id="modal-body"></div>
       </div>
     </dialog>

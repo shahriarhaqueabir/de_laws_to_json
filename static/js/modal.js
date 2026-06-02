@@ -28,6 +28,9 @@ async function openLawModal(key, targetSection = "") {
   modalSearch.value       = targetSection;
   modalBody.innerHTML     = '<div class="spinner"></div>';
 
+  const refContainer  = document.getElementById("modal-references");
+  if (refContainer) refContainer.style.display = "none";
+
   const insSummary    = document.getElementById("ins-summary");
   const insRisk       = document.getElementById("ins-risk");
   const insExclusions = document.getElementById("ins-exclusions");
@@ -45,9 +48,10 @@ async function openLawModal(key, targetSection = "") {
     }
     modalAbortController = new AbortController();
 
-    const [resp, insightResp] = await Promise.all([
+    const [resp, insightResp, refResp] = await Promise.all([
       fetch(`/api/law/${encodeURIComponent(key)}`, { signal: modalAbortController.signal }),
-      fetch(`/api/law-insights/${encodeURIComponent(key)}`, { signal: modalAbortController.signal }).catch(() => null)
+      fetch(`/api/law-insights/${encodeURIComponent(key)}`, { signal: modalAbortController.signal }).catch(() => null),
+      fetch(`/api/law/${encodeURIComponent(key)}/references`, { signal: modalAbortController.signal }).catch(() => null)
     ]);
 
     if (!resp.ok) {
@@ -71,6 +75,47 @@ async function openLawModal(key, targetSection = "") {
       insScenarios.textContent  = insights.scenarios  || "Keine Beispielszenarien verfügbar.";
     } else {
       insSummary.textContent = "Zusammenfassung konnte nicht geladen werden oder AI-Dienst ist offline.";
+    }
+
+    // Render outgoing/incoming references in modal
+    if (refContainer && refResp && refResp.ok) {
+      const refData = await refResp.json();
+      const outgoing = refData.outgoing || [];
+      const incoming = refData.incoming || [];
+      const outgoingList = document.getElementById("refs-outgoing");
+      const incomingList = document.getElementById("refs-incoming");
+
+      if (outgoing.length || incoming.length) {
+        refContainer.style.display = "flex";
+
+        if (outgoingList) {
+          if (outgoing.length) {
+            outgoingList.innerHTML = outgoing.map(ref => {
+              const targetNorm = ref.target_norm || "";
+              const targetNormClean = targetNorm.replace("§", "").trim();
+              return `
+                <span class="ref-chip" style="background: rgba(255, 204, 0, 0.1); border: 1px solid rgba(255, 204, 0, 0.25); color: #ffcc00; padding: 4px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; display: inline-block;" onclick="openLawModal('${escapeHTML(ref.target_law)}', '${escapeHTML(targetNormClean)}')">
+                  ${escapeHTML(ref.target_law)} ${escapeHTML(targetNorm)}
+                </span>`;
+            }).join(' ');
+          } else {
+            outgoingList.innerHTML = '<span style="font-style: italic; opacity: 0.6;">No outgoing references found</span>';
+          }
+        }
+
+        if (incomingList) {
+          if (incoming.length) {
+            incomingList.innerHTML = incoming.map(ref => `
+              <span class="ref-chip" style="background: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.25); color: #00e676; padding: 4px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; display: inline-block;" onclick="openLawModal('${escapeHTML(ref.source_law)}')">
+                ${escapeHTML(ref.source_law)} (${ref.mention_count})
+              </span>`).join(' ');
+          } else {
+            incomingList.innerHTML = '<span style="font-style: italic; opacity: 0.6;">No incoming backlinks found</span>';
+          }
+        }
+      } else {
+        refContainer.style.display = "none";
+      }
     }
 
     const meta = law.meta || {};
@@ -199,6 +244,12 @@ async function renderNextChunk(terms, filterText = "") {
   }
 
   rebindModalToggles();
+
+  // Trigger background batch pre-translation for norm titles in this chunk
+  const titlesToTranslate = chunk.map(norm => norm.title || norm.meta?.title || "").filter(t => t.trim().length > 0);
+  if (typeof prewarmBatchTranslations === 'function' && titlesToTranslate.length > 0) {
+    prewarmBatchTranslations(titlesToTranslate);
+  }
 }
 
 function rebindModalToggles() {

@@ -203,7 +203,7 @@ german-law-vault/
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama AI API endpoint |
-| `OLLAMA_MODEL` | `llama3.2` | Ollama model for AI features |
+| `OLLAMA_MODEL` | `qwen2.5:1.5b` | Ollama model for AI features |
 | `OLLAMA_TIMEOUT` | `120` | AI request timeout (seconds) |
 | `EXPANSION_CACHE_SIZE` | `1000` | Query cache size |
 
@@ -212,7 +212,7 @@ german-law-vault/
 For AI-powered analysis and translation:
 
 1. **Install Ollama**: https://ollama.ai
-2. **Pull a model**: `ollama pull llama3.2`
+2. **Pull a model**: `ollama pull qwen2.5:1.5b`
 3. **Start Ollama**: `ollama serve`
 
 The application will automatically detect Ollama and enable AI features.

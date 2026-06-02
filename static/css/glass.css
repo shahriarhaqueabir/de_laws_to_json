@@ -1,0 +1,92 @@
+/* ── Glassmorphism Utility Classes ────────────────────────── */
+/* Subtle glass: default frosted card look */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-heavy {
+  background: hsla(220, 20%, 10%, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid hsla(220, 20%, 85%, 0.1);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius, 12px);
+  transition: background var(--transition-fast, 0.2s ease),
+              border-color var(--transition-fast, 0.2s ease),
+              transform var(--transition-smooth, 0.4s cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--transition-smooth, 0.4s cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.glass-card:hover {
+  background: hsla(220, 20%, 14%, 0.6);
+  border-color: hsla(42, 90%, 52%, 0.2);
+}
+
+/* ── Edge highlight (subtle inner glow on top) ── */
+.glass-edge {
+  position: relative;
+}
+.glass-edge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-edge), transparent);
+  pointer-events: none;
+}
+
+/* ── Animation Keyframes ───────────────────────────────── */
+/* Tab panel fade in */
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Shimmer / skeleton wave (enhanced, overrides main.css) */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Progress sweep (light running across bar) */
+@keyframes progressSweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ── Fallback: solid bg when backdrop-filter unsupported ── */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-heavy,
+  .glass-card {
+    background: hsla(220, 20%, 10%, 0.92) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}

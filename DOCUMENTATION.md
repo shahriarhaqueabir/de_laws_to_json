@@ -242,7 +242,7 @@ def search_laws(query):
 **Configuration**:
 ```python
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-OLLAMA_MODEL = "llama3.2"
+OLLAMA_MODEL = "qwen2.5:1.5b"
 OLLAMA_TIMEOUT = 120  # seconds
 TRANSLATION_SAVE_INTERVAL = 30  # seconds
 ```
@@ -628,7 +628,7 @@ ollama list
 ollama serve
 
 # Pull model if needed
-ollama pull llama3.2
+ollama pull qwen2.5:1.5b
 ```
 
 ### Debugging

@@ -5,8 +5,15 @@
  */
 "use strict";
 
-// ── Helper: Call unified translation endpoint ────────────────────────────────
+// ── Local Translation Cache Map ──────────────────────────────────────────────
+window.translationMap = window.translationMap || {};
+
+// ── Helper: Call unified translation endpoint with local cache check ─────────
 async function translateText(text, isTitle) {
+  if (window.translationMap && window.translationMap[text]) {
+    return window.translationMap[text];
+  }
+  
   try {
     const resp = await fetch("/api/translate", {
       method: "POST",
@@ -17,10 +24,43 @@ async function translateText(text, isTitle) {
     if (!resp.ok) return null;
 
     const data = await resp.json();
-    return data.translation || null;
+    const translation = data.translation || null;
+    if (translation) {
+      window.translationMap[text] = translation;
+    }
+    return translation;
   } catch (err) {
     console.error("Translation error:", err);
     return null;
+  }
+}
+
+// ── Batch Pre-warmer for Modal Load (Background Parallel Fetch) ──────────────
+async function prewarmBatchTranslations(texts) {
+  if (!texts || !texts.length) return;
+
+  const misses = texts.filter(t => !window.translationMap[t]);
+  if (!misses.length) return;
+
+  try {
+    const resp = await fetch("/api/translate/batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texts: misses, is_title: true })
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      const translations = data.translations || [];
+      translations.forEach(t => {
+        if (t.translation && t.translation !== t.original) {
+          window.translationMap[t.original] = t.translation;
+        }
+      });
+      console.log(`Pre-warmed translation cache with ${translations.length} terms.`);
+    }
+  } catch (err) {
+    console.error("Batch pre-warm translation error:", err);
   }
 }
 

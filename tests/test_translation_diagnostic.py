@@ -88,7 +88,7 @@ print("\n[TEST 3] Ollama AI Service Check")
 print("-" * 50)
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:1.5b")
 
 try:
     # Check if Ollama is running

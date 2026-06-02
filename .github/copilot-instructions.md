@@ -203,7 +203,7 @@ See [requirements.txt](requirements.txt):
 
 ```bash
 OLLAMA_URL=http://127.0.0.1:11434/api/generate
-OLLAMA_MODEL=llama3.2
+OLLAMA_MODEL=qwen2.5:1.5b
 OLLAMA_TIMEOUT=120
 EXPANSION_CACHE_SIZE=1000
 ```

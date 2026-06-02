@@ -1,0 +1,359 @@
+2026-06-02 19:58:42,668 [INFO] dictionary.memory_dict: In-memory dictionary loaded: 325 legal terms, 98121 main entries
+2026-06-02 19:58:42,668 [INFO] In-memory dictionary loaded: 325 legal terms, 98121 main entries
+2026-06-02 19:58:42,671 [INFO] dictionary: In-memory legal dictionary loaded successfully
+2026-06-02 19:58:42,671 [INFO] In-memory legal dictionary loaded successfully
+2026-06-02 19:58:42,673 [INFO] dictionary: Stats: {'legal_priority_terms': 325, 'main_dict_entries': 98121, 'prefix_index_entries': 87323, 'type': 'in_memory'}
+2026-06-02 19:58:42,673 [INFO] Stats: {'legal_priority_terms': 325, 'main_dict_entries': 98121, 'prefix_index_entries': 87323, 'type': 'in_memory'}
+2026-06-02 19:58:42,767 [INFO] ai: Loaded PII patterns from config: E:\Projects\repos\personal\de_laws_to_json\Documentation and AI Instructions\AI_CONFIG\guardrails.yaml
+2026-06-02 19:58:42,767 [INFO] Loaded PII patterns from config: E:\Projects\repos\personal\de_laws_to_json\Documentation and AI Instructions\AI_CONFIG\guardrails.yaml
+2026-06-02 19:58:42,770 [INFO] ai: AI Guardrails initialized
+2026-06-02 19:58:42,770 [INFO] AI Guardrails initialized
+2026-06-02 19:58:42,770 [INFO] indexing: Citation verification ready
+2026-06-02 19:58:42,770 [INFO] Citation verification ready
+2026-06-02 19:58:42,774 [INFO] ai: Using in-memory legal dictionary
+2026-06-02 19:58:42,774 [INFO] Using in-memory legal dictionary
+2026-06-02 19:58:42,786 [INFO] ai: Loaded 0 AI translations from SQLite translations_cache
+2026-06-02 19:58:42,786 [INFO] Loaded 0 AI translations from SQLite translations_cache
+2026-06-02 19:58:42,788 [INFO] ai: Background translation cache saver started
+2026-06-02 19:58:42,788 [INFO] Background translation cache saver started
+2026-06-02 19:58:42,789 [INFO] dictionary: Unified AI translator initialized
+2026-06-02 19:58:42,789 [INFO] Unified AI translator initialized
+2026-06-02 19:58:42,789 [INFO] ai: AI guardrails imported successfully
+2026-06-02 19:58:42,789 [INFO] AI guardrails imported successfully
+2026-06-02 19:58:42,797 [INFO] Loaded 0 AI translations.
+2026-06-02 19:58:42,810 [INFO] Loaded 47 law view counts.
+2026-06-02 19:58:42,815 [INFO] server: ============================================================
+2026-06-02 19:58:42,815 [INFO] ============================================================
+2026-06-02 19:58:42,816 [INFO] server: German Law Search Dashboard - Server Starting
+2026-06-02 19:58:42,816 [INFO] German Law Search Dashboard - Server Starting
+2026-06-02 19:58:42,816 [INFO] server: ============================================================
+2026-06-02 19:58:42,816 [INFO] ============================================================
+2026-06-02 19:58:42,817 [INFO] server: Server will be available at: http://127.0.0.1:5000
+2026-06-02 19:58:42,817 [INFO] Server will be available at: http://127.0.0.1:5000
+2026-06-02 19:58:42,817 [INFO] ai: AI subsystem initializing...
+2026-06-02 19:58:42,817 [INFO] AI subsystem initializing...
+2026-06-02 19:58:42,985 [INFO] ai: Ollama is running
+2026-06-02 19:58:42,985 [INFO] Ollama is running
+2026-06-02 19:58:43,032 [INFO] indexing: Database ready: 6145 laws, 107237 norms.
+2026-06-02 19:58:43,032 [INFO] Database ready: 6145 laws, 107237 norms.
+2026-06-02 19:58:43,035 [INFO] server: Flask app starting...
+2026-06-02 19:58:43,035 [INFO] Flask app starting...
+2026-06-02 19:58:43,060 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-06-02 19:58:43,060 [INFO] [33mPress CTRL+C to quit[0m
+2026-06-02 19:58:53,034 [INFO] ai: PREWARM: Starting translation pre-warming for popular laws.
+2026-06-02 19:58:53,034 [INFO] PREWARM: Starting translation pre-warming for popular laws.
+2026-06-02 19:59:01,813 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:01,813 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:01,814 [INFO] ai: Translated: 'Bürgerliches Gesetzbuch...' -> 'Bürgerliches Gesetzbuch...'
+2026-06-02 19:59:01,814 [INFO] Translated: 'Bürgerliches Gesetzbuch...' -> 'Bürgerliches Gesetzbuch...'
+2026-06-02 19:59:04,174 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:04,174 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:04,281 [INFO] ai: Translated: 'Verordnung zum elektronischen Anzeigeverfahren für...' -> 'Ordinance on Electronic Notice Procedure for Inlan...'
+2026-06-02 19:59:04,281 [INFO] Translated: 'Verordnung zum elektronischen Anzeigeverfahren für...' -> 'Ordinance on Electronic Notice Procedure for Inlan...'
+2026-06-02 19:59:04,420 [INFO] ai: PREWARM [1]: 'Verordnung zum elektronischen Anzeigever' → 'Ordinance on Electronic Notice Procedure'
+2026-06-02 19:59:04,420 [INFO] PREWARM [1]: 'Verordnung zum elektronischen Anzeigever' → 'Ordinance on Electronic Notice Procedure'
+2026-06-02 19:59:07,204 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:07,204 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:07,204 [INFO] ai: Translated: 'Gesetz über die urheberrechtliche Verantwortlichke...' -> 'Law Title in English:
+
+Gesetz über die Urheberrech...'
+2026-06-02 19:59:07,204 [INFO] Translated: 'Gesetz über die urheberrechtliche Verantwortlichke...' -> 'Law Title in English:
+
+Gesetz über die Urheberrech...'
+2026-06-02 19:59:07,205 [INFO] ai: PREWARM [2]: 'Gesetz über die urheberrechtliche Verant' → 'Law Title in English:
+
+Gesetz über die U'
+2026-06-02 19:59:07,205 [INFO] PREWARM [2]: 'Gesetz über die urheberrechtliche Verant' → 'Law Title in English:
+
+Gesetz über die U'
+2026-06-02 19:59:09,679 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:09,679 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:09,679 [INFO] ai: Translated: 'Verordnung zur Konkretisierung der Verhaltensregel...' -> 'Ordinance for the Clarification of Rules and Regul...'
+2026-06-02 19:59:09,679 [INFO] Translated: 'Verordnung zur Konkretisierung der Verhaltensregel...' -> 'Ordinance for the Clarification of Rules and Regul...'
+2026-06-02 19:59:09,680 [INFO] ai: PREWARM [3]: 'Verordnung zur Konkretisierung der Verha' → 'Ordinance for the Clarification of Rules'
+2026-06-02 19:59:09,680 [INFO] PREWARM [3]: 'Verordnung zur Konkretisierung der Verha' → 'Ordinance for the Clarification of Rules'
+2026-06-02 19:59:12,198 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:12,198 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:12,199 [INFO] ai: Translated: 'Verordnung über den Gegenstand der Prüfung und die...' -> 'Ordinance on the Subject of Examination and the Co...'
+2026-06-02 19:59:12,199 [INFO] Translated: 'Verordnung über den Gegenstand der Prüfung und die...' -> 'Ordinance on the Subject of Examination and the Co...'
+2026-06-02 19:59:12,200 [INFO] ai: PREWARM [4]: 'Verordnung über den Gegenstand der Prüfu' → 'Ordinance on the Subject of Examination '
+2026-06-02 19:59:12,200 [INFO] PREWARM [4]: 'Verordnung über den Gegenstand der Prüfu' → 'Ordinance on the Subject of Examination '
+2026-06-02 19:59:14,829 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:14,829 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:14,830 [INFO] ai: Translated: 'Verordnung über Inhalt, Umfang und Darstellung der...' -> 'Ordinance concerning the content, scope, and prese...'
+2026-06-02 19:59:14,830 [INFO] Translated: 'Verordnung über Inhalt, Umfang und Darstellung der...' -> 'Ordinance concerning the content, scope, and prese...'
+2026-06-02 19:59:14,830 [INFO] ai: PREWARM [5]: 'Verordnung über Inhalt, Umfang und Darst' → 'Ordinance concerning the content, scope,'
+2026-06-02 19:59:14,830 [INFO] PREWARM [5]: 'Verordnung über Inhalt, Umfang und Darst' → 'Ordinance concerning the content, scope,'
+2026-06-02 19:59:17,305 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:17,305 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:17,306 [INFO] ai: Translated: 'Gesetz über deutsche Immobilien-Aktiengesellschaft...' -> 'Law Title in English: Law on German Immobilien Akt...'
+2026-06-02 19:59:17,306 [INFO] Translated: 'Gesetz über deutsche Immobilien-Aktiengesellschaft...' -> 'Law Title in English: Law on German Immobilien Akt...'
+2026-06-02 19:59:17,306 [INFO] ai: PREWARM [6]: 'Gesetz über deutsche Immobilien-Aktienge' → 'Law Title in English: Law on German Immo'
+2026-06-02 19:59:17,306 [INFO] PREWARM [6]: 'Gesetz über deutsche Immobilien-Aktienge' → 'Law Title in English: Law on German Immo'
+2026-06-02 19:59:19,855 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:19,855 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:19,856 [INFO] ai: Translated: 'Bekanntmachung zu § 8 des Markengesetzes...' -> 'Bekanntmachung zur § 8 des Markengesetzes...'
+2026-06-02 19:59:19,856 [INFO] Translated: 'Bekanntmachung zu § 8 des Markengesetzes...' -> 'Bekanntmachung zur § 8 des Markengesetzes...'
+2026-06-02 19:59:19,856 [INFO] ai: PREWARM [7]: 'Bekanntmachung zu § 8 des Markengesetzes' → 'Bekanntmachung zur § 8 des Markengesetze'
+2026-06-02 19:59:19,856 [INFO] PREWARM [7]: 'Bekanntmachung zu § 8 des Markengesetzes' → 'Bekanntmachung zur § 8 des Markengesetze'
+2026-06-02 19:59:21,860 [INFO] ai: Cache hit: 'Bekanntmachung zu § 8 des Markengesetzes...'
+2026-06-02 19:59:21,860 [INFO] Cache hit: 'Bekanntmachung zu § 8 des Markengesetzes...'
+2026-06-02 19:59:21,861 [INFO] ai: PREWARM [8]: 'Bekanntmachung zu § 8 des Markengesetzes' → 'Bekanntmachung zur § 8 des Markengesetze'
+2026-06-02 19:59:21,861 [INFO] PREWARM [8]: 'Bekanntmachung zu § 8 des Markengesetzes' → 'Bekanntmachung zur § 8 des Markengesetze'
+2026-06-02 19:59:24,679 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:24,679 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:24,680 [INFO] ai: Translated: 'Vertrag zwischen der Bundesrepublik Deutschland, v...' -> 'Contract between the Federal Republic of Germany, ...'
+2026-06-02 19:59:24,680 [INFO] Translated: 'Vertrag zwischen der Bundesrepublik Deutschland, v...' -> 'Contract between the Federal Republic of Germany, ...'
+2026-06-02 19:59:24,680 [INFO] ai: PREWARM [9]: 'Vertrag zwischen der Bundesrepublik Deut' → 'Contract between the Federal Republic of'
+2026-06-02 19:59:24,680 [INFO] PREWARM [9]: 'Vertrag zwischen der Bundesrepublik Deut' → 'Contract between the Federal Republic of'
+2026-06-02 19:59:27,187 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:27,187 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:27,188 [INFO] ai: Translated: 'Verordnung zur Konkretisierung der Verhaltensregel...' -> 'Ordinance for the Clarification of Rules and Organ...'
+2026-06-02 19:59:27,188 [INFO] Translated: 'Verordnung zur Konkretisierung der Verhaltensregel...' -> 'Ordinance for the Clarification of Rules and Organ...'
+2026-06-02 19:59:27,188 [INFO] ai: PREWARM [10]: 'Verordnung zur Konkretisierung der Verha' → 'Ordinance for the Clarification of Rules'
+2026-06-02 19:59:27,188 [INFO] PREWARM [10]: 'Verordnung zur Konkretisierung der Verha' → 'Ordinance for the Clarification of Rules'
+2026-06-02 19:59:29,560 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:29,560 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:29,560 [INFO] ai: Translated: 'Einführungsgesetz zum Bürgerlichen Gesetzbuche...' -> 'Enabling Act for the Civil Code...'
+2026-06-02 19:59:29,560 [INFO] Translated: 'Einführungsgesetz zum Bürgerlichen Gesetzbuche...' -> 'Enabling Act for the Civil Code...'
+2026-06-02 19:59:29,561 [INFO] ai: PREWARM [11]: 'Einführungsgesetz zum Bürgerlichen Geset' → 'Enabling Act for the Civil Code'
+2026-06-02 19:59:29,561 [INFO] PREWARM [11]: 'Einführungsgesetz zum Bürgerlichen Geset' → 'Enabling Act for the Civil Code'
+2026-06-02 19:59:32,219 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:32,219 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:32,220 [INFO] ai: Translated: 'Bekanntmachung betreffend Ausführungsbestimmungen ...' -> 'Bekanntmachung betreffend Ausführungsbestimmungen ...'
+2026-06-02 19:59:32,220 [INFO] Translated: 'Bekanntmachung betreffend Ausführungsbestimmungen ...' -> 'Bekanntmachung betreffend Ausführungsbestimmungen ...'
+2026-06-02 19:59:32,220 [INFO] ai: PREWARM [12]: 'Bekanntmachung betreffend Ausführungsbes' → 'Bekanntmachung betreffend Ausführungsbes'
+2026-06-02 19:59:32,220 [INFO] PREWARM [12]: 'Bekanntmachung betreffend Ausführungsbes' → 'Bekanntmachung betreffend Ausführungsbes'
+2026-06-02 19:59:34,720 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:34,720 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:34,721 [INFO] ai: Translated: 'Verordnung über das Bewachungsgewerbe...' -> 'Ordinance on the Watchmaking Industry...'
+2026-06-02 19:59:34,721 [INFO] Translated: 'Verordnung über das Bewachungsgewerbe...' -> 'Ordinance on the Watchmaking Industry...'
+2026-06-02 19:59:34,721 [INFO] ai: PREWARM [13]: 'Verordnung über das Bewachungsgewerbe' → 'Ordinance on the Watchmaking Industry'
+2026-06-02 19:59:34,721 [INFO] PREWARM [13]: 'Verordnung über das Bewachungsgewerbe' → 'Ordinance on the Watchmaking Industry'
+2026-06-02 19:59:37,365 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:37,365 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:37,366 [INFO] ai: Translated: 'Vertrag über die Durchführung des europäischen ele...' -> 'Contract concerning the Implementation of the Euro...'
+2026-06-02 19:59:37,366 [INFO] Translated: 'Vertrag über die Durchführung des europäischen ele...' -> 'Contract concerning the Implementation of the Euro...'
+2026-06-02 19:59:37,366 [INFO] ai: PREWARM [14]: 'Vertrag über die Durchführung des europä' → 'Contract concerning the Implementation o'
+2026-06-02 19:59:37,366 [INFO] PREWARM [14]: 'Vertrag über die Durchführung des europä' → 'Contract concerning the Implementation o'
+2026-06-02 19:59:39,847 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:39,847 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:39,848 [INFO] ai: Translated: 'Vereinbarung über die Durchführung des Prüfverfahr...' -> 'Agreement concerning the execution of the inspecti...'
+2026-06-02 19:59:39,848 [INFO] Translated: 'Vereinbarung über die Durchführung des Prüfverfahr...' -> 'Agreement concerning the execution of the inspecti...'
+2026-06-02 19:59:39,848 [INFO] ai: PREWARM [15]: 'Vereinbarung über die Durchführung des P' → 'Agreement concerning the execution of th'
+2026-06-02 19:59:39,848 [INFO] PREWARM [15]: 'Vereinbarung über die Durchführung des P' → 'Agreement concerning the execution of th'
+2026-06-02 19:59:42,573 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:42,573 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:42,574 [INFO] ai: Translated: 'Satzung der Pensionskasse Deutscher Eisenbahnen un...' -> 'Statute of the German Railway and Streetcar Pensio...'
+2026-06-02 19:59:42,574 [INFO] Translated: 'Satzung der Pensionskasse Deutscher Eisenbahnen un...' -> 'Statute of the German Railway and Streetcar Pensio...'
+2026-06-02 19:59:42,574 [INFO] ai: PREWARM [16]: 'Satzung der Pensionskasse Deutscher Eise' → 'Statute of the German Railway and Street'
+2026-06-02 19:59:42,574 [INFO] PREWARM [16]: 'Satzung der Pensionskasse Deutscher Eise' → 'Statute of the German Railway and Street'
+2026-06-02 19:59:44,893 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:44,893 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:44,894 [INFO] ai: Translated: 'Gesetz zur Sicherung der tarifvertraglichen Sozial...' -> 'Law Title in English: Law for the Protection of Ta...'
+2026-06-02 19:59:44,894 [INFO] Translated: 'Gesetz zur Sicherung der tarifvertraglichen Sozial...' -> 'Law Title in English: Law for the Protection of Ta...'
+2026-06-02 19:59:44,894 [INFO] ai: PREWARM [17]: 'Gesetz zur Sicherung der tarifvertraglic' → 'Law Title in English: Law for the Protec'
+2026-06-02 19:59:44,894 [INFO] PREWARM [17]: 'Gesetz zur Sicherung der tarifvertraglic' → 'Law Title in English: Law for the Protec'
+2026-06-02 19:59:47,482 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:47,482 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:47,482 [INFO] ai: Translated: 'Gesetz zur Sicherung der Sozialkassenverfahren im ...' -> 'Law Title in English:
+
+Gesetz zur Sicherung der So...'
+2026-06-02 19:59:47,482 [INFO] Translated: 'Gesetz zur Sicherung der Sozialkassenverfahren im ...' -> 'Law Title in English:
+
+Gesetz zur Sicherung der So...'
+2026-06-02 19:59:47,482 [INFO] ai: PREWARM [18]: 'Gesetz zur Sicherung der Sozialkassenver' → 'Law Title in English:
+
+Gesetz zur Sicher'
+2026-06-02 19:59:47,482 [INFO] PREWARM [18]: 'Gesetz zur Sicherung der Sozialkassenver' → 'Law Title in English:
+
+Gesetz zur Sicher'
+2026-06-02 19:59:50,001 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:50,001 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:50,002 [INFO] ai: Translated: 'Verordnung über die Allgemeinen Beförderungsbeding...' -> 'Ordinance on General Operating Conditions for Stre...'
+2026-06-02 19:59:50,002 [INFO] Translated: 'Verordnung über die Allgemeinen Beförderungsbeding...' -> 'Ordinance on General Operating Conditions for Stre...'
+2026-06-02 19:59:50,002 [INFO] ai: PREWARM [19]: 'Verordnung über die Allgemeinen Beförder' → 'Ordinance on General Operating Condition'
+2026-06-02 19:59:50,002 [INFO] PREWARM [19]: 'Verordnung über die Allgemeinen Beförder' → 'Ordinance on General Operating Condition'
+2026-06-02 19:59:52,470 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:52,470 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:52,471 [INFO] ai: Translated: 'Gesetz zur Sicherung der Zweckbestimmung von Sozia...' -> 'Law Title in English: Law to Ensure the Legality o...'
+2026-06-02 19:59:52,471 [INFO] Translated: 'Gesetz zur Sicherung der Zweckbestimmung von Sozia...' -> 'Law Title in English: Law to Ensure the Legality o...'
+2026-06-02 19:59:52,471 [INFO] ai: PREWARM [20]: 'Gesetz zur Sicherung der Zweckbestimmung' → 'Law Title in English: Law to Ensure the '
+2026-06-02 19:59:52,471 [INFO] PREWARM [20]: 'Gesetz zur Sicherung der Zweckbestimmung' → 'Law Title in English: Law to Ensure the '
+2026-06-02 19:59:54,900 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:54,900 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:54,900 [INFO] ai: Translated: 'Verordnung über wohnungswirtschaftliche Berechnung...' -> 'Ordinance concerning housing economic calculations...'
+2026-06-02 19:59:54,900 [INFO] Translated: 'Verordnung über wohnungswirtschaftliche Berechnung...' -> 'Ordinance concerning housing economic calculations...'
+2026-06-02 19:59:54,901 [INFO] ai: PREWARM [21]: 'Verordnung über wohnungswirtschaftliche ' → 'Ordinance concerning housing economic ca'
+2026-06-02 19:59:54,901 [INFO] PREWARM [21]: 'Verordnung über wohnungswirtschaftliche ' → 'Ordinance concerning housing economic ca'
+2026-06-02 19:59:57,487 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:57,487 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:57,487 [INFO] ai: Translated: 'Verordnung über die Ermittlung der zulässigen Miet...' -> 'Ordinance concerning the determination of allowabl...'
+2026-06-02 19:59:57,487 [INFO] Translated: 'Verordnung über die Ermittlung der zulässigen Miet...' -> 'Ordinance concerning the determination of allowabl...'
+2026-06-02 19:59:57,488 [INFO] ai: PREWARM [22]: 'Verordnung über die Ermittlung der zuläs' → 'Ordinance concerning the determination o'
+2026-06-02 19:59:57,488 [INFO] PREWARM [22]: 'Verordnung über die Ermittlung der zuläs' → 'Ordinance concerning the determination o'
+2026-06-02 19:59:59,873 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 19:59:59,873 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 19:59:59,874 [INFO] ai: Translated: 'Gerichtskostengesetz...' -> 'Law Title: Civil Procedure Code...'
+2026-06-02 19:59:59,874 [INFO] Translated: 'Gerichtskostengesetz...' -> 'Law Title: Civil Procedure Code...'
+2026-06-02 19:59:59,874 [INFO] ai: PREWARM [23]: 'Gerichtskostengesetz' → 'Law Title: Civil Procedure Code'
+2026-06-02 19:59:59,874 [INFO] PREWARM [23]: 'Gerichtskostengesetz' → 'Law Title: Civil Procedure Code'
+2026-06-02 20:00:02,497 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:02,497 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:02,498 [INFO] ai: Translated: 'Gesetz zur Regelung offener Vermögensfragen...' -> 'Gesetz zur Regelung offener Vermögensfragen...'
+2026-06-02 20:00:02,498 [INFO] Translated: 'Gesetz zur Regelung offener Vermögensfragen...' -> 'Gesetz zur Regelung offener Vermögensfragen...'
+2026-06-02 20:00:05,105 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:05,105 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:05,106 [INFO] ai: Translated: 'Vertrag zwischen der Bundesrepublik Deutschland un...' -> 'Contract between the Federal Republic of Germany a...'
+2026-06-02 20:00:05,106 [INFO] Translated: 'Vertrag zwischen der Bundesrepublik Deutschland un...' -> 'Contract between the Federal Republic of Germany a...'
+2026-06-02 20:00:05,106 [INFO] ai: PREWARM [24]: 'Vertrag zwischen der Bundesrepublik Deut' → 'Contract between the Federal Republic of'
+2026-06-02 20:00:05,106 [INFO] PREWARM [24]: 'Vertrag zwischen der Bundesrepublik Deut' → 'Contract between the Federal Republic of'
+2026-06-02 20:00:07,678 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:07,678 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:07,679 [INFO] ai: Translated: 'Gesetz zur Einsparung von Energie und zur Nutzung ...' -> 'Law Title: Law to Save Energy and to Utilize Renew...'
+2026-06-02 20:00:07,679 [INFO] Translated: 'Gesetz zur Einsparung von Energie und zur Nutzung ...' -> 'Law Title: Law to Save Energy and to Utilize Renew...'
+2026-06-02 20:00:07,680 [INFO] ai: PREWARM [25]: 'Gesetz zur Einsparung von Energie und zu' → 'Law Title: Law to Save Energy and to Uti'
+2026-06-02 20:00:07,680 [INFO] PREWARM [25]: 'Gesetz zur Einsparung von Energie und zu' → 'Law Title: Law to Save Energy and to Uti'
+2026-06-02 20:00:10,265 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:10,265 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:10,266 [INFO] ai: Translated: 'Gesetz über gebäude- und wohnungsstatistische Erhe...' -> 'Law Title in English:
+
+Gesetz über Gebäude- und Wo...'
+2026-06-02 20:00:10,266 [INFO] Translated: 'Gesetz über gebäude- und wohnungsstatistische Erhe...' -> 'Law Title in English:
+
+Gesetz über Gebäude- und Wo...'
+2026-06-02 20:00:10,266 [INFO] ai: PREWARM [26]: 'Gesetz über gebäude- und wohnungsstatist' → 'Law Title in English:
+
+Gesetz über Gebäu'
+2026-06-02 20:00:10,266 [INFO] PREWARM [26]: 'Gesetz über gebäude- und wohnungsstatist' → 'Law Title in English:
+
+Gesetz über Gebäu'
+2026-06-02 20:00:12,811 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:12,811 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:12,812 [INFO] ai: Translated: 'Erste Verordnung über die Erhöhung der Zinsen für ...' -> 'first ordinance on the increase of interest for lo...'
+2026-06-02 20:00:12,812 [INFO] Translated: 'Erste Verordnung über die Erhöhung der Zinsen für ...' -> 'first ordinance on the increase of interest for lo...'
+2026-06-02 20:00:12,812 [INFO] ai: PREWARM [27]: 'Erste Verordnung über die Erhöhung der Z' → 'first ordinance on the increase of inter'
+2026-06-02 20:00:12,812 [INFO] PREWARM [27]: 'Erste Verordnung über die Erhöhung der Z' → 'first ordinance on the increase of inter'
+2026-06-02 20:00:15,508 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:15,508 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:15,509 [INFO] ai: Translated: 'Gesetz über den Schutz des Arbeitsplatzes bei Einb...' -> 'Law Title in English:
+
+Gesetz zur Schutzverordnung...'
+2026-06-02 20:00:15,509 [INFO] Translated: 'Gesetz über den Schutz des Arbeitsplatzes bei Einb...' -> 'Law Title in English:
+
+Gesetz zur Schutzverordnung...'
+2026-06-02 20:00:15,509 [INFO] ai: PREWARM [28]: 'Gesetz über den Schutz des Arbeitsplatze' → 'Law Title in English:
+
+Gesetz zur Schutz'
+2026-06-02 20:00:15,509 [INFO] PREWARM [28]: 'Gesetz über den Schutz des Arbeitsplatze' → 'Law Title in English:
+
+Gesetz zur Schutz'
+2026-06-02 20:00:17,946 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:17,946 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:17,947 [INFO] ai: Translated: 'Gesetz über die Pflegezeit...' -> 'Law Title: Law on Maternity Leave...'
+2026-06-02 20:00:17,947 [INFO] Translated: 'Gesetz über die Pflegezeit...' -> 'Law Title: Law on Maternity Leave...'
+2026-06-02 20:00:17,948 [INFO] ai: PREWARM [29]: 'Gesetz über die Pflegezeit' → 'Law Title: Law on Maternity Leave'
+2026-06-02 20:00:17,948 [INFO] PREWARM [29]: 'Gesetz über die Pflegezeit' → 'Law Title: Law on Maternity Leave'
+2026-06-02 20:00:20,360 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:20,360 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:20,360 [INFO] ai: Translated: 'Bundesbeamtengesetz...' -> 'Federal Law on Civil Servants...'
+2026-06-02 20:00:20,360 [INFO] Translated: 'Bundesbeamtengesetz...' -> 'Federal Law on Civil Servants...'
+2026-06-02 20:00:20,361 [INFO] ai: PREWARM [30]: 'Bundesbeamtengesetz' → 'Federal Law on Civil Servants'
+2026-06-02 20:00:20,361 [INFO] PREWARM [30]: 'Bundesbeamtengesetz' → 'Federal Law on Civil Servants'
+2026-06-02 20:00:22,869 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:22,869 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:22,869 [INFO] ai: Translated: 'Gesetz über die Rechtsstellung der Soldaten...' -> 'Law Title in English: Law on the Status of Soldier...'
+2026-06-02 20:00:22,869 [INFO] Translated: 'Gesetz über die Rechtsstellung der Soldaten...' -> 'Law Title in English: Law on the Status of Soldier...'
+2026-06-02 20:00:22,870 [INFO] ai: PREWARM [31]: 'Gesetz über die Rechtsstellung der Solda' → 'Law Title in English: Law on the Status '
+2026-06-02 20:00:22,870 [INFO] PREWARM [31]: 'Gesetz über die Rechtsstellung der Solda' → 'Law Title in English: Law on the Status '
+2026-06-02 20:00:25,458 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:25,458 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:25,459 [INFO] ai: Translated: 'Gesetz über die Rechtsverhältnisse der Mitglieder ...' -> 'Law Title in English:
+Gesetz über die Rechtsverhäl...'
+2026-06-02 20:00:25,459 [INFO] Translated: 'Gesetz über die Rechtsverhältnisse der Mitglieder ...' -> 'Law Title in English:
+Gesetz über die Rechtsverhäl...'
+2026-06-02 20:00:25,459 [INFO] ai: PREWARM [32]: 'Gesetz über die Rechtsverhältnisse der M' → 'Law Title in English:
+Gesetz über die Re'
+2026-06-02 20:00:25,459 [INFO] PREWARM [32]: 'Gesetz über die Rechtsverhältnisse der M' → 'Law Title in English:
+Gesetz über die Re'
+2026-06-02 20:00:27,876 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:27,876 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:27,876 [INFO] ai: Translated: 'Reichsversicherungsordnung...' -> 'Reichsbank Insurance Ordinance...'
+2026-06-02 20:00:27,876 [INFO] Translated: 'Reichsversicherungsordnung...' -> 'Reichsbank Insurance Ordinance...'
+2026-06-02 20:00:27,877 [INFO] ai: PREWARM [33]: 'Reichsversicherungsordnung' → 'Reichsbank Insurance Ordinance'
+2026-06-02 20:00:27,877 [INFO] PREWARM [33]: 'Reichsversicherungsordnung' → 'Reichsbank Insurance Ordinance'
+2026-06-02 20:00:33,631 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:33,631 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:33,632 [INFO] ai: Translated: 'Insolvenzordnung...' -> 'Insolvency Ordinance...'
+2026-06-02 20:00:33,632 [INFO] Translated: 'Insolvenzordnung...' -> 'Insolvency Ordinance...'
+2026-06-02 20:00:33,633 [INFO] ai: PREWARM [34]: 'Insolvenzordnung' → 'Insolvency Ordinance'
+2026-06-02 20:00:33,633 [INFO] PREWARM [34]: 'Insolvenzordnung' → 'Insolvency Ordinance'
+2026-06-02 20:00:36,317 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:36,317 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:36,318 [INFO] ai: Translated: 'Gesetz über die Rechtsverhältnisse der Mitglieder ...' -> 'Law Title in English: Law on the Rights and Obliga...'
+2026-06-02 20:00:36,318 [INFO] Translated: 'Gesetz über die Rechtsverhältnisse der Mitglieder ...' -> 'Law Title in English: Law on the Rights and Obliga...'
+2026-06-02 20:00:36,319 [INFO] ai: PREWARM [35]: 'Gesetz über die Rechtsverhältnisse der M' → 'Law Title in English: Law on the Rights '
+2026-06-02 20:00:36,319 [INFO] PREWARM [35]: 'Gesetz über die Rechtsverhältnisse der M' → 'Law Title in English: Law on the Rights '
+2026-06-02 20:00:38,718 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:38,718 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:38,719 [INFO] ai: Translated: 'Deutsches Richtergesetz...' -> 'Deutsche Richtergesetz...'
+2026-06-02 20:00:38,719 [INFO] Translated: 'Deutsches Richtergesetz...' -> 'Deutsche Richtergesetz...'
+2026-06-02 20:00:38,720 [INFO] ai: PREWARM [36]: 'Deutsches Richtergesetz' → 'Deutsche Richtergesetz'
+2026-06-02 20:00:38,720 [INFO] PREWARM [36]: 'Deutsches Richtergesetz' → 'Deutsche Richtergesetz'
+2026-06-02 20:00:41,276 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:41,276 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:41,277 [INFO] ai: Translated: 'Verordnung über die Teilzeitbeschäftigung von Sold...' -> 'Ordinance concerning part-time employment of women...'
+2026-06-02 20:00:41,277 [INFO] Translated: 'Verordnung über die Teilzeitbeschäftigung von Sold...' -> 'Ordinance concerning part-time employment of women...'
+2026-06-02 20:00:41,277 [INFO] ai: PREWARM [37]: 'Verordnung über die Teilzeitbeschäftigun' → 'Ordinance concerning part-time employmen'
+2026-06-02 20:00:41,277 [INFO] PREWARM [37]: 'Verordnung über die Teilzeitbeschäftigun' → 'Ordinance concerning part-time employmen'
+2026-06-02 20:00:43,674 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:43,674 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:43,675 [INFO] ai: Translated: 'Gesetz zum Schutze der arbeitenden Jugend...' -> 'Gesetz zur Schutz des Arbeitenden Jugend...'
+2026-06-02 20:00:43,675 [INFO] Translated: 'Gesetz zum Schutze der arbeitenden Jugend...' -> 'Gesetz zur Schutz des Arbeitenden Jugend...'
+2026-06-02 20:00:43,675 [INFO] ai: PREWARM [38]: 'Gesetz zum Schutze der arbeitenden Jugen' → 'Gesetz zur Schutz des Arbeitenden Jugend'
+2026-06-02 20:00:43,675 [INFO] PREWARM [38]: 'Gesetz zum Schutze der arbeitenden Jugen' → 'Gesetz zur Schutz des Arbeitenden Jugend'
+2026-06-02 20:00:46,292 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:46,292 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:46,294 [INFO] ai: Translated: 'Gesetz über das Verfahren in Familiensachen und in...' -> 'Law Title: Law on the Procedure in Family Matters ...'
+2026-06-02 20:00:46,294 [INFO] Translated: 'Gesetz über das Verfahren in Familiensachen und in...' -> 'Law Title: Law on the Procedure in Family Matters ...'
+2026-06-02 20:00:46,295 [INFO] ai: PREWARM [39]: 'Gesetz über das Verfahren in Familiensac' → 'Law Title: Law on the Procedure in Famil'
+2026-06-02 20:00:46,295 [INFO] PREWARM [39]: 'Gesetz über das Verfahren in Familiensac' → 'Law Title: Law on the Procedure in Famil'
+2026-06-02 20:00:48,696 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:48,696 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:48,698 [INFO] ai: Translated: 'Einkommensteuergesetz...' -> 'Income Tax Act...'
+2026-06-02 20:00:48,698 [INFO] Translated: 'Einkommensteuergesetz...' -> 'Income Tax Act...'
+2026-06-02 20:00:48,698 [INFO] ai: PREWARM [40]: 'Einkommensteuergesetz' → 'Income Tax Act'
+2026-06-02 20:00:48,698 [INFO] PREWARM [40]: 'Einkommensteuergesetz' → 'Income Tax Act'
+2026-06-02 20:00:51,222 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:51,222 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:51,223 [INFO] ai: Translated: 'Bundeskindergeldgesetz...' -> 'Federal Kindergarten Allowance Act...'
+2026-06-02 20:00:51,223 [INFO] Translated: 'Bundeskindergeldgesetz...' -> 'Federal Kindergarten Allowance Act...'
+2026-06-02 20:00:51,223 [INFO] ai: PREWARM [41]: 'Bundeskindergeldgesetz' → 'Federal Kindergarten Allowance Act'
+2026-06-02 20:00:51,223 [INFO] PREWARM [41]: 'Bundeskindergeldgesetz' → 'Federal Kindergarten Allowance Act'
+2026-06-02 20:00:53,860 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:53,860 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:53,861 [INFO] ai: Translated: 'Sozialgesetzbuch (SGB) - Achtes Buch (VIII) - Kind...' -> 'Social Code (SGB) - Eighth Book (VIII) - Children ...'
+2026-06-02 20:00:53,861 [INFO] Translated: 'Sozialgesetzbuch (SGB) - Achtes Buch (VIII) - Kind...' -> 'Social Code (SGB) - Eighth Book (VIII) - Children ...'
+2026-06-02 20:00:53,861 [INFO] ai: PREWARM [42]: 'Sozialgesetzbuch (SGB) - Achtes Buch (VI' → 'Social Code (SGB) - Eighth Book (VIII) -'
+2026-06-02 20:00:53,861 [INFO] PREWARM [42]: 'Sozialgesetzbuch (SGB) - Achtes Buch (VI' → 'Social Code (SGB) - Eighth Book (VIII) -'
+2026-06-02 20:00:56,306 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:56,306 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:56,307 [INFO] ai: Translated: 'Erstes Gesetz zur Vereinheitlichung und Neuregelun...' -> 'First Law on Uniformity and Recodification of the ...'
+2026-06-02 20:00:56,307 [INFO] Translated: 'Erstes Gesetz zur Vereinheitlichung und Neuregelun...' -> 'First Law on Uniformity and Recodification of the ...'
+2026-06-02 20:00:56,307 [INFO] ai: PREWARM [43]: 'Erstes Gesetz zur Vereinheitlichung und ' → 'First Law on Uniformity and Recodificati'
+2026-06-02 20:00:56,307 [INFO] PREWARM [43]: 'Erstes Gesetz zur Vereinheitlichung und ' → 'First Law on Uniformity and Recodificati'
+2026-06-02 20:00:59,020 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:00:59,020 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:00:59,021 [INFO] ai: Translated: 'Sozialgesetzbuch (SGB) Drittes Buch (III) - Arbeit...' -> 'Social Code (SGB) Third Book (III) - Employment Su...'
+2026-06-02 20:00:59,021 [INFO] Translated: 'Sozialgesetzbuch (SGB) Drittes Buch (III) - Arbeit...' -> 'Social Code (SGB) Third Book (III) - Employment Su...'
+2026-06-02 20:00:59,021 [INFO] ai: PREWARM [44]: 'Sozialgesetzbuch (SGB) Drittes Buch (III' → 'Social Code (SGB) Third Book (III) - Emp'
+2026-06-02 20:00:59,021 [INFO] PREWARM [44]: 'Sozialgesetzbuch (SGB) Drittes Buch (III' → 'Social Code (SGB) Third Book (III) - Emp'
+2026-06-02 20:01:01,585 [INFO] ai: Ollama translation successful (attempt 1)
+2026-06-02 20:01:01,585 [INFO] Ollama translation successful (attempt 1)
+2026-06-02 20:01:01,586 [INFO] ai: Translated: 'Gesetz über die Leistungen zur Sicherung des Unter...' -> 'Law Title in English: Law on the Provision of Serv...'
+2026-06-02 20:01:01,586 [INFO] Translated: 'Gesetz über die Leistungen zur Sicherung des Unter...' -> 'Law Title in English: Law on the Provision of Serv...'
+2026-06-02 20:01:01,586 [INFO] ai: PREWARM [45]: 'Gesetz über die Leistungen zur Sicherung' → 'Law Title in English: Law on the Provisi'
+2026-06-02 20:01:01,586 [INFO] PREWARM [45]: 'Gesetz über die Leistungen zur Sicherung' → 'Law Title in English: Law on the Provisi'
+2026-06-02 20:01:03,588 [INFO] ai: PREWARM: Done. 45 law titles pre-translated.
+2026-06-02 20:01:03,588 [INFO] PREWARM: Done. 45 law titles pre-translated.

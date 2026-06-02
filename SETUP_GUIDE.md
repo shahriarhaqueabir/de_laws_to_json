@@ -220,16 +220,15 @@ curl -fsSL https://ollama.ai/install.sh | sh
 
 ```bash
 # Download the recommended model
-ollama pull llama3.2
+ollama pull qwen2.5:1.5b
 ```
 
-**Model size:** ~2 GB
+**Model size:** ~1 GB
 
 **Alternative models:**
 ```bash
-ollama pull llama3.1      # Meta's Llama 3.1
+ollama pull llama3.2:1b   # Llama 3.2 1B (very light)
 ollama pull mistral       # Mistral 7B
-ollama pull codellama     # Code-focused model
 ```
 
 ### Step 3: Verify Ollama
@@ -239,7 +238,7 @@ ollama pull codellama     # Code-focused model
 ollama list
 
 # Test generation
-ollama run llama3.2 "Hello, world!"
+ollama run qwen2.5:1.5b "Hello, world!"
 ```
 
 ### Step 4: Enable AI in Application
@@ -406,7 +405,7 @@ PORT = 5001  # Use different port
 
 **Solutions:**
 1. Start Ollama: `ollama serve`
-2. Pull model: `ollama pull llama3.2`
+2. Pull model: `ollama pull qwen2.5:1.5b`
 3. Check URL in `.env`:
    ```
    OLLAMA_URL=http://127.0.0.1:11434/api/generate

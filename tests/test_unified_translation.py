@@ -22,7 +22,7 @@ import urllib.error
 # Configuration
 FLASK_URL = "http://127.0.0.1:5000"
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:1.5b")
 
 # Test cases
 TEST_CASES = [

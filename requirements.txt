@@ -21,8 +21,17 @@ tiktoken>=0.12.0
 # YAML Configuration (for AI guardrails)
 PyYAML>=6.0
 
+# Desktop App Packaging (Phase 6)
+pywebview>=4.4
+
+# Vector search: cosine similarity for embeddings (Phase 2)
+numpy>=1.26
+
 # Optional: AI Translation (if using Ollama or external translation services)
 # deep-translator>=1.11.4
+
+# Build Tools (install separately, not via pip on Windows)
+# pyinstaller>=6.0       # Run: pip install pyinstaller
 
 # Development & Testing
 # pytest>=7.4.0          # Uncomment for running tests

@@ -297,7 +297,7 @@ Use citation format:
 ollama list
 
 # Download model if needed
-ollama pull llama3.2
+ollama pull qwen2.5:1.5b
 
 # Start Ollama
 ollama serve

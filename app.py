@@ -15,6 +15,7 @@ import logging
 import os
 import sys
 import re
+import sqlite3
 import threading
 import bisect
 import secrets
@@ -30,6 +31,9 @@ from functools import wraps
 from typing import Dict, List, Optional, Tuple
 
 from flask import Flask, jsonify, render_template, request, Response
+
+# Database layer
+from database.db import get_db, db_is_ready, init_db, DB_PATH
 
 # Import centralized logging configuration
 from logging_config import (
@@ -179,9 +183,6 @@ def _log_response(response):
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-JSON_DIR = "./de_federal_json"
-EN_JSON_DIR = "./de_federal_translations"
-SEARCH_INDEX_FILE = "./search_index.json"
 HOST = "127.0.0.1"
 PORT = 5000
 
@@ -937,20 +938,36 @@ DE_EXPANSIONS: Dict[str, List[str]] = {
 _index_lock = threading.Lock()
 _indexing_done = threading.Event()
 
-# Active corpus storage
-_law_summaries: List[Dict] = []
-_inverted: Dict[str, List[Tuple[int, float]]] = {}
-_sorted_terms: List[str] = []  # For fast prefix lookups via bisect
-
-# BM25 Metadata
-_doc_lengths: Dict[int, int] = {}
-_avgdl: float = 0.0
-
-_total_files = 0
-_indexed_files = 0
-
 # Security
 ADMIN_API_KEY = secrets.token_hex(16)
+
+# DB-level counters (populated once at startup)
+_db_law_count: int = 0
+_db_norm_count: int = 0
+
+
+def is_first_run() -> bool:
+    """Return True if the database does not exist or contains no laws."""
+    ready, count = db_is_ready()
+    return not ready
+
+
+def _init_db_state() -> None:
+    """Called once at startup to verify the DB and cache row counts."""
+    global _db_law_count, _db_norm_count
+    ready, count = db_is_ready()
+    if ready:
+        with get_db() as conn:
+            _db_law_count  = conn.execute("SELECT COUNT(*) FROM laws").fetchone()[0]
+            _db_norm_count = conn.execute("SELECT COUNT(*) FROM norms").fetchone()[0]
+        indexing_logger.info(
+            "Database ready: %d laws, %d norms.", _db_law_count, _db_norm_count
+        )
+        _indexing_done.set()
+    else:
+        indexing_logger.warning(
+            "Database not ready — run process_de_laws.py or use the Setup Wizard."
+        )
 
 # ---------------------------------------------------------------------------
 # Text helpers
@@ -1012,284 +1029,12 @@ def expand_query(raw: str) -> Tuple[List[str], List[str]]:
     return res
 
 # ---------------------------------------------------------------------------
-# Index building
+# Search (SQLite FTS5 + BM25-compatible scoring)
 # ---------------------------------------------------------------------------
 
-def _extract_summary(fpath: str) -> Optional[Dict]:
-    """Extract lightweight metadata from a single law JSON file."""
-    try:
-        with open(fpath, encoding="utf-8", errors="replace") as fh:
-            raw = json.load(fh)
-    except (json.JSONDecodeError, OSError):
-        return None
-
-    # Structural mapping for the updated process_de_laws.py output
-    meta = raw.get("meta", {})
-    norms_raw = raw.get("norms", [])
-
-    # key defaults to filename stem if not explicit
-    key = raw.get("key")
-    if not key:
-        key = os.path.splitext(os.path.basename(fpath))[0]
-
-    category = _categorize(meta.get("title", ""), str(key))
-
-    norms = []
-    for norm in norms_raw:
-        preview = ""
-        paragraphs = norm.get("paragraphs", [])
-        if paragraphs:
-            preview = paragraphs[0].get("text", "")[:280]
-
-        norms.append(
-            {
-                "norm_id": norm.get("norm_id", ""),
-                "title": norm.get("title", ""),
-                "preview": preview,
-            }
-        )
-
-    # Check if English translation exists
-    en_translation_path = os.path.join(EN_JSON_DIR, f"{key}.json")
-    en_title = ""
-    en_norms = []
-    if os.path.exists(en_translation_path):
-        try:
-            with open(en_translation_path, encoding="utf-8", errors="replace") as fh:
-                en_raw = json.load(fh)
-                en_meta = en_raw.get("meta", {})
-                en_title = en_meta.get("title", "")
-
-                for en_norm in en_raw.get("norms", []):
-                    en_preview = ""
-                    en_paragraphs = en_norm.get("paragraphs", [])
-                    if en_paragraphs:
-                        en_preview = en_paragraphs[0].get("text", "")[:280]
-                    en_norms.append(
-                        {
-                            "norm_id": en_norm.get("norm_id", ""),
-                            "title": en_norm.get("title", ""),
-                            "preview": en_preview,
-                        }
-                    )
-        except (json.JSONDecodeError, OSError) as e:
-            logging.warning("Failed to load translation for %s: %s", key, e)
-
-    return {
-        "key": key,
-        "title": meta.get("title", ""),
-        "en_title": en_title,
-        "alt_title": meta.get("alt_title", ""),
-        "last_changed": meta.get("last_changed", ""),
-        "source": meta.get("source", ""),
-        "category": category,
-        "norms": norms,
-        "en_norms": en_norms,
-        "file_path": fpath,
-        "has_translation": bool(en_title or en_norms),
-    }
-
-def _populate_inverted_pure(
-    summaries: List[Dict],
-) -> Tuple[Dict, Dict[int, int], float]:
-    """Build and return an in-memory inverted index, doc lengths, and avg document length."""
-    inv: Dict[str, List[Tuple[int, float]]] = defaultdict(list)
-    doc_lengths: Dict[int, int] = {}
-    total_len = 0
-
-    for idx, s in enumerate(summaries):
-        term_scores: Dict[str, float] = defaultdict(float)
-        # We calculate "raw" frequency-like scores for BM25.
-        # Law abbreviation (highest signal)
-        tokens_key = tokenize(s["key"])
-        for t in tokens_key:
-            term_scores[t] += 20.0
-        # Titles (German and English)
-        tokens_titles = tokenize(
-            s["title"] + " " + s.get("alt_title", "") + " " + s.get("en_title", "")
-        )
-        for t in tokens_titles:
-            term_scores[t] += 10.0
-        # Norm ids and titles (German and English)
-        all_norms = s.get("norms", []) + s.get("en_norms", [])
-        norm_tokens_count = 0
-        for norm in all_norms:
-            toks_norm = tokenize(norm["norm_id"] + " " + norm["title"])
-            for t in toks_norm:
-                term_scores[t] += 3.0
-            # Paragraph previews (low weight)
-            toks_preview = tokenize(norm["preview"])
-            for t in toks_preview:
-                term_scores[t] += 0.4
-            norm_tokens_count += len(toks_norm) + len(toks_preview)
-
-        # Doc length is the sum of relevant tokens (approximated)
-        d_len = len(tokens_key) + len(tokens_titles) + norm_tokens_count
-        doc_lengths[idx] = d_len
-        total_len += d_len
-
-        for term, score in term_scores.items():
-            inv[term].append((idx, score))
-
-    avgdl = total_len / max(len(summaries), 1)
-    return dict(inv), doc_lengths, avgdl
-
-def _fast_load_index(path: str) -> bool:
-    """Try to load a pre-built search index with BM25 metadata. Returns True on success."""
-    global \
-        _total_files, \
-        _indexed_files, \
-        _law_summaries, \
-        _inverted, \
-        _sorted_terms, \
-        _doc_lengths, \
-        _avgdl
-    try:
-        with open(path, encoding="utf-8") as fh:
-            data = json.load(fh)
-
-        # Backward compatibility check
-        if isinstance(data, list):
-            # Old format, just summaries
-            summaries = data
-            inverted, doc_lengths, avgdl = _populate_inverted_pure(summaries)
-        else:
-            summaries = data.get("summaries", [])
-            inverted = data.get("inverted", {})
-            # Load doc_lengths keys as ints (JSON keys are always strings)
-            raw_dl = data.get("doc_lengths", {})
-            doc_lengths = {int(k): v for k, v in raw_dl.items()}
-            avgdl = data.get("avgdl", 0.0)
-
-            if not inverted or not doc_lengths:
-                inverted, doc_lengths, avgdl = _populate_inverted_pure(summaries)
-
-        new_sorted_terms = sorted(inverted.keys())
-
-        with _index_lock:
-            _law_summaries = summaries
-            _inverted = inverted
-            _sorted_terms = new_sorted_terms
-            _doc_lengths = doc_lengths
-            _avgdl = avgdl
-            _total_files = len(summaries)
-            _indexed_files = len(summaries)
-
-        _indexing_done.set()
-        logging.info(
-            "Fast Index Ready: %d laws, %d terms, avgdl=%.2f.",
-            len(summaries),
-            len(_inverted),
-            _avgdl,
-        )
-        return True
-    except (json.JSONDecodeError, OSError, ValueError) as e:
-        logging.warning("Cached index unreadable — rebuilding from source: %s", e)
-        with _index_lock:
-            _law_summaries = []
-            _inverted = {}
-            _sorted_terms = []
-            _doc_lengths = {}
-            _avgdl = 0.0
-        return False
-
-def _build_from_source() -> List[Dict]:
-    """Scan JSON_DIR and build summaries from individual law files."""
-    global _total_files, _indexed_files
-    files = sorted(f for f in os.listdir(JSON_DIR) if f.endswith(".json"))
-    _total_files = len(files)
-    logging.info("Building search index from %d files …", _total_files)
-    summaries: List[Dict] = []
-    for i, fname in enumerate(files):
-        summary = _extract_summary(os.path.join(JSON_DIR, fname))
-        if summary:
-            summaries.append(summary)
-        _indexed_files = i + 1
-    return summaries
-
-def _persist_index(
-    summaries: List[Dict], local_inverted: Dict, doc_lengths: Dict, avgdl: float
-) -> bool:
-    """Save the lightweight index, inverted mapping, and BM25 metadata to disk atomically."""
-    try:
-        data = {
-            "summaries": summaries,
-            "inverted": local_inverted,
-            "doc_lengths": doc_lengths,
-            "avgdl": avgdl,
-        }
-
-        # Write to a temporary file first, then atomically rename it.
-        # This prevents search_index.json corruption if the process is killed midway.
-        fd, temp_path = tempfile.mkstemp(
-            dir=os.path.dirname(os.path.abspath(SEARCH_INDEX_FILE)), suffix=".tmp"
-        )
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            json.dump(data, fh, ensure_ascii=False)
-
-        # Atomic replace
-        os.replace(temp_path, SEARCH_INDEX_FILE)
-        logging.info("Deep search index atomically saved → %s", SEARCH_INDEX_FILE)
-        return True
-    except OSError as exc:
-        logging.warning("Could not save search index: %s", exc)
-        try:
-            # Clean up temp file if it exists
-            if "temp_path" in locals() and os.path.exists(temp_path):
-                os.remove(temp_path)
-        except Exception:
-            pass
-        return False
-
-def build_index(force: bool = False) -> None:
-    global _law_summaries, _inverted, _sorted_terms, _indexed_files, _total_files
-    start_time = time.time()
-    try:
-        indexing_logger.info("=" * 50)
-        indexing_logger.info("Index build started")
-        
-        if not os.path.isdir(JSON_DIR):
-            indexing_logger.error("'%s' not found — run the download/process pipeline first.", JSON_DIR)
-            return
-
-        _indexing_done.clear()
-        _indexed_files = 0
-
-        # Fast path: pre-built lightweight index exists (only if not forcing)
-        if not force and os.path.exists(SEARCH_INDEX_FILE):
-            indexing_logger.info("Loading pre-built search index from %s …", SEARCH_INDEX_FILE)
-            if _fast_load_index(SEARCH_INDEX_FILE):
-                indexing_logger.info("Index loaded successfully from cache")
-                return
-
-        # Slow path: scan individual JSON files
-        indexing_logger.info("Building index from source JSON files...")
-        summaries = _build_from_source()
-        new_inverted, new_doc_lengths, new_avgdl = _populate_inverted_pure(summaries)
-        new_sorted_terms = sorted(new_inverted.keys())
-
-        # Persist to disk before swapping global references
-        persisted = _persist_index(summaries, new_inverted, new_doc_lengths, new_avgdl)
-        if not persisted:
-            indexing_logger.warning("Index persistence failed; using in-memory only.")
-
-        # Swapping global references
-        with _index_lock:
-            _law_summaries = summaries
-            _inverted = new_inverted
-            _sorted_terms = new_sorted_terms
-            _doc_lengths = new_doc_lengths
-            _avgdl = new_avgdl
-
-        duration = time.time() - start_time
-        indexing_logger.info("Indexing complete: %d laws ready in %.2fs", len(summaries), duration)
-        indexing_logger.info(f"Index statistics: {len(new_inverted)} unique terms, {len(new_sorted_terms)} sorted terms")
-    except Exception as e:
-        indexing_logger.error(f"FATAL: Index build failed: {e}")
-        error_logger.error(f"Index build failed: {e}")
-    finally:
-        _indexing_done.set()
-        indexing_logger.info("Index build finished (success or failure)")
+def _dummy_extract_summary(fpath: str) -> Optional[Dict]:
+    """Placeholder — no longer used; data comes from SQLite."""
+    return None
 
 # ---------------------------------------------------------------------------
 # Search
@@ -1364,166 +1109,241 @@ def _extract_cyborg_metadata(law: dict) -> dict:
     }
 
 def search_laws(query: str, top_k: int = 20, category: str = "") -> Dict:
-    """Search for laws matching the query (returns laws only, not norms)."""
+    """
+    Search for laws matching the query using a Hybrid Search pipeline:
+    1. Query expansion via legal dictionary & synonyms.
+    2. SQLite FTS5 search to fetch top 100 candidate paragraphs (norms).
+    3. nomic-embed-text vector embedding re-ranking of the candidate paragraphs.
+    4. Aggregation of paragraph scores to the law level.
+    5. Exact key & citation boosts applied to the aggregated scores.
+    6. Normalization of scores to a percentage scale (0-100%).
+    """
     if not query.strip() and not category:
         return {"results": [], "keywords": [], "german_terms": []}
 
     cited_law, cited_sec = _detect_citation(query)
     original_tokens, german_terms = expand_query(query)
-    scores: Dict[int, float] = defaultdict(float)
-    matched_map: Dict[int, List[str]] = defaultdict(list)
-
-    with _index_lock:
-        local_summaries = _law_summaries
-        local_inverted = _inverted
-        local_sorted_terms = _sorted_terms
-        local_doc_lengths = _doc_lengths
-        local_avgdl = _avgdl
-
-    num_docs = len(local_summaries)
     q_lower = query.lower().strip()
 
-    # 1. Base Score & Citation/Key Boost
-    for idx, law in enumerate(local_summaries):
-        if category and law.get("category") != category:
-            continue
+    # Build FTS5 query terms (OR logic)
+    fts_terms = [t.replace('"', '') for t in german_terms if t.strip()]
+    if not fts_terms:
+        fts_terms = [t.replace('"', '') for t in original_tokens if t.strip()]
 
-        # Basic listing for category if no query
-        if not q_lower and category:
-            scores[idx] += 1.0
+    results_map: Dict[str, Dict] = {}   # key -> result dict
+    matched_terms_map: Dict[str, List[str]] = defaultdict(list)
+    law_results: Dict[str, Dict] = {}
 
-        law_key = law.get("key", "").lower()
-        if q_lower:
-            if q_lower == law_key:
-                scores[idx] += 1000.0
-                matched_map[idx].append(f"Key match: {law_key}")
-            elif q_lower in law_key:
-                scores[idx] += 200.0
-                matched_map[idx].append(f"Key partial: {law_key}")
+    try:
+        with get_db() as conn:
+            fts_rows = []
+            # ── 1. FTS5 full-text search over norms (top 100 candidates) ──
+            if fts_terms:
+                fts_query = " OR ".join(f'"{t}"' for t in fts_terms)
+                fts_rows = conn.execute(
+                    """
+                    SELECT n.id AS norm_id, n.law_id, l.key, l.title, l.alt_title, l.last_changed,
+                           l.category, l.authority, l.status, l.jurisdiction,
+                           (SELECT COUNT(*) FROM norms n2 WHERE n2.law_id = l.id) AS total_norms,
+                           n.norm_id AS norm_num, n.title AS norm_title,
+                           snippet(fts_norms, 2, '[', ']', '...', 20) AS snippet,
+                           rank AS fts_rank
+                    FROM fts_norms fts
+                    JOIN norms n ON n.id = fts.rowid
+                    JOIN laws  l ON n.law_id = l.id
+                    WHERE fts_norms MATCH ?
+                    AND (? = '' OR l.category = ?)
+                    ORDER BY rank ASC
+                    LIMIT 100
+                    """,
+                    (fts_query, category, category),
+                ).fetchall()
 
-            if cited_law and cited_law in law_key:
-                if any(
-                    cited_sec == str(n.get("norm_id", "")) for n in law.get("norms", [])
-                ):
-                    scores[idx] += 400.0
-                    matched_map[idx].append(f"Citation: {cited_law} {cited_sec}")
+            # ── 2. Vector re-ranking of the FTS5 candidate norms ──────────
+            vector_scores: Dict[int, float] = {}
+            if fts_rows:
+                candidate_norm_ids = [row["norm_id"] for row in fts_rows]
+                try:
+                    from vector_search import vector_rerank
+                    # Re-rank candidate paragraph IDs using the query embedding
+                    reranked = vector_rerank(query, candidate_norm_ids, top_k=100)
+                    vector_scores = {norm_id: score for norm_id, score in reranked}
+                except Exception as e:
+                    ai_logger.warning("Vector re-ranking skipped: %s", e)
 
-    # 2. BM25 scoring for terms
-    _apply_bm25_scoring(
-        scores,
-        german_terms,
-        local_inverted,
-        local_sorted_terms,
-        local_doc_lengths,
-        local_avgdl,
-        num_docs,
-        category,
-        local_summaries,
-        matched_map=matched_map,
-    )
+            # ── 3. Aggregate paragraph scores back to law-level scores ───
+            for i, row in enumerate(fts_rows):
+                k = row["key"]
+                norm_id = row["norm_id"]
+                
+                # Reciprocal rank score for FTS5 (ranges from 0.01 to 1.0)
+                norm_fts_score = 1.0 / (i + 1.0)
+                
+                # Retrieve vector embedding score (cosine similarity, usually 0.3 to 0.8)
+                v_score = vector_scores.get(norm_id, 0.0) if vector_scores else 0.0
+                
+                # Hybrid merge: 60% Vector, 40% FTS5 (if vector embeddings exist)
+                if vector_scores and norm_id in vector_scores:
+                    norm_score = 0.4 * norm_fts_score + 0.6 * v_score
+                else:
+                    # Fallback to pure FTS5 score
+                    norm_score = norm_fts_score
+                
+                if k not in law_results:
+                    law_results[k] = {
+                        "key":           row["key"],
+                        "title":         row["title"],
+                        "alt_title":     row["alt_title"],
+                        "last_changed":  row["last_changed"],
+                        "category":      row["category"],
+                        "authority":     row["authority"],
+                        "status":        row["status"],
+                        "jurisdiction":  row["jurisdiction"],
+                        "total_norms":   row["total_norms"],
+                        "norm_hits":     1,
+                        "max_norm_score": norm_score,
+                        "relevant_norms": [{
+                            "norm_id": row["norm_num"],
+                            "title":   row["norm_title"],
+                            "snippet": row["snippet"]
+                        }]
+                    }
+                else:
+                    res = law_results[k]
+                    res["norm_hits"] += 1
+                    if norm_score > res["max_norm_score"]:
+                        res["max_norm_score"] = norm_score
+                    # Keep up to 3 highly-relevant norms per law for UI context
+                    if len(res["relevant_norms"]) < 3:
+                        res["relevant_norms"].append({
+                            "norm_id": row["norm_num"],
+                            "title":   row["norm_title"],
+                            "snippet": row["snippet"]
+                        })
 
-    if not scores:
-        return {
-            "results": [],
-            "keywords": original_tokens,
-            "german_terms": german_terms,
-        }
+            # Calculate base law-level score from norm aggregates
+            for k, res in law_results.items():
+                # Base is the best paragraph's score
+                base = res["max_norm_score"]
+                # Give a tiny boost for laws with multiple relevant matches
+                hits_bonus = min(0.1, (res["norm_hits"] - 1) * 0.02)
+                results_map[k] = res | {"score": base + hits_bonus}
+                matched_terms_map[k].extend(fts_terms)
 
-    return _format_search_results(
-        scores,
-        local_summaries,
-        top_k,
-        original_tokens,
-        german_terms,
-        matched_map=matched_map,
-    )
+            # ── 4. Exact key boost (keeps the existing fast-path boosts) ──
+            if q_lower:
+                exact_rows = conn.execute(
+                    """
+                    SELECT l.key, l.title, l.alt_title, l.last_changed,
+                           l.category, l.authority, l.status, l.jurisdiction,
+                           (SELECT COUNT(*) FROM norms n WHERE n.law_id = l.id) AS total_norms
+                     FROM laws l
+                    WHERE LOWER(l.key) = ? OR LOWER(l.key) LIKE ?
+                    LIMIT 5
+                    """,
+                    (q_lower, f"%{q_lower}%"),
+                ).fetchall()
+                for row in exact_rows:
+                    k = row["key"]
+                    boost = 1000.0 if row["key"].lower() == q_lower else 200.0
+                    if k in results_map:
+                        results_map[k]["score"] += boost
+                    else:
+                        results_map[k] = dict(row) | {
+                            "score": boost,
+                            "relevant_norms": []
+                        }
+                    matched_terms_map[k].append(f"Key match: {k}")
 
+            # ── 5. Citation boost (boost specific targeted paragraph) ─────
+            if cited_law and cited_sec:
+                cite_rows = conn.execute(
+                    """
+                    SELECT l.key FROM laws l
+                    JOIN norms n ON n.law_id = l.id
+                    WHERE LOWER(l.key) LIKE ? AND n.norm_id = ?
+                    LIMIT 3
+                    """,
+                    (f"%{cited_law}%", cited_sec),
+                ).fetchall()
+                for row in cite_rows:
+                    k = row["key"]
+                    if k in results_map:
+                        results_map[k]["score"] += 400.0
+                    else:
+                        # Fetch complete record
+                        l_row = conn.execute(
+                            "SELECT * FROM laws WHERE key = ?", (k,)
+                        ).fetchone()
+                        if l_row:
+                            results_map[k] = dict(l_row) | {
+                                "score": 400.0,
+                                "relevant_norms": []
+                            }
+                    matched_terms_map[k].append(f"Citation: {cited_law} §{cited_sec}")
+
+            # ── 6. Category-only fallback (no query text) ─────────────────
+            if not q_lower and category and not results_map:
+                cat_rows = conn.execute(
+                    """
+                    SELECT l.key, l.title, l.alt_title, l.last_changed,
+                           l.category, l.authority, l.status, l.jurisdiction,
+                           (SELECT COUNT(*) FROM norms n WHERE n.law_id = l.id) AS total_norms
+                    FROM laws l WHERE l.category = ?
+                    ORDER BY l.key LIMIT ?
+                    """,
+                    (category, top_k),
+                ).fetchall()
+                for row in cat_rows:
+                    results_map[row["key"]] = dict(row) | {
+                        "score": 1.0,
+                        "relevant_norms": []
+                    }
+
+    except Exception as exc:
+        logging.error("search_laws hybrid search error: %s", exc, exc_info=True)
+        return {"results": [], "keywords": original_tokens, "german_terms": german_terms}
+
+    if not results_map:
+        return {"results": [], "keywords": original_tokens, "german_terms": german_terms}
+
+    # Sort results by hybrid score descending
+    sorted_items = sorted(results_map.items(), key=lambda x: x[1].get("score", 0), reverse=True)[:top_k]
+    max_score = max(v.get("score", 0) for _, v in sorted_items) or 1.0
+
+    results = []
+    for key, data in sorted_items:
+        relevance = min(100, round(data.get("score", 0) / max_score * 100))
+        results.append({
+            "key":           data.get("key", key),
+            "title":         data.get("title", ""),
+            "alt_title":     data.get("alt_title", ""),
+            "last_changed":  data.get("last_changed", ""),
+            "relevance":     relevance,
+            "total_norms":   data.get("total_norms", 0),
+            "category":      data.get("category", "other"),
+            "relevant_norms": data.get("relevant_norms", []),
+            "matched_terms": list(dict.fromkeys(matched_terms_map.get(key, []))),
+            "authority":     data.get("authority", ""),
+            "status":        data.get("status", "Active"),
+            "jurisdiction":  data.get("jurisdiction", ""),
+        })
+
+    return {"results": results, "keywords": original_tokens, "german_terms": german_terms}
+
+
+# BM25 helpers kept as no-ops for backward compat with any external callers
 def _get_matching_docs(inverted, sorted_terms, term):
-    """Retrieve documents matching a term, including prefix expansion if needed."""
-    matching_docs = inverted.get(term, [])
-    if not matching_docs and len(term) >= 4:
-        prefix = term[:5]
-        s_idx = bisect.bisect_left(sorted_terms, prefix)
-        while s_idx < len(sorted_terms) and sorted_terms[s_idx].startswith(prefix):
-            if sorted_terms[s_idx] != term:
-                matching_docs.extend(inverted[sorted_terms[s_idx]])
-            s_idx += 1
-    return matching_docs
+    return []
 
 def _calculate_term_idf(matching_docs, num_docs):
-    """Calculate Inverse Document Frequency (IDF) for a term."""
-    unique_docs = {idx for idx, _ in matching_docs}
-    n_q = len(unique_docs)
-    return math.log((num_docs - n_q + 0.5) / (n_q + 0.5) + 1.0)
+    return 0.0
 
-def _apply_bm25_scoring(
-    scores,
-    terms,
-    inverted,
-    sorted_terms,
-    doc_lengths,
-    avgdl,
-    num_docs,
-    category,
-    summaries,
-    matched_map=None,
-):
-    k1, b = 1.5, 0.75
-    for term in terms:
-        matching_docs = _get_matching_docs(inverted, sorted_terms, term)
-        if not matching_docs:
-            continue
+def _apply_bm25_scoring(*args, **kwargs):
+    pass
 
-        idf = _calculate_term_idf(matching_docs, num_docs)
-
-        for idx, freq in matching_docs:
-            if category and summaries[idx].get("category") != category:
-                continue
-            dl = doc_lengths.get(idx, avgdl)
-            score = (
-                idf
-                * (freq * (k1 + 1))
-                / (freq + k1 * (1 - b + b * (dl / max(avgdl, 1))))
-            )
-            scores[idx] += score
-            if matched_map is not None:
-                if term not in matched_map[idx]:
-                    matched_map[idx].append(term)
-
-def _format_search_results(
-    scores, summaries, top_k, keywords, german_terms, matched_map=None
-):
-    top_indices = sorted(scores, key=scores.__getitem__, reverse=True)[:top_k]
-    max_score = max(scores.values()) if scores else 0
-    results = []
-    for idx in top_indices:
-        law = summaries[idx]
-        relevance = (
-            min(100, round(scores[idx] / max_score * 100)) if max_score > 0 else 0
-        )
-
-        # Cyborg Metadata Extraction
-        meta = _extract_cyborg_metadata(law)
-
-        results.append(
-            {
-                "key": law.get("key", ""),
-                "title": law.get("title", ""),
-                "alt_title": law.get("alt_title", ""),
-                "last_changed": law.get("last_changed", ""),
-                "relevance": relevance,
-                "total_norms": len(law.get("norms", [])),
-                "category": law.get("category", "other"),
-                "relevant_norms": [
-                    n.get("title") or n.get("norm_id") for n in law.get("norms", [])[:5]
-                ],
-                "matched_terms": matched_map[idx] if matched_map else [],
-                "authority": meta["authority"],
-                "status": meta["status"],
-                "jurisdiction": meta["jurisdiction"],
-            }
-        )
-    return {"results": results, "keywords": keywords, "german_terms": german_terms}
+def _format_search_results(scores, summaries, top_k, keywords, german_terms, matched_map=None):
+    return {"results": [], "keywords": keywords, "german_terms": german_terms}
 
 # ---------------------------------------------------------------------------
 # Flask routes
@@ -1555,7 +1375,7 @@ def api_dev_health():
 
     # Get indexed laws count
     with _index_lock:
-        indexed_laws = len(_law_summaries)
+        indexed_laws = _db_law_count
 
     return jsonify({
         "status": "ok",
@@ -1573,42 +1393,43 @@ def api_dev_health():
 
 @app.route("/api/status")
 def api_status():
-    global _law_summaries
     try:
-        total_norms = 0
-        largest_law = None
+        ready = _indexing_done.is_set()
+        if ready:
+            with get_db() as conn:
+                law_count  = conn.execute("SELECT COUNT(*) FROM laws").fetchone()[0]
+                norm_count = conn.execute("SELECT COUNT(*) FROM norms").fetchone()[0]
+                cat_rows   = conn.execute(
+                    "SELECT category, COUNT(*) AS cnt FROM laws GROUP BY category"
+                ).fetchall()
+                cat_counts = {r["category"]: r["cnt"] for r in cat_rows}
+                largest = conn.execute(
+                    """
+                    SELECT l.key, l.title, COUNT(n.id) AS norm_count
+                    FROM laws l LEFT JOIN norms n ON n.law_id = l.id
+                    GROUP BY l.id ORDER BY norm_count DESC LIMIT 1
+                    """
+                ).fetchone()
+        else:
+            law_count = norm_count = 0
+            cat_counts = {}
+            largest = None
 
-        if _indexing_done.is_set():
-            with _index_lock:
-                total_norms = sum(len(law.get("norms", [])) for law in _law_summaries)
-                if _law_summaries:
-                    largest_law = max(
-                        _law_summaries, key=lambda x: len(x.get("norms", []))
-                    )
-
-                cat_counts = defaultdict(int)
-                for law in _law_summaries:
-                    cat_counts[law.get("category", "other")] += 1
-
-        return jsonify(
-            {
-                "ready": _indexing_done.is_set(),
-                "total": _total_files,
-                "indexed": _indexed_files,
-                "laws": len(_law_summaries),
-                "total_norms": total_norms,
-                "categories": cat_counts if _indexing_done.is_set() else {},
-                "largest_law": {
-                    "key": largest_law["key"],
-                    "title": largest_law["title"],
-                    "norms": len(largest_law.get("norms", [])),
-                }
-                if largest_law
-                else None,
-            }
-        )
+        return jsonify({
+            "ready":       ready,
+            "total":       law_count,
+            "indexed":     law_count,
+            "laws":        law_count,
+            "total_norms": norm_count,
+            "categories":  cat_counts,
+            "largest_law": {
+                "key":   largest["key"],
+                "title": largest["title"],
+                "norms": largest["norm_count"],
+            } if largest else None,
+        })
     except Exception as e:
-        logging.error(f"API STATUS ERROR: {e}", exc_info=True)
+        logging.error("API STATUS ERROR: %s", e, exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/search", methods=["POST"])
@@ -1654,103 +1475,72 @@ def api_search():
     per_seconds=int(os.environ.get("RATE_PERIOD_GENERIC", "60")),
 )
 def api_laws():
-    """Returns a paginated and filterable list of all laws (German only, without norms)."""
+    """Returns a paginated, filterable list of all laws (without norm content)."""
     if not _indexing_done.is_set():
         return jsonify({"ready": False}), 503
 
-    page = int(request.args.get("page", 1))
-    per_page = int(request.args.get("per_page", 48))
+    page     = max(1, int(request.args.get("page", 1)))
+    per_page = max(1, min(200, int(request.args.get("per_page", 48))))
     category = request.args.get("category", "")
-    q = request.args.get("q", "").lower()
+    q        = request.args.get("q", "").strip().lower()
 
-    # Snapshot local reference
-    with _index_lock:
-        local_summaries = _law_summaries
-
-    filtered = local_summaries
-    if category:
-        filtered = [law for law in filtered if law.get("category") == category]
     try:
-        if q:
-            # Tokenize for smart matching (split by space or §)
-            parts = [p.strip() for p in re.split(r"[\s§]+", q) if p.strip()]
+        with get_db() as conn:
+            # Build WHERE clause dynamically
+            where_parts  = []
+            params: list = []
 
-            # Simple fallback if splitting failed
-            if not parts:
-                filtered = [
-                    law
-                    for law in filtered
-                    if q in law.get("key", "").lower()
-                    or q in law.get("title", "").lower()
-                ]
-            else:
-                law_prefix = parts[0]
-                section_num = parts[1] if len(parts) >= 2 else ""
+            if category:
+                where_parts.append("l.category = ?")
+                params.append(category)
 
-                def is_match(law):
-                    key = law.get("key", "").lower()
-                    title = law.get("title", "").lower()
-
-                    # Case 1: "BGB 303" -> parts[0]="bgb", parts[1]="303"
-                    if law_prefix and section_num:
-                        # Law code must start with prefix OR match exactly
-                        if law_prefix not in key:
-                            return False
-                        # Check if any norm matches the section number
-                        return any(
-                            section_num in str(n.get("norm_id", "")).lower()
-                            for n in law.get("norms", [])
+            if q:
+                parts = [p.strip() for p in re.split(r"[\s§]+", q) if p.strip()]
+                if parts:
+                    law_prefix  = parts[0]
+                    section_num = parts[1] if len(parts) >= 2 else ""
+                    if section_num:
+                        # "BGB 303" → law key contains prefix AND norm exists
+                        where_parts.append(
+                            "(LOWER(l.key) LIKE ? AND EXISTS "
+                            "(SELECT 1 FROM norms n WHERE n.law_id = l.id AND n.norm_id = ?))"
                         )
+                        params += [f"%{law_prefix}%", section_num]
+                    else:
+                        where_parts.append("(LOWER(l.key) LIKE ? OR LOWER(l.title) LIKE ?)")
+                        params += [f"%{law_prefix}%", f"%{law_prefix}%"]
 
-                    # Case 2: Only one term (could be "BGB" or "§303" or "303")
-                    if law_prefix:
-                        # Basic title/key match
-                        if law_prefix in key or law_prefix in title:
-                            return True
-                        # If it's a number, match against norm IDs
-                        if any(c.isdigit() for c in law_prefix):
-                            return any(
-                                law_prefix in str(n.get("norm_id", "")).lower()
-                                for n in law.get("norms", [])
-                            )
+            where_sql = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
 
-                    return False
+            # Total count
+            total = conn.execute(
+                f"SELECT COUNT(*) FROM laws l {where_sql}", params
+            ).fetchone()[0]
 
-                filtered = [law for law in filtered if is_match(law)]
+            # Paged results
+            offset = (page - 1) * per_page
+            rows = conn.execute(
+                f"""
+                SELECT l.key, l.title, l.alt_title, l.last_changed, l.category,
+                       (SELECT COUNT(*) FROM norms n WHERE n.law_id = l.id) AS total_norms
+                FROM laws l
+                {where_sql}
+                ORDER BY l.key
+                LIMIT ? OFFSET ?
+                """,
+                params + [per_page, offset],
+            ).fetchall()
 
-        total_matching = len(filtered)
-
-        # Sort by key (abbreviation) for the database view
-        filtered = sorted(filtered, key=lambda x: x.get("key", ""))
-
-        start = (page - 1) * per_page
-        end = start + per_page
-        paged = filtered[start:end]
-
-        results = []
-        for law in paged:
-            item = {
-                "key": law.get("key", ""),
-                "title": law.get("title", ""),
-                "alt_title": law.get("alt_title", ""),
-                "last_changed": law.get("last_changed", ""),
-                "category": law.get("category", "other"),
-                "total_norms": len(law.get("norms", [])),
-            }
-            results.append(item)
-
-        return jsonify(
-            {
-                "laws": results,
-                "total": total_matching,
-                "page": page,
-                "per_page": per_page,
-                "has_more": end < total_matching,
-            }
-        )
-    except Exception as e:
-        logging.error(f"API LAWS ERROR: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "laws":     [dict(r) for r in rows],
+            "total":    total,
+            "page":     page,
+            "per_page": per_page,
+            "has_more": (offset + per_page) < total,
+        })
+    except Exception as exc:
+        logging.error("API LAWS ERROR: %s", exc, exc_info=True)
+        return jsonify({"error": str(exc)}), 500
 
 @app.route("/api/law/<path:key>")
 @rate_limit(
@@ -1758,31 +1548,107 @@ def api_laws():
     per_seconds=int(os.environ.get("RATE_PERIOD_GENERIC", "60")),
 )
 def api_law(key: str):
-    """Return the full content of a law by key (German + English translation if available)."""
-    with _index_lock:
-        local_summaries = _law_summaries
-
-    match = next(
-        (law_sum for law_sum in local_summaries if law_sum["key"] == key), None
-    )
-    if not match:
-        return jsonify({"error": "Law not found"}), 404
+    """Return the full content of a law by key, including all norms from SQLite."""
     try:
-        with open(match["file_path"], encoding="utf-8", errors="replace") as fh:
-            raw = json.load(fh)
+        with get_db() as conn:
+            law_row = conn.execute(
+                "SELECT * FROM laws WHERE key = ?", (key,)
+            ).fetchone()
+            if not law_row:
+                return jsonify({"error": "Law not found"}), 404
 
-        # If translation exists, lazily load it and attach
-        if match.get("has_translation"):
-            en_translation_path = os.path.join(EN_JSON_DIR, f"{key}.json")
-            if os.path.exists(en_translation_path):
-                with open(
-                    en_translation_path, encoding="utf-8", errors="replace"
-                ) as fh:
-                    raw["en_translation"] = json.load(fh)
+            norm_rows = conn.execute(
+                """
+                SELECT norm_id, title, content
+                FROM norms WHERE law_id = ?
+                ORDER BY id
+                """,
+                (law_row["id"],),
+            ).fetchall()
 
-        return jsonify(raw)
-    except OSError as e:
-        return jsonify({"error": str(e)}), 500
+        law = dict(law_row)
+        norms = []
+        for nr in norm_rows:
+            # Reconstruct paragraphs from flat content string
+            paragraphs = [
+                {"id": str(i + 1), "text": line.strip()}
+                for i, line in enumerate(nr["content"].split("\n"))
+                if line.strip()
+            ]
+            norms.append({
+                "norm_id":   nr["norm_id"],
+                "title":     nr["title"],
+                "paragraphs": paragraphs,
+            })
+
+        _increment_view(key)
+
+        return jsonify({
+            "key":   law["key"],
+            "meta":  {
+                "title":        law["title"],
+                "alt_title":    law["alt_title"],
+                "last_changed": law["last_changed"],
+                "source":       law["source"],
+                "category":     law["category"],
+                "authority":    law["authority"],
+                "status":       law["status"],
+                "jurisdiction": law["jurisdiction"],
+            },
+            "norms": norms,
+        })
+    except Exception as exc:
+        logging.error("API LAW ERROR for %s: %s", key, exc, exc_info=True)
+        return jsonify({"error": str(exc)}), 500
+
+@app.route("/api/law/<path:key>/references")
+@rate_limit(
+    max_calls=int(os.environ.get("RATE_LIMIT_GENERIC", "60")),
+    per_seconds=int(os.environ.get("RATE_PERIOD_GENERIC", "60")),
+)
+def api_law_references(key: str):
+    """
+    Returns all outgoing references (laws this law references) and
+    incoming references/backlinks (laws referencing this law).
+    """
+    try:
+        with get_db() as conn:
+            # 1. Outgoing references (what this law cites)
+            outgoing_rows = conn.execute(
+                """
+                SELECT DISTINCT target_law, target_norm, COUNT(*) as mention_count
+                FROM cross_references xref
+                JOIN norms n ON xref.source_norm_id = n.id
+                JOIN laws l ON n.law_id = l.id
+                WHERE LOWER(l.key) = ?
+                GROUP BY target_law, target_norm
+                ORDER BY target_law, target_norm
+                """,
+                (key.lower(),),
+            ).fetchall()
+
+            # 2. Incoming references/backlinks (what cites this law)
+            incoming_rows = conn.execute(
+                """
+                SELECT DISTINCT l.key AS source_law, l.title AS source_title, COUNT(*) as mention_count
+                FROM cross_references xref
+                JOIN norms n ON xref.source_norm_id = n.id
+                JOIN laws l ON n.law_id = l.id
+                WHERE LOWER(xref.target_law) = ?
+                GROUP BY l.key
+                ORDER BY mention_count DESC, l.key
+                """,
+                (key.lower(),),
+            ).fetchall()
+
+        return jsonify({
+            "law": key,
+            "outgoing": [dict(r) for r in outgoing_rows],
+            "incoming": [dict(r) for r in incoming_rows],
+        })
+    except Exception as exc:
+        logging.error("API LAW REFERENCES ERROR for %s: %s", key, exc, exc_info=True)
+        return jsonify({"error": str(exc)}), 500
 
 @app.route("/api/law-insights/<path:key>")
 @rate_limit(
@@ -1802,24 +1668,29 @@ def api_law_insights(key: str):
                 }
             ), 200
 
-    with _index_lock:
-        local_summaries = _law_summaries
-
-    match = next(
-        (law_sum for law_sum in local_summaries if law_sum["key"] == key), None
-    )
-    if not match:
-        return jsonify({"error": "Law not found"}), 404
+    try:
+        with get_db() as conn:
+            law_row = conn.execute(
+                "SELECT * FROM laws WHERE key = ?", (key,)
+            ).fetchone()
+        if not law_row:
+            return jsonify({"error": "Law not found"}), 404
+        match = dict(law_row)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
 
     try:
         # Load first few norms to provide context
-        with open(match["file_path"], encoding="utf-8", errors="replace") as fh:
-            law_data = json.load(fh)
+        with get_db() as conn:
+            norm_rows = conn.execute(
+                "SELECT title, content FROM norms WHERE law_id = ? ORDER BY id LIMIT 3",
+                (match["id"],),
+            ).fetchall()
 
         norms_context = ""
-        for n in law_data.get("norms", [])[:3]:
-            n_title = n.get("title", "")
-            n_text = n.get("paragraphs", [{}])[0].get("text", "")[:300]
+        for nr in norm_rows:
+            n_title = nr["title"]
+            n_text  = (nr["content"] or "")[:300]
             norms_context += f"- {n_title}: {n_text}...\n"
 
         prompt = (
@@ -1986,12 +1857,12 @@ def _prewarm_translations():
 
     warmed = 0
     for key in sorted_keys:
-        with _index_lock:
-            summary = next((s for s in _law_summaries if s.get("key") == key), None)
-        if not summary:
+        with get_db() as conn:
+            row = conn.execute("SELECT title FROM laws WHERE key = ?", (key,)).fetchone()
+        if not row:
             continue
 
-        title = summary.get("title", "").strip()
+        title = (row["title"] or "").strip()
         if not title:
             continue
 
@@ -2113,15 +1984,28 @@ def api_translate_batch():
         return jsonify({"error": "Invalid input: expected 'texts' array"}), 400
     
     results = []
-    for text in texts[:50]:  # Limit batch size
-        if unified_translator:
-            translation, from_cache = unified_translator.translate(str(text), is_title)
-            results.append({
-                "original": text,
-                "translation": translation,
-                "from_cache": from_cache,
-            })
-        else:
+    if unified_translator:
+        try:
+            # Call parallel ThreadPoolExecutor translation helper
+            batch_results = unified_translator.translate_batch_parallel(texts[:50], is_title)
+            for text in texts[:50]:
+                text_str = str(text)
+                trans = batch_results.get(text_str, text_str)
+                results.append({
+                    "original": text_str,
+                    "translation": trans,
+                    "from_cache": True,
+                })
+        except Exception as e:
+            ai_logger.error("Batch translation failed: %s", e)
+            for text in texts[:50]:
+                results.append({
+                    "original": text,
+                    "translation": text,
+                    "error": str(e)
+                })
+    else:
+        for text in texts[:50]:
             results.append({
                 "original": text,
                 "translation": text,
@@ -2164,7 +2048,7 @@ def api_ai_chat():
     query = data.get("query", "").strip()
     context = data.get("context", "").strip()
 
-    model = os.environ.get("OLLAMA_MODEL", "llama3.2")
+    model = os.environ.get("OLLAMA_MODEL", "qwen2.5:1.5b")
 
     prompt = (
         "### SYSTEM\n"
@@ -2307,22 +2191,27 @@ def _find_law_by_id(law_id: str, paragraph: str) -> Optional[Dict]:
                 paragraph in result.get("paragraph", "")):
                 return result
         
-        # Try searching in law_summaries
-        for law in _law_summaries:
-            if law.get("key", "").lower() == law_id.lower():
-                # Found the law, now find the paragraph
-                for norm in law.get("norms", []):
-                    if str(norm.get("norm_id", "")) == paragraph.replace("§", "").strip():
-                        return {
-                            "law_id": law_id,
-                            "paragraph": paragraph,
-                            "content": norm.get("content", ""),
-                            "meta": {
-                                "last_changed": law.get("last_changed"),
-                                "status": "in_force"
-                            }
-                        }
-    
+        # Fallback: search directly in the DB
+        with get_db() as conn:
+            law_row = conn.execute("SELECT id, title, last_changed FROM laws WHERE key = ?", (law_id.lower(),)).fetchone()
+        if law_row:
+            norm_num = paragraph.replace("§", "").strip()
+            with get_db() as conn:
+                norm_row = conn.execute(
+                    "SELECT norm_id, content FROM norms WHERE law_id = ? AND norm_id = ?",
+                    (law_row["id"], norm_num),
+                ).fetchone()
+            if norm_row:
+                return {
+                    "law_id": law_id,
+                    "paragraph": paragraph,
+                    "content": norm_row["content"],
+                    "meta": {
+                        "last_changed": law_row["last_changed"],
+                        "status": "in_force"
+                    }
+                }
+
     return None
 
 
@@ -2345,9 +2234,9 @@ def api_admin_info():
     return jsonify(
         {
             "indexing": _indexing_done.is_set(),
-            "total_files": _total_files,
-            "indexed_files": _indexed_files,
-            "laws": len(_law_summaries),
+            "total_files": _db_law_count,
+            "indexed_files": _db_norm_count,
+            "laws": _db_law_count,
             "log_level": logging.getLevelName(lvl),
         }
     )
@@ -2410,30 +2299,30 @@ if __name__ == "__main__":
     logger.info("=" * 60)
     logger.info("German Law Search Dashboard - Server Starting")
     logger.info("=" * 60)
-    logger.info(f"Server will be available at: http://{HOST}:{PORT}")
-    logger.info("Waiting for incoming connections...")
-    
-    # Log AI health status at startup
+    logger.info("Server will be available at: http://%s:%s", HOST, PORT)
+
+    # AI health check
     ai_logger.info("AI subsystem initializing...")
     try:
         url = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434/api/tags")
         req = urllib.request.Request(url)
         urllib.request.urlopen(req, timeout=3)
-        ai_logger.info("AI health check: Ollama is running")
+        ai_logger.info("Ollama is running")
     except Exception as e:
-        ai_logger.warning(f"AI health check: Ollama unavailable at startup - {e}")
-    
-    # Start index build
-    indexing_logger.info("Starting index build in background...")
-    threading.Thread(target=build_index, daemon=True).start()
-    
+        ai_logger.warning("Ollama unavailable at startup: %s", e)
+
+    # Verify database (replaces build_index thread)
+    _init_db_state()
+
     print("  ---  German Law Search Dashboard")
     print(f"  ->   http://{HOST}:{PORT}\n")
+    if is_first_run():
+        print("  [!]  Database not found — open the app and use the Setup Wizard.")
 
     @app.before_request
     def log_connection():
         """Log incoming connections for visibility."""
-        logger.info(f"Connection from {request.remote_addr} - {request.method} {request.path}")
+        logger.debug("Connection from %s - %s %s", request.remote_addr, request.method, request.path)
 
     logger.info("Flask app starting...")
     app.run(host=HOST, port=PORT, debug=False, use_reloader=False, threaded=True)
