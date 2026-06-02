@@ -357,3 +357,394 @@ Gesetz über die Re'
 2026-06-02 20:01:01,586 [INFO] PREWARM [45]: 'Gesetz über die Leistungen zur Sicherung' → 'Law Title in English: Law on the Provisi'
 2026-06-02 20:01:03,588 [INFO] ai: PREWARM: Done. 45 law titles pre-translated.
 2026-06-02 20:01:03,588 [INFO] PREWARM: Done. 45 law titles pre-translated.
+2026-06-02 20:48:24,283 [INFO] server: HTTP 200 | POST /api/ai_chat | OK
+2026-06-02 20:48:24,283 [INFO] HTTP 200 | POST /api/ai_chat | OK
+2026-06-02 20:48:27,780 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:27] "POST /api/ai_chat HTTP/1.1" 200 -
+2026-06-02 20:48:45,864 [INFO] server: HTTP 200 | GET / | OK
+2026-06-02 20:48:45,864 [INFO] HTTP 200 | GET / | OK
+2026-06-02 20:48:45,865 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:45] "GET / HTTP/1.1" 200 -
+2026-06-02 20:48:45,868 [INFO] server: HTTP 200 | GET / | OK
+2026-06-02 20:48:45,868 [INFO] HTTP 200 | GET / | OK
+2026-06-02 20:48:45,868 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:45] "GET / HTTP/1.1" 200 -
+2026-06-02 20:48:46,124 [INFO] server: HTTP 200 | GET /static/css/main.css | OK
+2026-06-02 20:48:46,124 [INFO] HTTP 200 | GET /static/css/main.css | OK
+2026-06-02 20:48:46,125 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/css/main.css HTTP/1.1" 200 -
+2026-06-02 20:48:46,129 [INFO] server: HTTP 304 | GET /static/css/main.css | Not Modified (cached by browser)
+2026-06-02 20:48:46,129 [INFO] HTTP 304 | GET /static/css/main.css | Not Modified (cached by browser)
+2026-06-02 20:48:46,130 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,133 [INFO] server: HTTP 200 | GET /static/js/search.js | OK
+2026-06-02 20:48:46,133 [INFO] HTTP 200 | GET /static/js/search.js | OK
+2026-06-02 20:48:46,133 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/search.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,137 [INFO] server: HTTP 200 | GET /static/js/translation.js | OK
+2026-06-02 20:48:46,137 [INFO] HTTP 200 | GET /static/js/translation.js | OK
+2026-06-02 20:48:46,138 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/translation.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,141 [INFO] server: HTTP 200 | GET /static/js/modal.js | OK
+2026-06-02 20:48:46,141 [INFO] HTTP 200 | GET /static/js/modal.js | OK
+2026-06-02 20:48:46,142 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/modal.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,145 [INFO] server: HTTP 200 | GET /static/js/ai.js | OK
+2026-06-02 20:48:46,145 [INFO] HTTP 200 | GET /static/js/ai.js | OK
+2026-06-02 20:48:46,145 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/ai.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,148 [INFO] server: HTTP 200 | GET /static/js/dev.js | OK
+2026-06-02 20:48:46,148 [INFO] HTTP 200 | GET /static/js/dev.js | OK
+2026-06-02 20:48:46,149 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/dev.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,152 [INFO] server: HTTP 200 | GET /static/js/app.js | OK
+2026-06-02 20:48:46,152 [INFO] HTTP 200 | GET /static/js/app.js | OK
+2026-06-02 20:48:46,153 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/app.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,193 [INFO] server: HTTP 200 | GET /static/js/state.js | OK
+2026-06-02 20:48:46,193 [INFO] HTTP 200 | GET /static/js/state.js | OK
+2026-06-02 20:48:46,194 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/state.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,198 [INFO] server: HTTP 304 | GET /static/js/state.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,198 [INFO] HTTP 304 | GET /static/js/state.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,199 [INFO] server: HTTP 200 | GET /static/css/glass.css | OK
+2026-06-02 20:48:46,200 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/state.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,201 [INFO] server: HTTP 200 | GET /static/js/utils.js | OK
+2026-06-02 20:48:46,199 [INFO] HTTP 200 | GET /static/css/glass.css | OK
+2026-06-02 20:48:46,201 [INFO] server: HTTP 200 | GET /static/js/vault.js | OK
+2026-06-02 20:48:46,201 [INFO] server: HTTP 200 | GET /static/js/bookmarks.js | OK
+2026-06-02 20:48:46,201 [INFO] HTTP 200 | GET /static/js/utils.js | OK
+2026-06-02 20:48:46,201 [INFO] HTTP 200 | GET /static/js/vault.js | OK
+2026-06-02 20:48:46,202 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/css/glass.css HTTP/1.1" 200 -
+2026-06-02 20:48:46,201 [INFO] HTTP 200 | GET /static/js/bookmarks.js | OK
+2026-06-02 20:48:46,204 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/utils.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,204 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/vault.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,205 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /static/js/bookmarks.js HTTP/1.1" 200 -
+2026-06-02 20:48:46,207 [INFO] server: HTTP 304 | GET /static/css/glass.css | Not Modified (cached by browser)
+2026-06-02 20:48:46,207 [INFO] HTTP 304 | GET /static/css/glass.css | Not Modified (cached by browser)
+2026-06-02 20:48:46,209 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/css/glass.css HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,209 [INFO] server: HTTP 304 | GET /static/js/utils.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,209 [INFO] HTTP 304 | GET /static/js/utils.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,212 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/utils.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,211 [INFO] server: HTTP 304 | GET /static/js/bookmarks.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,211 [INFO] HTTP 304 | GET /static/js/bookmarks.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,213 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/bookmarks.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,217 [INFO] server: HTTP 304 | GET /static/js/vault.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,217 [INFO] HTTP 304 | GET /static/js/vault.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,218 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/vault.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,219 [INFO] server: HTTP 304 | GET /static/js/search.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,219 [INFO] HTTP 304 | GET /static/js/search.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,221 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/search.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,221 [INFO] server: HTTP 304 | GET /static/js/translation.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,221 [INFO] HTTP 304 | GET /static/js/translation.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,222 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/translation.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,225 [INFO] server: HTTP 304 | GET /static/js/modal.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,225 [INFO] HTTP 304 | GET /static/js/modal.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,226 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/modal.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,227 [INFO] server: HTTP 304 | GET /static/js/ai.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,227 [INFO] HTTP 304 | GET /static/js/ai.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,228 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/ai.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,229 [INFO] server: HTTP 304 | GET /static/js/dev.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,229 [INFO] HTTP 304 | GET /static/js/dev.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,230 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/dev.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,233 [INFO] server: HTTP 304 | GET /static/js/app.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,233 [INFO] HTTP 304 | GET /static/js/app.js | Not Modified (cached by browser)
+2026-06-02 20:48:46,234 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[36mGET /static/js/app.js HTTP/1.1[0m" 304 -
+2026-06-02 20:48:46,252 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:48:46,252 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:48:46,254 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:48:46,254 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:48:46,255 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:48:46,292 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:48:46,292 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:48:46,293 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:48:46,293 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:48:46,294 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:48:46,393 [INFO] server: HTTP 200 | GET /api/status | OK
+2026-06-02 20:48:46,393 [INFO] HTTP 200 | GET /api/status | OK
+2026-06-02 20:48:46,394 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /api/status HTTP/1.1" 200 -
+2026-06-02 20:48:46,421 [INFO] server: HTTP 200 | GET /api/status | OK
+2026-06-02 20:48:46,421 [INFO] HTTP 200 | GET /api/status | OK
+2026-06-02 20:48:46,422 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "GET /api/status HTTP/1.1" 200 -
+2026-06-02 20:48:46,631 [INFO] server: HTTP 204 | GET /favicon.ico | No Content
+2026-06-02 20:48:46,631 [INFO] HTTP 204 | GET /favicon.ico | No Content
+2026-06-02 20:48:46,632 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[35m[1mGET /favicon.ico HTTP/1.1[0m" 204 -
+2026-06-02 20:48:46,707 [INFO] server: HTTP 204 | GET /favicon.ico | No Content
+2026-06-02 20:48:46,707 [INFO] HTTP 204 | GET /favicon.ico | No Content
+2026-06-02 20:48:46,708 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:46] "[35m[1mGET /favicon.ico HTTP/1.1[0m" 204 -
+2026-06-02 20:48:56,322 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:48:56,322 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:48:56,325 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:48:56,325 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:48:56,327 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:56] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:48:56,652 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:48:56,652 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:48:56,654 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:48:56,654 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:48:56,655 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:56] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:48:59,247 [INFO] server: HTTP 200 | POST /api/search | OK
+2026-06-02 20:48:59,247 [INFO] HTTP 200 | POST /api/search | OK
+2026-06-02 20:48:59,248 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:59] "POST /api/search HTTP/1.1" 200 -
+2026-06-02 20:48:59,259 [INFO] server: HTTP 200 | POST /api/ai_chat | OK
+2026-06-02 20:48:59,259 [INFO] HTTP 200 | POST /api/ai_chat | OK
+2026-06-02 20:48:59,644 [INFO] 127.0.0.1 - - [02/Jun/2026 20:48:59] "POST /api/ai_chat HTTP/1.1" 200 -
+2026-06-02 20:49:06,314 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:06,314 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:06,316 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:06,316 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:06,318 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:06] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:06,669 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:06,669 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:06,671 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:06,671 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:06,673 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:06] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:16,321 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:16,321 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:16,323 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:16,323 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:16,325 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:16] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:16,662 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:16,662 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:16,663 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:16,663 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:16,665 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:16] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:26,339 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:26,339 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:26,342 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:26,342 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:26,344 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:26] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:26,669 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:26,669 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:26,672 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:26,672 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:26,673 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:26] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:36,320 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:36,320 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:36,322 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:36,322 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:36,324 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:36] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:36,652 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:36,652 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:36,653 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:36,653 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:36,654 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:36] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:46,328 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:46,328 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:46,330 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:46,330 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:46,332 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:46] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:46,656 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:46,656 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:46,656 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:46,656 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:46,657 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:46] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:56,298 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:56,298 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:56,299 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:56,299 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:56,299 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:56] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:49:56,669 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:56,669 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:49:56,671 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:56,671 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:49:56,673 [INFO] 127.0.0.1 - - [02/Jun/2026 20:49:56] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:06,320 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:06,320 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:06,320 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:06,320 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:06,321 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:06] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:06,657 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:06,657 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:06,659 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:06,659 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:06,661 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:06] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:16,317 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:16,317 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:16,318 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:16,318 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:16,318 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:16] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:16,646 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:16,646 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:16,649 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:16,649 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:16,651 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:16] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:21,226 [INFO] Embedding request: model=nomic-embed-text chars=43 est_tokens=15
+2026-06-02 20:50:22,957 [INFO] server: HTTP 200 | POST /api/search | OK
+2026-06-02 20:50:22,957 [INFO] HTTP 200 | POST /api/search | OK
+2026-06-02 20:50:22,958 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:22] "POST /api/search HTTP/1.1" 200 -
+2026-06-02 20:50:22,966 [INFO] server: HTTP 200 | POST /api/ai_chat | OK
+2026-06-02 20:50:22,966 [INFO] HTTP 200 | POST /api/ai_chat | OK
+2026-06-02 20:50:23,175 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:23] "POST /api/ai_chat HTTP/1.1" 200 -
+2026-06-02 20:50:26,295 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:26,295 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:26,296 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:26,296 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:26,297 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:26] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:26,663 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:26,663 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:26,665 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:26,665 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:26,666 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:26] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:36,327 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:36,327 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:36,330 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:36,330 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:36,332 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:36] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:36,671 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:36,671 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:36,673 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:36,673 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:36,675 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:36] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:46,299 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:46,299 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:46,300 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:46,300 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:46,300 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:46] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:46,653 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:46,653 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:46,653 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:46,653 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:46,654 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:46] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:56,305 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:56,305 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:56,307 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:56,307 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:56,308 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:56] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:50:56,661 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:56,661 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:50:56,663 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:56,663 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:50:56,665 [INFO] 127.0.0.1 - - [02/Jun/2026 20:50:56] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:06,315 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:06,315 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:06,316 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:06,316 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:06,317 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:06] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:06,671 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:06,671 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:06,674 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:06,674 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:06,676 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:06] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:16,305 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:16,305 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:16,306 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:16,306 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:16,306 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:16] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:16,667 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:16,667 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:16,667 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:16,667 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:16,668 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:16] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:26,301 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:26,301 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:26,302 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:26,302 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:26,302 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:26] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:26,660 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:26,660 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:26,662 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:26,662 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:26,663 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:26] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:36,322 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:36,322 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:36,323 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:36,323 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:36,324 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:36] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:36,646 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:36,646 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:36,647 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:36,647 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:36,647 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:36] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:46,293 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:46,293 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:46,294 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:46,294 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:46,294 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:46] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:46,648 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:46,648 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:46,649 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:46,649 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:46,650 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:46] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:56,307 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:56,307 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:56,309 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:56,309 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:56,311 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:56] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:51:56,650 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:56,650 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:51:56,651 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:56,651 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:51:56,651 [INFO] 127.0.0.1 - - [02/Jun/2026 20:51:56] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:52:06,290 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:06,290 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:06,291 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:06,291 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:06,291 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:06] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:52:06,675 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:06,675 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:06,677 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:06,677 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:06,679 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:06] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:52:16,316 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:16,316 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:16,317 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:16,317 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:16,317 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:16] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:52:16,669 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:16,669 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:16,670 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:16,670 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:16,671 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:16] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:52:26,313 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:26,313 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:26,314 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:26,314 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:26,315 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:26] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:52:26,649 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:26,649 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:26,651 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:26,651 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:26,653 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:26] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:52:32,618 [INFO] server: HTTP 200 | GET / | OK
+2026-06-02 20:52:32,618 [INFO] HTTP 200 | GET / | OK
+2026-06-02 20:52:32,619 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "GET / HTTP/1.1" 200 -
+2026-06-02 20:52:32,676 [INFO] server: HTTP 304 | GET /static/css/main.css | Not Modified (cached by browser)
+2026-06-02 20:52:32,676 [INFO] HTTP 304 | GET /static/css/main.css | Not Modified (cached by browser)
+2026-06-02 20:52:32,677 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,678 [INFO] server: HTTP 304 | GET /static/css/glass.css | Not Modified (cached by browser)
+2026-06-02 20:52:32,678 [INFO] HTTP 304 | GET /static/css/glass.css | Not Modified (cached by browser)
+2026-06-02 20:52:32,681 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/css/glass.css HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,683 [INFO] server: HTTP 304 | GET /static/js/state.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,683 [INFO] HTTP 304 | GET /static/js/state.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,685 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/state.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,684 [INFO] server: HTTP 304 | GET /static/js/utils.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,684 [INFO] HTTP 304 | GET /static/js/utils.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,688 [INFO] server: HTTP 304 | GET /static/js/vault.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,689 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/utils.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,688 [INFO] HTTP 304 | GET /static/js/vault.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,686 [INFO] server: HTTP 304 | GET /static/js/bookmarks.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,694 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/vault.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,691 [INFO] server: HTTP 304 | GET /static/js/search.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,686 [INFO] HTTP 304 | GET /static/js/bookmarks.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,693 [INFO] server: HTTP 304 | GET /static/js/translation.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,697 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/bookmarks.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,695 [INFO] server: HTTP 304 | GET /static/js/modal.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,696 [INFO] server: HTTP 304 | GET /static/js/ai.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,691 [INFO] HTTP 304 | GET /static/js/search.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,693 [INFO] HTTP 304 | GET /static/js/translation.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,700 [INFO] server: HTTP 304 | GET /static/js/dev.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,695 [INFO] HTTP 304 | GET /static/js/modal.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,696 [INFO] HTTP 304 | GET /static/js/ai.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,704 [INFO] server: HTTP 304 | GET /static/js/app.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,700 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/search.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,703 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/translation.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,700 [INFO] HTTP 304 | GET /static/js/dev.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,703 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/modal.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,704 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/ai.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,704 [INFO] HTTP 304 | GET /static/js/app.js | Not Modified (cached by browser)
+2026-06-02 20:52:32,705 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/app.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,705 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[36mGET /static/js/dev.js HTTP/1.1[0m" 304 -
+2026-06-02 20:52:32,731 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:32,731 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:32,732 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:32,732 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:32,733 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "GET /api/dev/health HTTP/1.1" 200 -
+2026-06-02 20:52:32,750 [INFO] server: HTTP 200 | GET /api/status | OK
+2026-06-02 20:52:32,750 [INFO] HTTP 200 | GET /api/status | OK
+2026-06-02 20:52:32,751 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "GET /api/status HTTP/1.1" 200 -
+2026-06-02 20:52:32,958 [INFO] server: HTTP 204 | GET /favicon.ico | No Content
+2026-06-02 20:52:32,958 [INFO] HTTP 204 | GET /favicon.ico | No Content
+2026-06-02 20:52:32,959 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:32] "[35m[1mGET /favicon.ico HTTP/1.1[0m" 204 -
+2026-06-02 20:52:36,664 [INFO] ai: AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:36,664 [INFO] AI health check: Ollama is connected at http://127.0.0.1:11434/api/tags
+2026-06-02 20:52:36,666 [INFO] server: HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:36,666 [INFO] HTTP 200 | GET /api/dev/health | OK
+2026-06-02 20:52:36,667 [INFO] 127.0.0.1 - - [02/Jun/2026 20:52:36] "GET /api/dev/health HTTP/1.1" 200 -
