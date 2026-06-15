@@ -190,3 +190,7 @@ LibreTranslate-main/
 # Keep this file
 # -----------------------------------------------------------------------------
 !.gitignore
+
+# Worktrees
+.worktrees/
+worktrees/
