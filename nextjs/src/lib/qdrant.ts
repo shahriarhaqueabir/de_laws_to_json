@@ -1,14 +1,22 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 
-const qdrantUrl = process.env.QDRANT_URL!;
-const qdrantKey = process.env.QDRANT_API_KEY!;
-
-export const qdrant = new QdrantClient({
-  url: qdrantUrl,
-  apiKey: qdrantKey,
-});
-
 export const COLLECTION = "german_norms";
+
+let qdrantClient: QdrantClient | null = null;
+
+function getQdrant(): QdrantClient {
+  if (qdrantClient) return qdrantClient;
+  const url = process.env.QDRANT_URL;
+  const apiKey = process.env.QDRANT_API_KEY;
+  if (!url || !apiKey) {
+    throw new Error(
+      "Qdrant environment variables not configured. " +
+        "Set QDRANT_URL and QDRANT_API_KEY in Vercel project settings.",
+    );
+  }
+  qdrantClient = new QdrantClient({ url, apiKey });
+  return qdrantClient;
+}
 
 export interface SearchResult {
   law_key: string;
@@ -33,7 +41,7 @@ export async function searchNorms(
   }
 
   // Using query() to support managed text inference
-  const results = await qdrant.query(COLLECTION, {
+  const results = await getQdrant().query(COLLECTION, {
     query: { text: query },
     limit: topK,
     offset,

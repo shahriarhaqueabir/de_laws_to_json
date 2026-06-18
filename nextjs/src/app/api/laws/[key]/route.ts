@@ -2,8 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { getServerClient } from "../../../../lib/supabase-server";
-import { qdrant, COLLECTION } from "../../../../lib/qdrant";
 import { errorResponse } from "../../../../lib/api-utils";
+import { COLLECTION } from "../../../../lib/qdrant";
+import { QdrantClient } from "@qdrant/js-client-rest";
+
+function getQdrant(): QdrantClient {
+  const url = process.env.QDRANT_URL;
+  const apiKey = process.env.QDRANT_API_KEY;
+  if (!url || !apiKey) {
+    throw new Error("Qdrant not configured");
+  }
+  return new QdrantClient({ url, apiKey });
+}
 
 export async function GET(
   req: NextRequest,
@@ -40,7 +50,7 @@ export async function GET(
 
   // Get norms from Qdrant by law_key filter (using scroll to get up to 1000)
   try {
-    const norms = await qdrant.scroll(COLLECTION, {
+    const norms = await getQdrant().scroll(COLLECTION, {
       filter: {
         must: [{ key: "law_key", match: { value: key } }],
       },

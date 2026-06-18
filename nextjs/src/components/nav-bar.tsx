@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -64,17 +64,20 @@ const navItems = [
 export default function NavBar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const [mode, setMode] = useState<ChatMode>(() => {
+  const [mode, setMode] = useState<ChatMode>("basic");
+  const [hydrated, setHydrated] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as ChatSettings;
-        return parsed.mode || "basic";
+        setMode(parsed.mode || "basic");
       }
     } catch {}
-    return "basic";
-  });
-  const [open, setOpen] = useState(false);
+    setHydrated(true);
+  }, []);
 
   const switchMode = (m: ChatMode) => {
     try {
