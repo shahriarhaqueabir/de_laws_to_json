@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getServerClient } from '../../../lib/supabase';
-import { qdrant, COLLECTION } from '../../../lib/qdrant';
+import { getServerClient } from '@/lib/supabase';
+import { qdrant, COLLECTION } from '@/lib/qdrant';
 
 export async function GET(
   req: NextRequest,

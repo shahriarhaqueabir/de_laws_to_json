@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchNorms } from '../../../lib/qdrant';
+import { searchNorms } from '@/lib/qdrant';
 
 export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams.get('q') || '';

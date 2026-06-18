@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getServerClient } from '../../../lib/supabase';
-import { searchNorms } from '../../../lib/qdrant';
+import { getServerClient } from '@/lib/supabase';
+import { searchNorms } from '@/lib/qdrant';
 
 const BROKER_URL = process.env.NEXT_PUBLIC_BROKER_URL || 'http://localhost:9090';
 
