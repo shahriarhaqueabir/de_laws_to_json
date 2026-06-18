@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'nextjs/**'
-      - '!nextjs/**.md'
+      - "nextjs/**"
+      - "!nextjs/**.md"
 
 concurrency:
   group: vercel-deploy
@@ -47,6 +47,7 @@ jobs:
 
       - name: Deploy to Vercel
         run: npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: .
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
