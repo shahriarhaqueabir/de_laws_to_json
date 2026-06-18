@@ -27,12 +27,12 @@ export default function CategoryGrid() {
         <Link
           key={cat.key}
           href={`/search?category=${cat.key}`}
-          className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200
-                     dark:border-gray-700 hover:shadow-md transition-shadow group text-center"
+          className="p-4 bg-[#1a1a1a] rounded-none border border-[#2a2a2a]
+                               hover:border-[#c4a86a] transition-all group text-center"
         >
           <cat.icon className={`w-8 h-8 mx-auto mb-3 ${cat.color} group-hover:scale-110 transition-transform`} />
-          <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{cat.name}</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{cat.en}</p>
+          <h3 className="font-semibold text-[#e8e6e3] text-sm">{cat.name}</h3>
+                    <p className="text-xs text-[#a09e9a]">{cat.en}</p>
         </Link>
       ))}
     </div>

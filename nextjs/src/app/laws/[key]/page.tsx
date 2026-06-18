@@ -4,14 +4,18 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import NormViewer from '../../../components/norm-viewer';
 import { Law, Norm } from '../../../lib/types';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, BookmarkPlus, BookmarkCheck } from 'lucide-react';
 import Link from 'next/link';
+import { isBookmarked, addBookmark, removeBookmark } from '../../../lib/bookmarks';
+import { useToast } from '../../../components/toast';
 
 export default function LawDetailPage() {
   const { key } = useParams();
   const [data, setData] = useState<(Law & { norms: Norm[] }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bookmarked, setBookmarked] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!key) return;
@@ -32,11 +36,33 @@ export default function LawDetailPage() {
     fetchLaw();
   }, [key]);
 
+  useEffect(() => {
+    if (data) setBookmarked(isBookmarked(data.key));
+  }, [data]);
+
+  const toggleBookmark = () => {
+    if (!data) return;
+    if (bookmarked) {
+      removeBookmark(data.key);
+      setBookmarked(false);
+      toast('Bookmark removed', 'info');
+    } else {
+      addBookmark({
+        law_key: data.key,
+        law_title: data.title,
+        category: data.category,
+        added_at: new Date().toISOString().split('T')[0],
+      });
+      setBookmarked(true);
+      toast('Law bookmarked', 'success');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-        <p className="mt-4 text-gray-500">Loading law and paragraphs...</p>
+        <Loader2 className="w-12 h-12 text-[#c4a86a] animate-spin" />
+        <p className="mt-4 text-[#a09e9a]">Loading law and paragraphs...</p>
       </div>
     );
   }
@@ -45,7 +71,7 @@ export default function LawDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
         <h2 className="text-2xl font-bold text-red-600 mb-4">{error || 'Law not found'}</h2>
-        <Link href="/" className="text-blue-600 hover:underline flex items-center justify-center gap-2">
+        <Link href="/" className="text-[#c4a86a] hover:underline flex items-center justify-center gap-2">
           <ArrowLeft className="w-4 h-4" /> Back to search
         </Link>
       </div>
@@ -54,50 +80,61 @@ export default function LawDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
-      <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 mb-8 transition-colors">
+      <Link href="/" className="inline-flex items-center gap-2 text-sm text-[#a09e9a] hover:text-[#c4a86a] mb-8 transition-all duration-100 active:translate-y-[1px]">
         <ArrowLeft className="w-4 h-4" /> Back to search
       </Link>
 
       <header className="mb-12">
         <div className="flex items-center gap-3 mb-4">
-          <span className="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded-md">
+          <span className="px-3 py-1 text-sm font-bold bg-[#c4a86a] text-[#0d0d0d] rounded-none">
             {data.key}
           </span>
-          <span className="text-sm font-medium text-gray-500 uppercase tracking-widest">
+          <span className="text-sm font-medium text-[#a09e9a] uppercase tracking-widest">
             {data.category}
           </span>
+          <button
+            onClick={toggleBookmark}
+            className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-none border transition-all duration-100 active:translate-y-[1px] ${
+              bookmarked
+                ? 'bg-[#c4a86a] text-[#0d0d0d] border-[#c4a86a]'
+                : 'bg-transparent text-[#a09e9a] border-[#2a2a2a] hover:border-[#c4a86a] hover:text-[#c4a86a]'
+            }`}
+          >
+            {bookmarked ? <BookmarkCheck className="w-3.5 h-3.5" /> : <BookmarkPlus className="w-3.5 h-3.5" />}
+            {bookmarked ? 'Bookmarked' : 'Bookmark This Law'}
+          </button>
         </div>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-[#e8e6e3] mb-4 leading-tight">
           {data.title}
         </h1>
         {data.alt_title && (
-          <p className="text-xl text-gray-600 dark:text-gray-400 italic mb-6">
+          <p className="text-xl text-[#a09e9a] italic mb-6">
             ({data.alt_title})
           </p>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm border-t border-b border-gray-200 dark:border-gray-800 py-6 my-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm border-t border-b border-[#2a2a2a] py-6 my-8">
           <div>
-            <span className="block text-gray-500 mb-1">Status</span>
-            <span className="font-semibold text-gray-900 dark:text-white">{data.status}</span>
+            <span className="block text-[#a09e9a] mb-1">Status</span>
+            <span className="font-semibold text-[#e8e6e3]">{data.status}</span>
           </div>
           <div>
-            <span className="block text-gray-500 mb-1">Authority</span>
-            <span className="font-semibold text-gray-900 dark:text-white">{data.authority}</span>
+            <span className="block text-[#a09e9a] mb-1">Authority</span>
+            <span className="font-semibold text-[#e8e6e3]">{data.authority}</span>
           </div>
           <div>
-            <span className="block text-gray-500 mb-1">Last Changed</span>
-            <span className="font-semibold text-gray-900 dark:text-white">{data.last_changed || 'N/A'}</span>
+            <span className="block text-[#a09e9a] mb-1">Last Changed</span>
+            <span className="font-semibold text-[#e8e6e3]">{data.last_changed || 'N/A'}</span>
           </div>
           <div>
-            <span className="block text-gray-500 mb-1">Paragraphs</span>
-            <span className="font-semibold text-gray-900 dark:text-white">{data.total_norms}</span>
+            <span className="block text-[#a09e9a] mb-1">Paragraphs</span>
+            <span className="font-semibold text-[#e8e6e3]">{data.total_norms}</span>
           </div>
         </div>
       </header>
 
       <section>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <h2 className="text-2xl font-bold text-[#e8e6e3] mb-6">
           Paragraphs (Normen)
         </h2>
         <div className="space-y-4">
@@ -111,8 +148,8 @@ export default function LawDetailPage() {
               />
             ))
           ) : (
-            <div className="text-center py-10 bg-gray-100 dark:bg-gray-800 rounded-xl">
-              <p className="text-gray-500 italic">No paragraphs available for this law in the vector store.</p>
+            <div className="text-center py-10 bg-[#1a1a1a] rounded-none">
+              <p className="text-[#a09e9a] italic">No paragraphs available for this law in the vector store.</p>
             </div>
           )}
         </div>

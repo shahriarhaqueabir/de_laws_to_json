@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { searchNorms } from "../../../lib/qdrant";
-import { getServerClient } from "../../../lib/supabase";
+import { getServerClient } from "../../../lib/supabase-server";
 
 export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams.get("q") || "";

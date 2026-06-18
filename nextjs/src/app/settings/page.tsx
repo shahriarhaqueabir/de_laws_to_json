@@ -147,16 +147,16 @@ export default function SettingsPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       <div className="flex items-center gap-3 mb-10">
-        <Settings className="w-8 h-8 text-gray-700 dark:text-gray-300" />
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <Settings className="w-8 h-8 text-[#a09e9a]" />
+        <h1 className="text-3xl font-bold text-[#e8e6e3]">Settings</h1>
         {saved && (
           <span className="text-sm text-green-600 font-medium ml-2">Saved ✓</span>
         )}
       </div>
 
       {/* ── Chat Mode Selector ── */}
-      <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm mb-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">AI Chat Mode</h2>
+      <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-none p-6 mb-6">
+        <h2 className="text-xl font-bold text-[#e8e6e3] mb-6">AI Chat Mode</h2>
 
         <div className="grid gap-4">
           {(Object.entries(MODE_LABELS) as [ChatMode, typeof MODE_LABELS[ChatMode]][]).map(
@@ -167,43 +167,43 @@ export default function SettingsPage() {
                 <button
                   key={mode}
                   onClick={() => update({ mode })}
-                  className={`flex items-start gap-4 p-4 rounded-xl border-2 text-left transition-all ${
+                  className={`flex items-start gap-4 p-4 rounded-none border text-left transition-all duration-100 active:translate-y-[1px] ${
                     isActive
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-600'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      ? 'border-[#c4a86a] bg-[#2a2a2a]'
+                      : 'border-[#2a2a2a] hover:border-[#c4a86a]'
                   }`}
                 >
                   <div
-                    className={`p-2 rounded-lg ${
+                    className={`p-2 rounded-none ${
                       isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                        ? 'bg-[#c4a86a] text-[#0d0d0d]'
+                        : 'bg-[#2a2a2a] text-[#a09e9a]'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-gray-900 dark:text-white">
+                      <span className="font-bold text-[#e8e6e3]">
                         {info.icon} {info.label}
                       </span>
                       {isActive && (
-                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-medium text-[#c4a86a] bg-[#2a2a2a] px-2 py-0.5 rounded-none">
                           Active
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-[#a09e9a]">
                       {info.description}
                     </p>
                     {isActive && (
                       <div className="mt-3 space-y-1">
-                        <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                        <p className="text-xs font-semibold text-[#d4b87a] uppercase tracking-wider">
                           Limitations
                         </p>
                         {MODE_LIMITATIONS[mode].map((lim, i) => (
-                          <p key={i} className="text-xs text-gray-500 dark:text-gray-400 flex items-start gap-1.5">
-                            <span className="text-amber-500 mt-0.5">⚠️</span>
+                          <p key={i} className="text-xs text-[#a09e9a] flex items-start gap-1.5">
+                            <span className="text-[#c4a86a] mt-0.5">⚠️</span>
                             {lim}
                           </p>
                         ))}
@@ -220,29 +220,29 @@ export default function SettingsPage() {
       {/* ── Mode-specific Configuration ── */}
 
       {settings.mode === 'local' && (
-        <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm mb-6">
+        <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-none p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <Plug className="w-5 h-5 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Local AI Configuration</h2>
+            <Plug className="w-5 h-5 text-[#c4a86a]" />
+            <h2 className="text-xl font-bold text-[#e8e6e3]">Local AI Configuration</h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[#a09e9a] mb-1">
                 Broker URL
               </label>
               <input
                 type="text"
                 value={settings.brokerUrl}
                 onChange={(e) => update({ brokerUrl: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-[#2a2a2a] rounded-none bg-[#0d0d0d] text-[#e8e6e3]"
               />
             </div>
 
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">Status:</span>
+              <span className="text-[#a09e9a]">Status:</span>
               {brokerOk === null ? (
-                <span className="text-gray-400">Checking...</span>
+                <span className="text-[#6b6a66]">Checking...</span>
               ) : brokerOk ? (
                 <span className="flex items-center gap-1 text-green-600">
                   <CheckCircle className="w-4 h-4" /> Connected
@@ -254,7 +254,7 @@ export default function SettingsPage() {
               )}
             </div>
 
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-[#a09e9a]">
               {MODE_STATUS_NOTE.local}
             </p>
           </div>
@@ -262,21 +262,21 @@ export default function SettingsPage() {
       )}
 
       {settings.mode === 'cloud' && (
-        <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm mb-6">
+        <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-none p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <Cloud className="w-5 h-5 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Cloud AI Configuration</h2>
+            <Cloud className="w-5 h-5 text-[#c4a86a]" />
+            <h2 className="text-xl font-bold text-[#e8e6e3]">Cloud AI Configuration</h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[#a09e9a] mb-1">
                 Provider
               </label>
               <select
                 value={settings.provider}
                 onChange={(e) => update({ provider: e.target.value as CloudProvider, model: PROVIDER_MODELS[e.target.value as CloudProvider][0] })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-[#2a2a2a] rounded-none bg-[#0d0d0d] text-[#e8e6e3]"
               >
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
@@ -285,7 +285,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[#a09e9a] mb-1">
                 API Key
               </label>
               <input
@@ -293,21 +293,21 @@ export default function SettingsPage() {
                 value={settings.apiKey}
                 onChange={(e) => update({ apiKey: e.target.value })}
                 placeholder={settings.apiKey ? '••••••••' : 'sk-...'}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm"
+                className="w-full px-3 py-2 border border-[#2a2a2a] rounded-none bg-[#0d0d0d] text-[#e8e6e3] font-mono text-sm"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-[#a09e9a] mt-1">
                 Stored in your browser only. Never sent to our servers.
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-[#a09e9a] mb-1">
                 Model
               </label>
               <select
                 value={settings.model}
                 onChange={(e) => update({ model: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-[#2a2a2a] rounded-none bg-[#0d0d0d] text-[#e8e6e3]"
               >
                 {PROVIDER_MODELS[settings.provider].map((m) => (
                   <option key={m} value={m}>
@@ -319,7 +319,7 @@ export default function SettingsPage() {
 
             {settings.provider === 'openai-compatible' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-[#a09e9a] mb-1">
                   Custom Endpoint URL
                 </label>
                 <input
@@ -327,12 +327,12 @@ export default function SettingsPage() {
                   value={settings.customEndpoint}
                   onChange={(e) => update({ customEndpoint: e.target.value })}
                   placeholder="https://api.openai.com"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm"
+                  className="w-full px-3 py-2 border border-[#2a2a2a] rounded-none bg-[#0d0d0d] text-[#e8e6e3] font-mono text-sm"
                 />
               </div>
             )}
 
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-[#a09e9a]">
               {MODE_STATUS_NOTE.cloud}
             </p>
           </div>
@@ -340,23 +340,23 @@ export default function SettingsPage() {
       )}
 
       {settings.mode === 'browser' && (
-        <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm mb-6">
+        <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-none p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <Brain className="w-5 h-5 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Browser AI Configuration</h2>
+            <Brain className="w-5 h-5 text-[#c4a86a]" />
+            <h2 className="text-xl font-bold text-[#e8e6e3]">Browser AI Configuration</h2>
           </div>
 
           <div className="space-y-4">
-            <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
-              <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+            <div className="p-4 bg-[#0d0d0d] rounded-none">
+              <p className="text-sm font-medium text-[#e8e6e3] mb-1">
                 Model: LaMini-Flan-T5-783M
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#a09e9a]">
                 Size: ~1.5GB • Type: Instruction-following • Runs entirely in your browser
               </p>
             </div>
 
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-[#a09e9a]">
               {MODE_STATUS_NOTE.browser}
             </p>
           </div>
@@ -364,13 +364,13 @@ export default function SettingsPage() {
       )}
 
       {settings.mode === 'basic' && (
-        <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm mb-6">
+        <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-none p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <FileText className="w-5 h-5 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Basic Search</h2>
+            <FileText className="w-5 h-5 text-[#c4a86a]" />
+            <h2 className="text-xl font-bold text-[#e8e6e3]">Basic Search</h2>
           </div>
 
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-[#a09e9a]">
             No configuration needed. This mode searches German laws via Qdrant and shows
             relevant paragraphs directly in the chat. Always available.
           </p>
@@ -383,7 +383,7 @@ export default function SettingsPage() {
           <button
             onClick={handleTestConnection}
             disabled={testing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm font-medium"
+            className="px-4 py-2 bg-[#c4a86a] text-[#0d0d0d] rounded-none hover:bg-[#d4b87a] disabled:opacity-50 transition-all duration-100 active:translate-y-[1px] text-sm font-medium"
           >
             {testing ? 'Testing...' : 'Test Connection'}
           </button>
@@ -402,12 +402,12 @@ export default function SettingsPage() {
       )}
 
       {/* ── Data Store ── */}
-      <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
+      <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-none p-6">
         <div className="flex items-center gap-3 mb-6">
-          <Database className="w-5 h-5 text-indigo-600" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Data Store</h2>
+          <Database className="w-5 h-5 text-[#c4a86a]" />
+          <h2 className="text-xl font-bold text-[#e8e6e3]">Data Store</h2>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-[#a09e9a]">
           Connected to Qdrant Cloud (managed e5-small, 107K norms) and Supabase (PostgreSQL + Auth).
         </p>
       </section>

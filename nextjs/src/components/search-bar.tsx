@@ -22,14 +22,14 @@ export default function SearchBar({ initialValue = '' }: { initialValue?: string
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search German laws... (e.g., Mietrecht, BGB, consumer rights)"
-          className="w-full px-4 py-3 pr-12 text-lg border rounded-lg
-                     focus:outline-none focus:ring-2 focus:ring-blue-500
-                     dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+          className="w-full px-4 py-3 pr-12 text-lg border rounded-none
+                               focus:outline-none focus:ring-1 focus:ring-[#c4a86a]
+                               bg-[#1a1a1a] border-[#2a2a2a] text-[#e8e6e3]"
         />
         <button
           type="submit"
           className="absolute right-2 top-1/2 -translate-y-1/2 p-2
-                     text-gray-500 hover:text-blue-600 transition-colors"
+                               text-[#6b6a66] hover:text-[#c4a86a] transition-all duration-100 active:translate-y-[1px]"
         >
           <Search className="w-6 h-6" />
         </button>

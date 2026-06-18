@@ -3,16 +3,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Gavel, Search, MessageSquare, Bookmark, Settings, Plug, Cloud, Brain, FileText, Check, ChevronDown } from 'lucide-react';
+import { Gavel, Search, MessageSquare, Bookmark, Settings, Plug, Cloud, Brain, FileText, Check, ChevronDown, LogIn, User } from 'lucide-react';
+import { useAuth } from './auth-context';
 import type { ChatMode, ChatSettings } from '../lib/types';
 
 const STORAGE_KEY = 'glv_chat_settings';
 
 const MODE_META: Record<ChatMode, { icon: typeof Plug; color: string; bg: string; label: string }> = {
-  local:   { icon: Plug,     color: 'text-blue-600',     bg: 'bg-blue-100 dark:bg-blue-900/40',     label: 'Local AI' },
-  cloud:   { icon: Cloud,    color: 'text-purple-600',   bg: 'bg-purple-100 dark:bg-purple-900/40',   label: 'Cloud AI' },
-  browser: { icon: Brain,    color: 'text-emerald-600',  bg: 'bg-emerald-100 dark:bg-emerald-900/40', label: 'Browser AI' },
-  basic:   { icon: FileText, color: 'text-gray-600',     bg: 'bg-gray-100 dark:bg-gray-800',          label: 'Basic Search' },
+  local:   { icon: Plug,     color: 'text-blue-600',     bg: 'bg-[#2a2a2a]', label: 'Local AI' },
+  cloud:   { icon: Cloud,    color: 'text-purple-600',   bg: 'bg-[#2a2a2a]', label: 'Cloud AI' },
+  browser: { icon: Brain,    color: 'text-emerald-600',  bg: 'bg-[#2a2a2a]', label: 'Browser AI' },
+  basic:   { icon: FileText, color: 'text-gray-600',     bg: 'bg-[#2a2a2a]', label: 'Basic Search' },
 };
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
 
 export default function NavBar() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [mode, setMode] = useState<ChatMode>('basic');
   const [open, setOpen] = useState(false);
 
@@ -51,15 +53,15 @@ export default function NavBar() {
   const ModeIcon = meta.icon;
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+    <nav className="sticky top-0 z-50 w-full bg-[#1a1a1a]/80 border-b border-[#2a2a2a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="p-1.5 bg-blue-600 rounded-lg text-white group-hover:bg-blue-700 transition-colors">
+              <div className="p-1.5 bg-[#c4a86a] rounded-none text-[#0d0d0d] group-hover:bg-[#d4b87a] transition-all duration-100">
                 <Gavel className="w-5 h-5" />
               </div>
-              <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white hidden sm:block">
+              <span className="font-bold text-xl tracking-tight text-[#e8e6e3] hidden sm:block">
                 German Law Vault
               </span>
             </Link>
@@ -72,11 +74,11 @@ export default function NavBar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                  }`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-none text-sm font-medium transition-all duration-100 active:translate-y-[1px] ${
+                                      isActive
+                                        ? 'bg-[#2a2a2a] text-[#c4a86a]'
+                                        : 'text-[#a09e9a] hover:bg-[#2a2a2a]'
+                                    }`}
                 >
                   <item.icon className="w-4 h-4" />
                   {item.label}
@@ -84,11 +86,34 @@ export default function NavBar() {
               );
             })}
 
+            {/* Auth indicator */}
+            <Link
+              href={user ? '/settings' : '/auth'}
+              className={`flex items-center gap-2 px-3 py-2 rounded-none text-sm font-medium transition-all duration-100 active:translate-y-[1px] ${
+                user
+                  ? 'bg-[#2a2a2a] text-[#a09e9a] hover:text-[#c4a86a]'
+                  : 'text-[#a09e9a] hover:text-[#c4a86a]'
+              }`}
+              title={user?.email ?? ''}
+            >
+              {user ? (
+                <>
+                  <User className="w-4 h-4" />
+                  <span className="max-w-[120px] truncate hidden lg:inline">{user.email}</span>
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden lg:inline">Sign in</span>
+                </>
+              )}
+            </Link>
+
             {/* Mode indicator + quick switcher */}
             <div className="relative ml-2">
               <button
                 onClick={() => setOpen(!open)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${meta.bg} ${meta.color} hover:opacity-80`}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-none text-xs font-semibold transition-all duration-100 active:translate-y-[1px] ${meta.bg} ${meta.color} hover:opacity-80`}
               >
                 <ModeIcon className="w-3.5 h-3.5" />
                 <span>{meta.label}</span>
@@ -98,7 +123,7 @@ export default function NavBar() {
               {open && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-20 py-2">
+                  <div className="absolute right-0 mt-2 w-56 bg-[#1a1a1a] border border-[#2a2a2a] rounded-none z-20 py-2">
                     {(['basic', 'browser', 'cloud', 'local'] as ChatMode[]).map((m) => {
                       const mm = MODE_META[m];
                       const MI = mm.icon;
@@ -107,27 +132,27 @@ export default function NavBar() {
                         <button
                           key={m}
                           onClick={() => switchMode(m)}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${
-                            isActive
-                              ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-all duration-100 active:translate-y-[1px] ${
+                                                      isActive
+                                                        ? 'bg-[#2a2a2a] text-[#e8e6e3]'
+                                                        : 'text-[#a09e9a] hover:bg-[#2a2a2a]'
+                                                    }`}
                         >
                           <MI className={`w-4 h-4 ${mm.color}`} />
                           <span className="flex-1 font-medium">{mm.label}</span>
-                          {isActive && <Check className="w-4 h-4 text-blue-600" />}
+                          {isActive && <Check className="w-4 h-4 text-[#c4a86a]" />}
                         </button>
                       );
                     })}
-                    <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2 px-4">
-                      <Link
-                        href="/settings"
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-2 text-xs text-gray-500 hover:text-blue-600 transition-colors py-1"
-                      >
-                        <Settings className="w-3 h-3" />
-                        Detailed settings
-                      </Link>
+                    <div className="border-t border-[#2a2a2a] mt-2 pt-2 px-4">
+                                          <Link
+                                            href="/settings"
+                                            onClick={() => setOpen(false)}
+                                            className="flex items-center gap-2 text-xs text-[#6b6a66] hover:text-[#c4a86a] transition-all duration-100 active:translate-y-[1px] py-1"
+                                          >
+                                            <Settings className="w-3 h-3" />
+                                            Detailed settings
+                                          </Link>
                     </div>
                   </div>
                 </>
@@ -143,23 +168,23 @@ export default function NavBar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`p-2 rounded-md ${
-                    isActive
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}
+                  className={`p-2 rounded-none transition-all duration-100 active:translate-y-[1px] ${
+                                      isActive
+                                        ? 'text-[#c4a86a]'
+                                        : 'text-[#a09e9a]'
+                                    }`}
                 >
                   <item.icon className="w-5 h-5" />
                 </Link>
               );
             })}
             <Link
-              href="/settings"
-              className={`p-2 rounded-md ${
-                pathname === '/settings' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'
+              href={user ? '/settings' : '/auth'}
+              className={`p-2 rounded-none transition-all duration-100 active:translate-y-[1px] ${
+                user ? 'text-[#c4a86a]' : 'text-[#a09e9a]'
               }`}
             >
-              <Settings className="w-5 h-5" />
+              {user ? <User className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
             </Link>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getServerClient } from '../../../lib/supabase';
+import { getServerClient } from '../../../lib/supabase-server';
 import { searchNorms } from '../../../lib/qdrant';
 import { generateChatResponse } from '../../../lib/chat';
 import type { ChatMode, CloudProvider, CitedLaw } from '../../../lib/types';

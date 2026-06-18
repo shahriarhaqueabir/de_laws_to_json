@@ -40,13 +40,13 @@ const modes = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-5xl mx-auto px-4 py-16">
-        <header className="text-center mb-14">
-          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-4">
-            German Law Vault
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+    <main className="min-h-screen bg-[#0d0d0d]">
+          <div className="max-w-5xl mx-auto px-4 py-16">
+            <header className="text-center mb-14">
+              <h1 className="text-5xl font-extrabold tracking-tight text-[#e8e6e3] mb-4">
+                German Law Vault
+              </h1>
+              <p className="text-xl text-[#a09e9a] max-w-2xl mx-auto">
             Explore 6,000+ German federal laws. Search in English or German, powered by AI semantic search.
           </p>
         </header>
@@ -61,18 +61,18 @@ export default function Home() {
                 <Link
                   key={mode.label}
                   href={mode.href}
-                  className={`${mode.bg} border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md transition-all group`}
+                  className={`${mode.bg} border border-[#2a2a2a] rounded-none p-5 hover:border-[#c4a86a] transition-all group`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`p-2.5 rounded-lg ${mode.bg}`}>
-                      <Icon className={`w-5 h-5 ${mode.color}`} />
+                    <div className={`p-2.5 rounded-none ${mode.bg}`}>
+                                          <Icon className={`w-5 h-5 ${mode.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-gray-900 dark:text-white">{mode.label}</h3>
+                        <h3 className="font-bold text-[#e8e6e3]">{mode.label}</h3>
                         <ArrowRight className={`w-4 h-4 ${mode.color} opacity-0 group-hover:opacity-100 transition-opacity`} />
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                      <p className="text-sm text-[#a09e9a] leading-relaxed">
                         {mode.description}
                       </p>
                     </div>
@@ -84,13 +84,13 @@ export default function Home() {
         </div>
 
         <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+          <h2 className="text-2xl font-bold text-[#e8e6e3] mb-6 text-center">
             Browse by Category
           </h2>
           <CategoryGrid />
         </div>
 
-        <footer className="mt-24 text-center text-gray-500 dark:text-gray-400 text-sm">
+        <footer className="mt-24 text-center text-[#6b6a66] text-sm">
           <p>© 2026 German Law Vault. AI-Assisted non-binding guidance.</p>
         </footer>
       </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getServerClient } from "../../../../lib/supabase";
+import { getServerClient } from "../../../../lib/supabase-server";
 import { qdrant, COLLECTION } from "../../../../lib/qdrant";
 
 export async function GET(
