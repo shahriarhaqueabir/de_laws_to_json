@@ -3,5 +3,5 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "regions": ["bru1"]
+  "regions": ["fra1"]
 }
