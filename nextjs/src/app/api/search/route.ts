@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { searchNorms } from '@/lib/qdrant';
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { searchNorms } from "../../../lib/qdrant";
+import { getServerClient } from "../../../lib/supabase";
 
 export async function GET(req: NextRequest) {
-  const query = req.nextUrl.searchParams.get('q') || '';
-  const category = req.nextUrl.searchParams.get('category') || '';
-  const page = parseInt(req.nextUrl.searchParams.get('page') || '1', 10);
+  const query = req.nextUrl.searchParams.get("q") || "";
+  const category = req.nextUrl.searchParams.get("category") || "";
+  const page = parseInt(req.nextUrl.searchParams.get("page") || "1", 10);
   const pageSize = 20;
 
   if (!query.trim() && !category) {
@@ -22,24 +24,27 @@ export async function GET(req: NextRequest) {
       const cookieStore = await cookies();
       const supabase = getServerClient(cookieStore);
       const { data: laws } = await supabase
-        .from('laws')
-        .select('*')
-        .eq('category', category)
+        .from("laws")
+        .select("*")
+        .eq("category", category)
         .limit(20);
 
-      allResults = (laws || []).map(l => ({
+      allResults = (laws || []).map((l) => ({
         law_key: l.key,
         law_title: l.title,
         category: l.category,
-        norm_id: '', // Browse mode doesn't highlight specific norms
-        norm_title: '',
-        content: '',
-        score: 1.0
+        norm_id: "", // Browse mode doesn't highlight specific norms
+        norm_title: "",
+        content: "",
+        score: 1.0,
       }));
     }
 
     // Group by law_key for law-level results
-    const lawMap = new Map<string, { hits: number; topScore: number; norms: any[] }>();
+    const lawMap = new Map<
+      string,
+      { hits: number; topScore: number; norms: any[] }
+    >();
     for (const r of allResults) {
       if (!lawMap.has(r.law_key)) {
         lawMap.set(r.law_key, { hits: 0, topScore: 0, norms: [] });
@@ -53,8 +58,8 @@ export async function GET(req: NextRequest) {
     const lawResults = Array.from(lawMap.entries())
       .map(([key, data]) => ({
         key,
-        title: data.norms[0]?.law_title || '',
-        category: data.norms[0]?.category || '',
+        title: data.norms[0]?.law_title || "",
+        category: data.norms[0]?.category || "",
         relevance: Math.round(data.topScore * 100),
         normHits: data.hits,
         relevantNorms: data.norms.map((n) => ({
@@ -70,7 +75,7 @@ export async function GET(req: NextRequest) {
       total: allResults.length,
     });
   } catch (err: any) {
-    console.error('Search error:', err);
-    return NextResponse.json({ error: 'Search failed' }, { status: 500 });
+    console.error("Search error:", err);
+    return NextResponse.json({ error: "Search failed" }, { status: 500 });
   }
 }

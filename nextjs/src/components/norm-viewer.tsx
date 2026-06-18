@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useTranslation } from '../hooks/useTranslation';
 import { Languages, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface NormViewerProps {

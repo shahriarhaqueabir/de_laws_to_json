@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { getServerClient } from '@/lib/supabase';
-import { qdrant, COLLECTION } from '@/lib/qdrant';
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { getServerClient } from "../../../../lib/supabase";
+import { qdrant, COLLECTION } from "../../../../lib/qdrant";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: { params: Promise<{ key: string }> },
 ) {
   const { key } = await params;
 
@@ -14,18 +14,19 @@ export async function GET(
 
   // Get law metadata
   const { data: law, error } = await supabase
-    .from('laws')
-    .select('*')
-    .eq('key', key)
+    .from("laws")
+    .select("*")
+    .eq("key", key)
     .single();
 
-  if (error) return NextResponse.json({ error: 'Law not found' }, { status: 404 });
+  if (error)
+    return NextResponse.json({ error: "Law not found" }, { status: 404 });
 
   // Get norms from Qdrant by law_key filter (using scroll to get up to 1000)
   try {
     const norms = await qdrant.scroll(COLLECTION, {
       filter: {
-        must: [{ key: 'law_key', match: { value: key } }]
+        must: [{ key: "law_key", match: { value: key } }],
       },
       limit: 1000,
       with_payload: true,
@@ -36,11 +37,11 @@ export async function GET(
       norms: norms.points.map((p: any) => p.payload),
     });
   } catch (err) {
-    console.error('Qdrant scroll error:', err);
+    console.error("Qdrant scroll error:", err);
     return NextResponse.json({
-        ...law,
-        norms: [],
-        warning: 'Could not fetch norms from vector store'
-      });
+      ...law,
+      norms: [],
+      warning: "Could not fetch norms from vector store",
+    });
   }
 }

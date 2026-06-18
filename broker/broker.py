@@ -5,14 +5,15 @@ Serves as an optional AI guidance layer.
 Usage:
     pip install -r requirements.txt
     python broker.py
-    # Server starts on http://localhost:9090
+    # Server starts on http://localhost:9000
 """
-import os
+
 import logging
-import uvicorn
+import os
 from typing import Optional
 
 import httpx
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -25,7 +26,12 @@ app = FastAPI(title="German Law Vault Broker")
 # Allow requests from the Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://*.vercel.app"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://*.vercel.app",
+        os.environ.get("CORS_ORIGIN", ""),
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
@@ -33,14 +39,17 @@ app.add_middleware(
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:1.5b")
 
+
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     context: str = Field(default="")
     conversationId: Optional[str] = None
 
+
 class ChatResponse(BaseModel):
     response: str
     model: str = OLLAMA_MODEL
+
 
 LEGAL_DISCLAIMER = (
     "\n\n---\n"
@@ -57,10 +66,12 @@ SYSTEM_PROMPT = """You are a German law assistant. Your role is to:
 6. Cite specific law keys and section numbers.
 """
 
+
 @app.get("/health")
 async def health():
     """Health check — called by the frontend to detect broker availability."""
     return {"status": "ok", "model": OLLAMA_MODEL}
+
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
@@ -96,6 +107,7 @@ Provide guidance based on the relevant laws above. Include citations."""
     except Exception as e:
         logger.error("Ollama request failed: %s", e)
         raise HTTPException(status_code=503, detail=f"Ollama unavailable: {str(e)}")
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=9090)

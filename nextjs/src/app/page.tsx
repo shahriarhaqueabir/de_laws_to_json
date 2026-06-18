@@ -1,5 +1,5 @@
-import SearchBar from '@/components/search-bar';
-import CategoryGrid from '@/components/category-grid';
+import SearchBar from '../components/search-bar';
+import CategoryGrid from '../components/category-grid';
 
 export default function Home() {
   return (

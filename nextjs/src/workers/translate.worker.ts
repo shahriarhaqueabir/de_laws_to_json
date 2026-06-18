@@ -7,13 +7,13 @@ import { pipeline, env } from '@huggingface/transformers';
 env.allowLocalModels = false;
 
 class TranslationWorker {
-  static task = 'translation';
+  static task = 'translation' as const;
   static model = 'Xenova/nllb-200-distilled-600M';
   static instance: any = null;
 
   static async getInstance(progress_callback?: (x: any) => void) {
     if (!this.instance) {
-      this.instance = pipeline(this.task, this.model, {
+      this.instance = pipeline(this.task as any, this.model, {
         progress_callback,
       });
     }

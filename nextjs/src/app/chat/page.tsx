@@ -1,89 +1,281 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Send, Loader2, ShieldAlert, Scale } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  MessageSquare,
+  Send,
+  Loader2,
+  ShieldAlert,
+  Scale,
+  Plug,
+  Cloud,
+  Brain,
+  FileText,
+  CheckCircle,
+  XCircle,
+  Download,
+} from 'lucide-react';
 import Link from 'next/link';
+import {
+  ChatMode,
+  ChatSettings,
+  CitedLaw,
+  DEFAULT_CHAT_SETTINGS,
+  MODE_LABELS,
+} from '../../lib/types';
+
+const STORAGE_KEY = 'glv_chat_settings';
+
+function loadSettings(): ChatSettings {
+  if (typeof window === 'undefined') return DEFAULT_CHAT_SETTINGS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return { ...DEFAULT_CHAT_SETTINGS, ...JSON.parse(raw) };
+  } catch {}
+  return DEFAULT_CHAT_SETTINGS;
+}
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  citedLaws?: any[];
+  citedLaws?: CitedLaw[];
 }
 
+const MODE_META: Record<ChatMode, { icon: typeof Plug; color: string; label: string }> = {
+  local: { icon: Plug, color: 'text-blue-600', label: 'Local AI' },
+  cloud: { icon: Cloud, color: 'text-purple-600', label: 'Cloud AI' },
+  browser: { icon: Brain, color: 'text-emerald-600', label: 'Browser AI' },
+  basic: { icon: FileText, color: 'text-gray-600', label: 'Basic Search' },
+};
+
+const LIMITATION_BANNERS: Record<ChatMode, string | null> = {
+  local: '🔌 Local AI — only works when broker.py + Ollama are running on your machine. Unavailable on the live site.',
+  cloud: '☁️ Cloud AI — uses your own API key. You are billed by your provider. Key stored in browser only.',
+  browser: '🧠 Browser AI — downloads a ~1.5GB model on first use. Slower than cloud AI. Fully private.',
+  basic: '📄 Basic Search — searches laws and shows excerpts. No AI analysis. You interpret the results.',
+};
+
 export default function ChatPage() {
+  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_CHAT_SETTINGS);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [brokerAvailable, setBrokerAvailable] = useState<boolean | null>(null);
+  const [workerStatus, setWorkerStatus] = useState<string | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const pendingRef = useRef<{ resolve: (v: string) => void; reject: (e: any) => void } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const mode = settings.mode;
+  const modeMeta = MODE_META[mode];
+  const ModeIcon = modeMeta.icon;
 
+  // Load settings on mount
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Check broker health on mount
-  useEffect(() => {
-    fetch('http://localhost:9090/health')
-      .then(res => res.ok ? setBrokerAvailable(true) : setBrokerAvailable(false))
-      .catch(() => setBrokerAvailable(false));
+    setSettings(loadSettings());
   }, []);
 
-  const handleSend = async (e: React.FormEvent) => {
+  // Check broker health in local mode
+  useEffect(() => {
+    if (mode !== 'local') { setBrokerAvailable(null); return; }
+    const check = () => {
+      fetch(`${settings.brokerUrl}/health`)
+        .then((r) => setBrokerAvailable(r.ok))
+        .catch(() => setBrokerAvailable(false));
+    };
+    check();
+    const interval = setInterval(check, 15000);
+    return () => clearInterval(interval);
+  }, [mode, settings.brokerUrl]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // ── Browser AI: Initialize worker ──
+  useEffect(() => {
+    if (mode !== 'browser') {
+      workerRef.current?.terminate();
+      workerRef.current = null;
+      return;
+    }
+    if (workerRef.current) return;
+
+    const worker = new Worker(
+      new URL('../../workers/chat.worker.ts', import.meta.url),
+      { type: 'module' }
+    );
+
+    worker.onmessage = (event) => {
+      const { status, id, output, error } = event.data;
+      if (status === 'progress') {
+        if (event.data.status === 'download') {
+          setWorkerStatus(`Downloading model... ${Math.round((event.data.loaded / event.data.total) * 100)}%`);
+        } else if (event.data.status === 'progress') {
+          setWorkerStatus(`Generating...`);
+        }
+      } else if (status === 'complete') {
+        setWorkerStatus(null);
+        pendingRef.current?.resolve(output);
+        pendingRef.current = null;
+      } else if (status === 'error') {
+        setWorkerStatus(`Error: ${error}`);
+        pendingRef.current?.reject(new Error(error));
+        pendingRef.current = null;
+      }
+    };
+
+    worker.onerror = (err) => {
+      setWorkerStatus('Worker error');
+      pendingRef.current?.reject(err);
+      pendingRef.current = null;
+    };
+
+    workerRef.current = worker;
+    setWorkerStatus('AI model ready');
+
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, [mode]);
+
+  const handleSend = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
 
     const userMsg = input;
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setMessages((prev) => [...prev, { role: 'user', content: userMsg }]);
     setLoading(true);
 
     try {
+      // Build request body based on mode
+      const body: Record<string, any> = { message: userMsg, mode };
+
+      if (mode === 'cloud') {
+        body.provider = settings.provider;
+        body.apiKey = settings.apiKey;
+        body.model = settings.model;
+        body.customEndpoint = settings.customEndpoint;
+      }
+
+      // For browser mode, we need Qdrant results from the server but generate client-side
+      if (mode === 'browser') {
+        // Get Qdrant results from server (no AI generation)
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...body, mode: 'basic' }),
+        });
+        const data = await res.json();
+
+        // Now generate with Transformers.js worker
+        const prompt = `Context from German laws:\n${(data.citedLaws || []).map((l: CitedLaw) => `[${l.law_key} ${l.norm_id}] ${l.law_title}`).join('\n')}\n\nUser situation:\n${userMsg}\n\nProvide guidance based on the relevant laws above. Include citations.`;
+
+        let workerResponse: string;
+        if (workerRef.current) {
+          workerResponse = await new Promise<string>((resolve, reject) => {
+            const id = crypto.randomUUID();
+            pendingRef.current = { resolve, reject };
+            workerRef.current?.postMessage({ id, prompt });
+          });
+        } else {
+          workerResponse = 'Browser AI worker not available. Please reload or switch to another mode.';
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: workerResponse + '\n\n---\n*Generated by Browser AI (Transformers.js). This is **not legally binding advice**.*',
+            citedLaws: data.citedLaws || [],
+          },
+        ]);
+        setLoading(false);
+        return;
+      }
+
+      // All other modes: server generates the response
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.response,
-        citedLaws: data.citedLaws
-      }]);
-      setBrokerAvailable(data.brokerAvailable);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: data.response || 'No response received.',
+          citedLaws: data.citedLaws || [],
+        },
+      ]);
+      if (data.brokerAvailable !== undefined) {
+        setBrokerAvailable(data.brokerAvailable);
+      }
     } catch (err) {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error connecting to the chat service.'
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: 'Sorry, I encountered an error. Please check your settings and try again.',
+        },
+      ]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [input, loading, mode, settings]);
 
   return (
     <main className="flex flex-col h-[calc(100vh-64px)] bg-gray-50 dark:bg-gray-900">
-      {/* Header Info */}
+      {/* ── Header ── */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Scale className="w-5 h-5 text-blue-600" />
             <h1 className="font-bold text-gray-900 dark:text-white">AI Legal Assistant</h1>
+            <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${modeMeta.color} bg-gray-100 dark:bg-gray-700`}>
+              <ModeIcon className="w-3 h-3" />
+              {modeMeta.label}
+            </span>
+            {mode === 'local' && brokerAvailable === true && (
+              <span className="flex items-center gap-1 text-xs text-green-600">
+                <CheckCircle className="w-3 h-3" /> Online
+              </span>
+            )}
+            {mode === 'local' && brokerAvailable === false && (
+              <span className="flex items-center gap-1 text-xs text-amber-600">
+                <XCircle className="w-3 h-3" /> Offline
+              </span>
+            )}
+            {mode === 'browser' && workerStatus && (
+              <span className="flex items-center gap-1 text-xs text-emerald-600">
+                <Brain className="w-3 h-3" /> {workerStatus}
+              </span>
+            )}
           </div>
-          {brokerAvailable === false && (
-            <div className="flex items-center gap-2 text-xs font-medium text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800">
-              <ShieldAlert className="w-3 h-3" />
-              Local Broker Offline
-            </div>
-          )}
+          <Link
+            href="/settings"
+            className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
+          >
+            Settings
+          </Link>
         </div>
       </div>
 
-      {/* Chat Messages */}
+      {/* ── Mode Limitation Banner ── */}
+      <div className={`px-4 py-2 text-xs text-center ${
+        mode === 'basic'
+          ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+          : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+      }`}>
+        {LIMITATION_BANNERS[mode]}
+      </div>
+
+      {/* ── Chat Messages ── */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-6 pb-20">
           {messages.length === 0 && (
@@ -91,9 +283,14 @@ export default function ChatPage() {
               <div className="bg-blue-100 dark:bg-blue-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-8 h-8 text-blue-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">How can I help you today?</h2>
-              <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                Describe a situation (e.g., "My landlord wants to increase my rent") and I will search relevant German laws to provide guidance.
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                How can I help you today?
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-4">
+                Describe a situation (e.g., &quot;My landlord wants to increase my rent&quot;) and I will search relevant German laws to provide guidance.
+              </p>
+              <p className="text-xs text-gray-400 max-w-sm mx-auto">
+                Mode: {MODE_LABELS[mode].icon} {MODE_LABELS[mode].label} — {MODE_LABELS[mode].description}
               </p>
             </div>
           )}
@@ -111,9 +308,11 @@ export default function ChatPage() {
 
                 {m.citedLaws && m.citedLaws.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Relevant Sources</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                      Relevant Sources
+                    </p>
                     <div className="flex flex-wrap gap-2">
-                      {m.citedLaws.map((law: any, j: number) => (
+                      {m.citedLaws.map((law, j) => (
                         <Link
                           key={j}
                           href={`/laws/${law.law_key}`}
@@ -128,25 +327,36 @@ export default function ChatPage() {
               </div>
             </div>
           ))}
+
           {loading && (
             <div className="flex justify-start">
               <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl rounded-tl-none px-5 py-3 shadow-sm">
-                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                  {mode === 'browser' && workerStatus && (
+                    <span className="text-xs text-gray-500">{workerStatus}</span>
+                  )}
+                </div>
               </div>
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input Area */}
+      {/* ── Input Area ── */}
       <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
         <form onSubmit={handleSend} className="max-w-4xl mx-auto flex gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your question about German law..."
+            placeholder={
+              mode === 'basic'
+                ? 'Search German laws... (e.g., Mietrecht, BGB § 558)'
+                : 'Describe your situation...'
+            }
             className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
             disabled={loading}
           />
