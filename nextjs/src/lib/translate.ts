@@ -3,7 +3,7 @@
  */
 
 let worker: Worker | null = null;
-const pending = new Map<string, { resolve: (v: string) => void; reject: (e: any) => void }>();
+const pending = new Map<string, { resolve: (v: string) => void; reject: (e: unknown) => void }>();
 
 function getWorker(): Worker {
   if (!worker && typeof window !== 'undefined') {

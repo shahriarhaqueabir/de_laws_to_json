@@ -76,6 +76,7 @@ export default function ChatPage() {
   }, []);
 
   // Check broker health in local mode
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (mode !== 'local') { setBrokerAvailable(null); return; }
     const check = () => {

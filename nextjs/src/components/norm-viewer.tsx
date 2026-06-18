@@ -21,7 +21,7 @@ export default function NormViewer({ normId, title, content }: NormViewerProps) 
     try {
       const result = await translate(content);
       setTranslation(result);
-    } catch (err) {
+    } catch {
       alert('Translation failed. The model might still be loading (~600MB).');
     }
   };

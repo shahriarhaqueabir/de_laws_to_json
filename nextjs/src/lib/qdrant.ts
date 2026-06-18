@@ -25,7 +25,7 @@ export async function searchNorms(
   category?: string,
   topK: number = 50,
 ): Promise<SearchResult[]> {
-  const filter: any = { must: [] };
+  const filter: { must: Array<Record<string, unknown>> } = { must: [] };
 
   if (category) {
     filter.must.push({ key: 'category', match: { value: category } });

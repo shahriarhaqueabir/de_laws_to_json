@@ -7,6 +7,8 @@ import { pipeline, env } from '@huggingface/transformers';
 
 env.allowLocalModels = false;
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- Transformers.js pipeline API is dynamic */
+
 const TASK = 'text2text-generation';
 const MODEL = 'Xenova/LaMini-Flan-T5-783M';
 

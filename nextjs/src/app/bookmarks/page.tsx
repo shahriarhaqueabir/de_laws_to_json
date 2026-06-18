@@ -15,7 +15,7 @@ export default function BookmarksPage() {
 
       <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center max-w-2xl mx-auto">
         <p className="text-gray-500 dark:text-gray-400">
-          You haven't saved any laws yet. Browse the vault and click the bookmark icon to save a section.
+          You have not saved any laws yet. Browse the vault and click the bookmark icon to save a section.
         </p>
       </div>
     </div>

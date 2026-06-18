@@ -6,6 +6,8 @@ import { pipeline, env } from '@huggingface/transformers';
 // Skip local model check
 env.allowLocalModels = false;
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- Transformers.js pipeline API is dynamic */
+
 class TranslationWorker {
   static task = 'translation' as const;
   static model = 'Xenova/nllb-200-distilled-600M';

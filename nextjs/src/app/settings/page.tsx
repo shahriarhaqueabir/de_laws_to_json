@@ -137,8 +137,8 @@ export default function SettingsPage() {
       } else {
         setTestResult('No test available for this mode');
       }
-    } catch (err: any) {
-      setTestResult(`Connection failed: ${err.message}`);
+    } catch (err: unknown) {
+      setTestResult(`Connection failed: ${(err as Error).message}`);
     } finally {
       setTesting(false);
     }
