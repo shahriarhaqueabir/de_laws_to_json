@@ -56,9 +56,9 @@ const MODE_LIMITATIONS: Record<ChatMode, string[]> = {
     'Your question and law context are sent to the provider for processing',
   ],
   browser: [
-    'Requires downloading a ~1.5GB AI model on first use (one-time)',
+    'Requires downloading a ~1GB AI model on first use (Qwen1.5, one-time)',
     'Generation is slower than cloud AI — runs on your CPU',
-    'Uses a smaller model (LaMini-Flan-T5-783M) — less capable for complex legal reasoning',
+    'Uses Qwen1.5-0.5B — decent for simple guidance, less capable for complex legal reasoning',
     'Only works in browsers that support Web Workers + WASM',
   ],
   basic: [
@@ -71,7 +71,7 @@ const MODE_LIMITATIONS: Record<ChatMode, string[]> = {
 const MODE_STATUS_NOTE: Record<ChatMode, string> = {
   local: 'Broker must be running on localhost:9000',
   cloud: 'Verify your API key is active',
-  browser: 'Model downloads on first use (~1.5GB)',
+  browser: 'Model downloads on first use (~1GB)',
   basic: 'Always available — no setup required',
 };
 

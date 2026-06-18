@@ -51,7 +51,7 @@ const MODE_META: Record<ChatMode, { icon: typeof Plug; color: string; label: str
 const LIMITATION_BANNERS: Record<ChatMode, string | null> = {
   local: '🔌 Local AI — only works when broker.py + Ollama are running on your machine. Unavailable on the live site.',
   cloud: '☁️ Cloud AI — uses your own API key. You are billed by your provider. Key stored in browser only.',
-  browser: '🧠 Browser AI — downloads a ~1.5GB model on first use. Slower than cloud AI. Fully private.',
+  browser: '🧠 Browser AI — downloads a ~1GB model on first use (Qwen1.5). Slower than cloud AI. Fully private.',
   basic: '📄 Basic Search — searches laws and shows excerpts. No AI analysis. You interpret the results.',
 };
 
