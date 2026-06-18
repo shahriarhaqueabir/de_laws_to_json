@@ -47,7 +47,7 @@ def seed_db():
                 "category": norm["category"] if norm.get("category") else "other",
                 "norm_id": norm["norm_id"],
                 "norm_title": norm["norm_title"],
-                "content": norm["content"][:4096], # Qdrant limit safety
+                "content": norm["content"][:16384], # Increased for legal text depth
             },
             # With managed inference, we send an empty vector or
             # let Qdrant handle it if the collection is configured to embed a payload field.

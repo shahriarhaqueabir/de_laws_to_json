@@ -81,88 +81,97 @@ export default function NormViewer({
   };
 
   return (
-    <div className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] overflow-hidden mb-3">
+    <div className="premium-card overflow-hidden mb-4 group/norm">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-[#1a1a1a] transition-colors duration-100 active:translate-y-[1px]"
+        className="w-full flex items-center justify-between p-5 text-left hover:bg-[#1a1a1a]/50 transition-colors duration-200"
       >
         <div className="flex-1">
-          <span className="text-[#888888] font-bold mr-2">{normId}</span>
-          <span className="font-medium text-[#e8e8e8]">{title}</span>
+          <span className="text-accent-cobalt font-bold mr-3 text-sm tracking-wider uppercase">{normId}</span>
+          <span className="font-serif font-semibold text-[#f0f0f0] text-lg">{title}</span>
         </div>
-        {expanded ? (
-          <ChevronUp className="w-5 h-5 text-[#6b6b6b]" />
-        ) : (
-          <ChevronDown className="w-5 h-5 text-[#6b6b6b]" />
-        )}
+        <div className="flex items-center gap-4">
+          {!explanation && !expanded && (
+             <div
+               className="hidden group-hover/norm:flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b6b6b] animate-pulse"
+               onClick={handleExplain}
+             >
+               <div className="w-2 h-2 rounded-full bg-accent-cobalt shadow-[0_0_8px_rgba(46,91,255,0.8)]" />
+               AI Aura Active
+             </div>
+          )}
+          {expanded ? (
+            <ChevronUp className="w-5 h-5 text-[#6b6b6b]" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-[#6b6b6b]" />
+          )}
+        </div>
       </button>
 
       {expanded && (
-        <div className="p-4 border-t border-[#2a2a2a]">
-          <div className="prose max-w-none text-[#a3a3a3] whitespace-pre-wrap leading-relaxed">
+        <div className="p-6 border-t border-white/5 bg-[#0d0d0d]/30">
+          <div className="legal-text text-[#a3a3a3] whitespace-pre-wrap">
             {content}
           </div>
 
-          <div className="mt-4 flex flex-col gap-3">
+          <div className="mt-8 flex flex-col gap-4">
             {!explanation ? (
               <button
                 onClick={handleExplain}
                 disabled={explaining}
-                className="flex items-center gap-2 text-sm font-medium text-[#888888] hover:text-[#aaaaaa] disabled:text-[#2a2a2a] transition-colors duration-100 active:translate-y-[1px]"
+                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#888888] hover:text-white disabled:text-[#2a2a2a] transition-all duration-300 group/btn"
               >
                 {explaining ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Languages className="w-4 h-4" />
+                  <div className="relative">
+                    <Languages className="w-4 h-4" />
+                    <div className="absolute inset-0 bg-accent-cobalt blur-md opacity-0 group-hover/btn:opacity-40 transition-opacity" />
+                  </div>
                 )}
                 {explaining
-                  ? "Generating explanation..."
-                  : `Explain in ${LANGUAGE_NAMES[settings.language]}`}
+                  ? "Distilling Knowledge..."
+                  : `Reveal Insights in ${LANGUAGE_NAMES[settings.language]}`}
               </button>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6 animate-in fade-in duration-700">
                 {/* Translation */}
-                <div className="p-4 bg-[#141414] border border-[#2a2a2a]">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#888888] uppercase tracking-wider mb-2">
+                <div className="p-5 glass-panel border-l-2 border-l-accent-cobalt">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-accent-cobalt uppercase tracking-[0.2em] mb-3">
                     <Languages className="w-3 h-3" />
-                    Translation
+                    Official Interpretation
                   </div>
-                  <p className="text-[#a3a3a3] leading-relaxed">
+                  <p className="legal-text text-[#e8e8e8]">
                     {explanation.translation}
                   </p>
                 </div>
 
-                {/* Summary */}
-                <div className="p-4 bg-[#141414] border border-[#2a2a2a]">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#888888] uppercase tracking-wider mb-2">
-                    <Scale className="w-3 h-3" />
-                    Summary
+                {/* Grid for other insights */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-white/5 border border-white/5">
+                    <div className="text-[9px] font-bold text-[#6b6b6b] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                      <Scale className="w-3 h-3" /> Summary
+                    </div>
+                    <p className="text-sm text-[#a3a3a3] leading-relaxed italic">
+                      {explanation.summary}
+                    </p>
                   </div>
-                  <p className="text-[#a3a3a3] leading-relaxed">
-                    {explanation.summary}
-                  </p>
-                </div>
-
-                {/* Implications */}
-                <div className="p-4 bg-[#141414] border border-[#2a2a2a]">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#888888] uppercase tracking-wider mb-2">
-                    <Scale className="w-3 h-3" />
-                    Implications
+                  <div className="p-4 bg-white/5 border border-white/5">
+                    <div className="text-[9px] font-bold text-[#6b6b6b] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                      <Scale className="w-3 h-3" /> Implications
+                    </div>
+                    <p className="text-sm text-[#a3a3a3] leading-relaxed">
+                      {explanation.implications}
+                    </p>
                   </div>
-                  <p className="text-[#a3a3a3] leading-relaxed">
-                    {explanation.implications}
-                  </p>
-                </div>
-
-                {/* Next Steps */}
-                <div className="p-4 bg-[#141414] border border-[#2a2a2a]">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#888888] uppercase tracking-wider mb-2">
-                    <Scale className="w-3 h-3" />
-                    Next Steps
+                  <div className="p-4 bg-white/5 border border-white/5">
+                    <div className="text-[9px] font-bold text-[#6b6b6b] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                      <Scale className="w-3 h-3" /> Next Steps
+                    </div>
+                    <p className="text-sm text-[#a3a3a3] leading-relaxed font-medium text-[#e8e8e8]">
+                      {explanation.next_steps}
+                    </p>
                   </div>
-                  <p className="text-[#a3a3a3] leading-relaxed">
-                    {explanation.next_steps}
-                  </p>
                 </div>
 
                 {/* Disclaimer */}

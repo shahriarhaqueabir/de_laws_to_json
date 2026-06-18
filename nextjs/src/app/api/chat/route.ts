@@ -67,9 +67,10 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     // 1. Search Qdrant for relevant norms (always)
-    const norms = await searchNorms(message, undefined, 5);
+    // Safety: limit context to 10 norms or ~12k characters total for smaller model safety
+    const norms = await searchNorms(message, undefined, 10);
     const contextStr = norms
-      .map((n) => `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 500)}`)
+      .map((n) => `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 1200)}`)
       .join("\n\n");
     const citedLaws: CitedLaw[] = norms.map((n) => ({
       law_key: n.law_key,

@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (cached) {
+      console.log(`[Cache Hit] Explanation found for ${normCacheId} (${lang})`);
       return NextResponse.json({
         norm_id: normId,
         law_key: lawKey,
@@ -81,6 +82,8 @@ export async function POST(req: NextRequest) {
         disclaimer: "",
       });
     }
+
+    console.log(`[Cache Miss] Generating explanation for ${normCacheId} (${lang})`);
 
     // 2. Generate via AI
     if (mode === "local") {

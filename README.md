@@ -14,7 +14,7 @@ This project has recently been overhauled from a monolithic Flask app into a mod
 ## ✨ Modern Features
 
 - **Semantic Vector Search**: Powered by Qdrant Cloud with managed `E5-small` embeddings. Search by meaning, not just keywords.
-- **Offline Private Translation**: Browser-based translation using **Transformers.js** (`NLLB-200`). Your legal queries never leave your browser for translation.
+- **Offline Private Translation**: Browser-based translation using **Transformers.js** (`Opus-MT`). Your legal queries never leave your browser for translation.
 - **Serverless Performance**: Hosted on Vercel with Supabase for law metadata and persistence.
 - **AI Legal Assistant**: Optional local AI integration via a **FastAPI Broker** and **Ollama** for private legal reasoning.
 - **6,000+ Federal Laws**: Always up-to-date collection of German federal legislation.

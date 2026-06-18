@@ -6,6 +6,7 @@ on:
     paths:
       - "nextjs/**"
       - "!nextjs/**.md"
+      - "vercel.json"
 
 concurrency:
   group: vercel-deploy
@@ -47,7 +48,7 @@ jobs:
 
       - name: Deploy to Vercel
         run: npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: nextjs
+        working-directory: .
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

@@ -256,69 +256,57 @@ export default function ChatPage() {
   );
 
   return (
-    <main className="flex flex-col h-[calc(100vh-64px)] bg-[#0d0d0d]">
+    <main className="flex flex-col h-[calc(100vh-64px)] bg-transparent">
       {/* ── Header ── */}
-      <div className="bg-[#141414] border-b border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-4">
+      <div className="glass-panel-heavy border-b border-white/5 p-4 relative z-10">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-[#888888]" />
-            <h1 className="font-bold text-[#e8e8e8]">AI Legal Assistant</h1>
+          <div className="flex items-center gap-3">
+            <Scale className="w-5 h-5 text-accent-cobalt" />
+            <h1 className="font-serif font-bold text-xl text-white">AI Legal Assistant</h1>
             <span
-              className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 bg-[#1a1a1a] text-[#888888] border border-[#2a2a2a]`}
+              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 bg-white/5 text-[#888888] border border-white/5`}
             >
               <ModeIcon className="w-3 h-3" />
               {modeMeta.label}
             </span>
             {mode === "local" && brokerAvailable === true && (
-              <span className="flex items-center gap-1 text-xs text-[#888888]">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-accent-cobalt uppercase">
                 <CheckCircle className="w-3 h-3" /> Online
-              </span>
-            )}
-            {mode === "local" && brokerAvailable === false && (
-              <span className="flex items-center gap-1 text-xs text-[#6b6b6b]">
-                <XCircle className="w-3 h-3" /> Offline
-              </span>
-            )}
-            {mode === "browser" && workerStatus && (
-              <span className="flex items-center gap-1 text-xs text-[#888888]">
-                <Brain className="w-3 h-3" /> {workerStatus}
               </span>
             )}
           </div>
           <Link
             href="/settings"
-            className="text-xs text-[#6b6b6b] hover:text-[#e8e8e8] transition-colors duration-100 active:translate-y-[1px]"
+            className="text-[10px] font-bold uppercase tracking-widest text-[#6b6b6b] hover:text-white transition-colors duration-200"
           >
-            Settings
+            Config
           </Link>
         </div>
       </div>
 
       {/* ── Mode Limitation Banner ── */}
-      <div className="bg-[#141414] border-b border-[#2a2a2a] px-4 py-2 text-xs text-center text-[#a3a3a3]">
+      <div className="bg-[#141414]/50 border-b border-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-center text-[#6b6b6b]">
         {LIMITATION_BANNERS[mode]}
       </div>
 
       {/* ── Chat Messages ── */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-4xl mx-auto space-y-6 pb-20">
+      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <div className="max-w-4xl mx-auto space-y-8 pb-24">
           {messages.length === 0 && (
-            <div className="text-center py-20">
-              <div className="bg-[#1a1a1a] w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-8 h-8 text-[#888888]" />
+            <div className="text-center py-24">
+              <div className="bg-white/5 w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-glow border border-white/5">
+                <MessageSquare className="w-10 h-10 text-accent-cobalt" />
               </div>
-              <h2 className="text-xl font-bold text-[#e8e8e8] mb-2">
-                How can I help you today?
+              <h2 className="text-2xl font-serif font-bold text-white mb-3">
+                Consult the Vault
               </h2>
-              <p className="text-[#a3a3a3] max-w-md mx-auto mb-4">
-                Describe a situation (e.g., &quot;My landlord wants to increase
-                my rent&quot;) and I will search relevant German laws to provide
-                guidance.
+              <p className="text-[#a3a3a3] max-w-md mx-auto mb-6 legal-text italic">
+                Describe a situation and I will search relevant German laws to provide
+                precise, authoritative guidance.
               </p>
-              <p className="text-xs text-[#6b6b6b] max-w-sm mx-auto">
-                Mode: {MODE_LABELS[mode].label} —{" "}
-                {MODE_LABELS[mode].description}
-              </p>
+              <div className="inline-block px-4 py-2 border border-white/5 bg-white/5 text-[10px] font-bold uppercase tracking-widest text-[#6b6b6b]">
+                Active Engine: {MODE_LABELS[mode].label}
+              </div>
             </div>
           )}
 
@@ -328,33 +316,33 @@ export default function ChatPage() {
               className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[85%] px-5 py-3 ${
+                className={`max-w-[85%] px-6 py-4 relative group ${
                   m.role === "user"
-                    ? "bg-[#888888] text-[#e8e8e8]"
-                    : "bg-[#141414] text-[#a3a3a3] border border-[#2a2a2a] shadow-[4px_4px_0px_#000000]"
+                    ? "bg-accent-cobalt text-white shadow-premium"
+                    : "glass-panel text-[#e8e8e8] shadow-premium"
                 }`}
               >
-                <div className="max-w-none text-inherit whitespace-pre-wrap leading-relaxed">
+                <div className={`legal-text text-inherit whitespace-pre-wrap ${m.role === "assistant" ? "" : "font-medium"}`}>
                   {m.content}
                 </div>
 
                 {m.citedLaws && m.citedLaws.length > 0 && (
                   <div
-                    className={`mt-4 pt-4 border-t ${
+                    className={`mt-6 pt-6 border-t ${
                       m.role === "user"
-                        ? "border-[#e8e8e8]/30"
-                        : "border-[#2a2a2a]"
+                        ? "border-white/20"
+                        : "border-white/10"
                     }`}
                   >
-                    <p className="text-xs font-bold uppercase tracking-wider text-[#6b6b6b] mb-2">
-                      Relevant Sources
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#6b6b6b] mb-3">
+                      Referenced Statues
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {m.citedLaws.map((law, j) => (
                         <Link
                           key={j}
                           href={`/laws/${law.law_key}`}
-                          className="text-xs bg-[#1a1a1a] text-[#888888] hover:bg-[#888888] hover:text-[#e8e8e8] px-2 py-1 transition-colors duration-100 active:translate-y-[1px]"
+                          className="text-[10px] font-bold px-2.5 py-1.5 bg-white/5 border border-white/5 text-[#888888] hover:bg-accent-cobalt hover:text-white hover:border-accent-cobalt transition-all duration-200"
                         >
                           {law.law_key} {law.norm_id}
                         </Link>
@@ -386,30 +374,30 @@ export default function ChatPage() {
       </div>
 
       {/* ── Input Area ── */}
-      <div className="bg-[#141414] border-t border-[#2a2a2a] p-4">
-        <form onSubmit={handleSend} className="max-w-4xl mx-auto flex gap-3">
+      <div className="glass-panel-heavy border-t border-white/5 p-6 absolute bottom-0 w-full z-10">
+        <form onSubmit={handleSend} className="max-w-4xl mx-auto flex gap-4">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
               mode === "basic"
-                ? "Search German laws... (e.g., Mietrecht, BGB § 558)"
-                : "Describe your situation..."
+                ? "Search legal code..."
+                : "Brief your advisor..."
             }
-            className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#888888] text-[#e8e8e8] placeholder:text-[#6b6b6b]"
+            className="flex-1 bg-white/5 border border-white/10 px-6 py-4 focus:outline-none focus:border-accent-cobalt focus:ring-1 focus:ring-accent-cobalt text-white placeholder:text-[#6b6b6b] transition-all duration-300"
             disabled={loading}
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="bg-[#888888] hover:bg-[#aaaaaa] text-[#e8e8e8] p-3 disabled:opacity-50 transition-colors duration-100 active:translate-y-[1px]"
+            className="bg-accent-cobalt hover:bg-accent-cobalt/80 text-white p-4 disabled:opacity-50 transition-all duration-200 active:scale-95 shadow-[0_0_20px_rgba(46,91,255,0.3)]"
           >
             <Send className="w-6 h-6" />
           </button>
         </form>
-        <p className="text-[10px] text-center text-[#6b6b6b] mt-2 uppercase tracking-widest font-medium">
-          AI-generated guidance is not legal advice.
+        <p className="text-[9px] text-center text-[#6b6b6b] mt-3 uppercase tracking-[0.3em] font-bold">
+          Vault Intelligence is not legally binding.
         </p>
       </div>
     </main>

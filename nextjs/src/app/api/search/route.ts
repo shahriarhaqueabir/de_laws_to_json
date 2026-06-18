@@ -106,6 +106,10 @@ export async function GET(req: NextRequest) {
         category: data.norms[0]?.category || "",
         relevance: Math.round(data.topScore * 100),
         normHits: data.hits,
+        contextSummary:
+          data.hits > 1
+            ? `Found ${data.hits} relevant sections in this law.`
+            : "",
         relevantNorms: data.norms.map((n) => ({
           normId: n.norm_id,
           title: n.norm_title,

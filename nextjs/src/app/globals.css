@@ -3,70 +3,127 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-    /* ── Brutalist Black / Grey / White Palette ── */
-    --bg-primary: #0a0a0a; /* Near-black — nav, sidebars */
-    --bg-secondary: #0d0d0d; /* Very dark — main content bg */
-    --bg-tertiary: #141414; /* Dark grey — cards, containers */
-    --bg-elevated: #1a1a1a; /* Elevated surfaces */
-    --bg-surface: #222222; /* Surface elements, inputs */
-    --bg-hover: #2a2a2a; /* Hover state surfaces */
+    /* ── Premium "Dark & Stormy" Palette ── */
+    --bg-primary: #080a0c; /* Onyx Matte — foundation */
+    --bg-secondary: #0d0d0d; /* Deep Charcoal — main content */
+    --bg-tertiary: #121212; /* Slate Charcoal — cards */
+    --bg-elevated: #1a1a1a; /* Surface elements */
+    --bg-glass: rgba(13, 13, 13, 0.75);
+    --bg-glass-heavy: rgba(8, 10, 12, 0.85);
 
-    --text-primary: #e8e8e8; /* Off-white — headers, primary text */
-    --text-secondary: #a3a3a3; /* Medium grey — body text */
-    --text-muted: #6b6b6b; /* Dim grey — secondary info */
+    --text-primary: #f0f0f0; /* Crisp Off-white — headers */
+    --text-secondary: #a3a3a3; /* Medium grey — body */
+    --text-muted: #6b6b6b; /* Dim grey — metadata */
 
-    --border-default: #1f1f1f; /* Dark borders */
-    --border-light: #2a2a2a; /* Slightly lighter borders */
+    --border-glass: rgba(255, 255, 255, 0.06);
+    --border-light: rgba(255, 255, 255, 0.1);
 
-    --accent-primary: #888888; /* Steel grey — CTAs, active states */
-    --accent-hover: #aaaaaa; /* Lighter grey — hover states */
-    --accent-muted: #555555; /* Dim grey — secondary accents */
+    --accent-cobalt: #2e5bff; /* Electric Cobalt — lightning */
+    --accent-cobalt-glow: rgba(46, 91, 255, 0.3);
+    --accent-amber: #ffb300; /* Warning/Action — lightning */
 
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-card-hover:
-        0 4px 12px rgba(0, 0, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.5);
-    --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.8);
+    --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 15px rgba(46, 91, 255, 0.15);
 }
 
 @theme inline {
-    --color-background: var(--bg-secondary);
+    --color-background: var(--bg-primary);
     --color-foreground: var(--text-primary);
+    --color-accent-cobalt: var(--accent-cobalt);
+    --font-serif: var(--font-playfair), serif;
+    --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
 body {
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
+    background-image: radial-gradient(
+            circle at 20% 30%,
+            rgba(46, 91, 255, 0.03) 0%,
+            transparent 40%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(18, 18, 18, 0.05) 0%,
+            transparent 50%
+        );
+    background-attachment: fixed;
     color: var(--text-secondary);
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    animation: storm-drift 60s ease-in-out infinite alternate;
 }
 
-/* ── Brutalist Utilities ── */
-
-/* Sharp corners — no rounding */
-* {
-    border-radius: 0 !important;
+@keyframes storm-drift {
+    0% {
+        background-position: 0% 0%;
+    }
+    100% {
+        background-position: 5% 5%;
+    }
 }
 
-/* Thin scrollbar for dark theme */
+/* ── Premium Utilities ── */
+
+.glass-panel {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glass);
+}
+
+.glass-panel-heavy {
+    background: var(--bg-glass-heavy);
+    backdrop-filter: blur(30px);
+    border: 1px solid var(--border-glass);
+}
+
+.premium-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-glass);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+    border-color: rgba(46, 91, 255, 0.2);
+    box-shadow: 0 10px 40px -15px rgba(0, 0, 0, 0.6), var(--shadow-glow);
+    transform: translateY(-2px);
+}
+
+/* Typography refinements */
+h1,
+h2,
+h3 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.02em;
+}
+
+.legal-text {
+    line-height: 1.7;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 ::-webkit-scrollbar-track {
-    background: var(--bg-primary);
+    background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--border-light);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-muted);
+    background: rgba(46, 91, 255, 0.2);
 }
 
-/* Selection color */
+/* Selection */
 ::selection {
-    background: #444444;
-    color: #e8e8e8;
+    background: rgba(46, 91, 255, 0.25);
+    color: white;
 }
 
 /* Toast animation */

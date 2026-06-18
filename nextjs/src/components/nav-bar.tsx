@@ -95,15 +95,15 @@ export default function NavBar() {
   const ModeIcon = meta.icon;
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-[#0a0a0a]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+    <nav className="sticky top-4 z-50 w-full px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto glass-panel shadow-premium px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-14">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="p-1.5 bg-[#888888] text-[#0a0a0a] group-hover:bg-[#555555] transition-colors duration-100">
-                <Gavel className="w-5 h-5" />
+              <div className="p-1.5 bg-accent-cobalt text-white shadow-[0_0_15px_rgba(46,91,255,0.4)] group-hover:scale-110 transition-transform duration-200">
+                <Gavel className="w-4 h-4" />
               </div>
-              <span className="font-bold text-xl tracking-tight text-[#e8e8e8] hidden sm:block">
+              <span className="font-serif font-bold text-lg tracking-tight text-white hidden sm:block">
                 German Law Vault
               </span>
             </Link>
@@ -118,14 +118,15 @@ export default function NavBar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors duration-100 active:translate-y-[1px] border-b-2 ${
-                    isActive
-                      ? "text-[#888888] border-[#888888]"
-                      : "text-[#6b6b6b] border-transparent hover:text-[#a3a3a3] hover:border-[#a3a3a3]"
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium transition-all duration-200 active:translate-y-[1px] relative group ${
+                    isActive ? "text-accent-cobalt" : "text-[#a3a3a3] hover:text-white"
                   }`}
                 >
-                  <item.icon className="w-4 h-4" />
+                  <item.icon className="w-3.5 h-3.5" />
                   {item.label}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-cobalt shadow-[0_0_8px_rgba(46,91,255,0.6)]" />
+                  )}
                 </Link>
               );
             })}

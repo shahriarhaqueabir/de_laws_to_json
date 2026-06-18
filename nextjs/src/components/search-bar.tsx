@@ -22,24 +22,24 @@ export default function SearchBar({
   );
 
   return (
-    <form onSubmit={handleSearch} className="w-full max-w-2xl mx-auto">
+    <form onSubmit={handleSearch} className="w-full max-w-3xl mx-auto group">
       <div className="relative">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search German laws... (e.g., Mietrecht, BGB, consumer rights)"
-          className="w-full px-4 py-3 pr-12 text-lg border
-                               focus:outline-none focus:ring-1 focus:ring-[#888888]
-                               bg-[#141414] border-[#2a2a2a] text-[#e8e8e8]"
+          placeholder="Search German laws... (e.g., Mietrecht, BGB § 823)"
+          className="w-full px-6 py-4 pr-14 text-xl glass-panel-heavy border-white/5
+                               focus:outline-none focus:border-accent-cobalt focus:ring-4 focus:ring-accent-cobalt-glow
+                               text-white placeholder:text-[#6b6b6b] transition-all duration-300"
         />
         <button
           type="submit"
           aria-label="Search"
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-2
-                               text-[#6b6b6b] hover:text-[#aaaaaa] transition-colors duration-100 active:translate-y-[1px]"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5
+                               text-[#888888] hover:text-white transition-all duration-300 active:scale-95"
         >
-          <Search className="w-6 h-6" />
+          <Search className="w-7 h-7" />
         </button>
       </div>
     </form>

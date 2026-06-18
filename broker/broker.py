@@ -5,7 +5,7 @@ Serves as an optional AI guidance layer.
 Usage:
     pip install -r requirements.txt
     python broker.py
-    # Server starts on http://localhost:9090
+    # Server starts on http://localhost:9000
 """
 
 import logging
