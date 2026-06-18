@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LawSearchResult } from '../lib/types';
+import { LawSearchResult } from '@/lib/types';
 import { ChevronRight } from 'lucide-react';
 
 export default function LawCard({ law }: { law: LawSearchResult }) {

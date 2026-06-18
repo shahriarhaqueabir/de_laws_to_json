@@ -12,8 +12,31 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Get top 50 from Qdrant (managed E5-small)
-    const allResults = await searchNorms(query, category, 50);
+    let allResults: any[] = [];
+
+    if (query.trim()) {
+      // 1. Semantic Search via Qdrant
+      allResults = await searchNorms(query, category, 50);
+    } else if (category) {
+      // 2. Browse Category via Supabase
+      const cookieStore = await cookies();
+      const supabase = getServerClient(cookieStore);
+      const { data: laws } = await supabase
+        .from('laws')
+        .select('*')
+        .eq('category', category)
+        .limit(20);
+
+      allResults = (laws || []).map(l => ({
+        law_key: l.key,
+        law_title: l.title,
+        category: l.category,
+        norm_id: '', // Browse mode doesn't highlight specific norms
+        norm_title: '',
+        content: '',
+        score: 1.0
+      }));
+    }
 
     // Group by law_key for law-level results
     const lawMap = new Map<string, { hits: number; topScore: number; norms: any[] }>();
