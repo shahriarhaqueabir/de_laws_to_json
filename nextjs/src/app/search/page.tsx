@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import SearchBar from '../../components/search-bar';
-import LawCard from '../../components/law-card';
-import { LawSearchResult } from '../../lib/types';
-import { Loader2 } from 'lucide-react';
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import SearchBar from "../../components/search-bar";
+import LawCard from "../../components/law-card";
+import { LawSearchResult } from "../../lib/types";
+import { Loader2 } from "lucide-react";
 
 function SearchResults() {
   const searchParams = useSearchParams();
-  const query = searchParams.get('q') || '';
-  const category = searchParams.get('category') || '';
+  const query = searchParams.get("q") || "";
+  const category = searchParams.get("category") || "";
 
   const [results, setResults] = useState<LawSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -25,11 +25,11 @@ function SearchResults() {
       try {
         const url = `/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}`;
         const res = await fetch(url);
-        if (!res.ok) throw new Error('Search failed');
+        if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
         setResults(data.results || []);
       } catch (err) {
-        setError('Failed to fetch search results.');
+        setError("Failed to fetch search results.");
       } finally {
         setLoading(false);
       }
@@ -46,25 +46,27 @@ function SearchResults() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 className="w-10 h-10 text-[#777777] animate-spin mb-4" />
-                    <p className="text-[#888888]">Searching German laws...</p>
+          <Loader2 className="w-10 h-10 text-[#888888] animate-spin mb-4" />
+          <p className="text-[#a3a3a3]">Searching German laws...</p>
         </div>
       ) : error ? (
-        <div className="p-4 bg-[#1a1a1a] text-red-400 rounded-none border border-[#1a1a1a]">
-                  {error}
-                </div>
+        <div className="p-4 bg-[#141414] border border-[#2a2a2a] text-[#a3a3a3]">
+          {error}
+        </div>
       ) : results.length > 0 ? (
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-[#cccccc]">
-                      Found {results.length} relevant laws
-                    </h2>
+          <h2 className="text-xl font-semibold text-[#e8e8e8]">
+            Found {results.length} relevant laws
+          </h2>
           {results.map((law) => (
             <LawCard key={law.key} law={law} />
           ))}
         </div>
       ) : query || category ? (
         <div className="text-center py-20">
-          <p className="text-[#888888] text-lg">No laws found matching your criteria.</p>
+          <p className="text-[#a3a3a3] text-lg">
+            No laws found matching your criteria.
+          </p>
         </div>
       ) : null}
     </div>
@@ -73,8 +75,12 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <main className="min-h-screen bg-[#070707]">
-      <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+    <main className="min-h-screen bg-[#0d0d0d]">
+      <Suspense
+        fallback={
+          <div className="p-10 text-center text-[#6b6b6b]">Loading...</div>
+        }
+      >
         <SearchResults />
       </Suspense>
     </main>

@@ -1,27 +1,102 @@
 @import "tailwindcss";
 
+@plugin "@tailwindcss/typography";
+
 :root {
-    --bg-primary: #070707;
-    --bg-secondary: #0e0e0e;
-    --bg-tertiary: #1a1a1a;
-    --text-primary: #c8c8c8;
-    --text-secondary: #777777;
-    --text-muted: #444444;
-    --border-primary: #1a1a1a;
-    --border-accent: #666666;
-    --accent: #666666;
-    --accent-hover: #888888;
+    /* ── Brutalist Black / Grey / White Palette ── */
+    --bg-primary: #0a0a0a; /* Near-black — nav, sidebars */
+    --bg-secondary: #0d0d0d; /* Very dark — main content bg */
+    --bg-tertiary: #141414; /* Dark grey — cards, containers */
+    --bg-elevated: #1a1a1a; /* Elevated surfaces */
+    --bg-surface: #222222; /* Surface elements, inputs */
+    --bg-hover: #2a2a2a; /* Hover state surfaces */
+
+    --text-primary: #e8e8e8; /* Off-white — headers, primary text */
+    --text-secondary: #a3a3a3; /* Medium grey — body text */
+    --text-muted: #6b6b6b; /* Dim grey — secondary info */
+
+    --border-default: #1f1f1f; /* Dark borders */
+    --border-light: #2a2a2a; /* Slightly lighter borders */
+
+    --accent-primary: #888888; /* Steel grey — CTAs, active states */
+    --accent-hover: #aaaaaa; /* Lighter grey — hover states */
+    --accent-muted: #555555; /* Dim grey — secondary accents */
+
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-card-hover:
+        0 4px 12px rgba(0, 0, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.5);
+    --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.8);
 }
 
 @theme inline {
-    --color-background: var(--bg-primary);
+    --color-background: var(--bg-secondary);
     --color-foreground: var(--text-primary);
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
 }
 
 body {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-family: var(--font-inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Brutalist Utilities ── */
+
+/* Sharp corners — no rounding */
+* {
+    border-radius: 0 !important;
+}
+
+/* Thin scrollbar for dark theme */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
     background: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-muted);
+}
+
+/* Selection color */
+::selection {
+    background: #444444;
+    color: #e8e8e8;
+}
+
+/* Toast animation */
+@keyframes slide-in-from-right {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+.animate-slide-in {
+    animation: slide-in-from-right 0.2s ease-out;
+}
+
+/* Focus ring */
+:focus-visible {
+    outline: 1px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

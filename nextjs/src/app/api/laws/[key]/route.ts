@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { cookies } from "next/headers";
 import { getServerClient } from "../../../../lib/supabase-server";
 import { qdrant, COLLECTION } from "../../../../lib/qdrant";
+import { errorResponse } from "../../../../lib/api-utils";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ key: string }> },
 ) {
   const { key } = await params;
+
+  const keySchema = z.string().min(1, "Law key is required");
+  const keyResult = keySchema.safeParse(key);
+  if (!keyResult.success) {
+    return errorResponse(
+      "VALIDATION_ERROR",
+      "Invalid law key",
+      400,
+      keyResult.error.issues.map((i) => ({
+        field: "key",
+        message: i.message,
+      })),
+    );
+  }
 
   const cookieStore = await cookies();
   const supabase = getServerClient(cookieStore);
@@ -34,14 +50,17 @@ export async function GET(
 
     return NextResponse.json({
       ...law,
-      norms: norms.points.map((p: any) => p.payload),
+      norms: norms.points
+        .map((p) => p.payload)
+        .filter(
+          (p): p is Record<string, unknown> => p !== null && p !== undefined,
+        ),
     });
   } catch (err) {
     console.error("Qdrant scroll error:", err);
-    return NextResponse.json({
-      ...law,
-      norms: [],
-      warning: "Could not fetch norms from vector store",
-    });
+    return NextResponse.json(
+      { error: "Could not fetch norms from vector store", law: law },
+      { status: 502 },
+    );
   }
 }

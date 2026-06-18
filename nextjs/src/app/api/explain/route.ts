@@ -1,13 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { getServerClient } from '../../../lib/supabase-server';
-import { generateNormExplanation } from '../../../lib/chat';
-import type { AppLanguage, CloudProvider } from '../../../lib/types';
-import { LANGUAGE_NAMES } from '../../../lib/types';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { cookies } from "next/headers";
+import { getServerClient } from "../../../lib/supabase-server";
+import { generateNormExplanation } from "../../../lib/chat";
+import type { AppLanguage, CloudProvider } from "../../../lib/types";
+import { LANGUAGE_NAMES } from "../../../lib/types";
+import { errorResponse } from "../../../lib/api-utils";
+
+const ExplainBodySchema = z.object({
+  normId: z.string().min(1, "normId is required"),
+  lawKey: z.string().min(1, "lawKey is required"),
+  content: z.string().min(1, "content is required"),
+  lang: z.string().min(1, "lang is required"),
+  lawTitle: z.string().optional(),
+  mode: z.string().optional(),
+  provider: z.string().optional(),
+  apiKey: z.string().optional(),
+  model: z.string().optional(),
+  customEndpoint: z.string().optional(),
+  brokerUrl: z.string().optional(),
+  ollamaModel: z.string().optional(),
+  ollamaParams: z.record(z.string(), z.unknown()).optional(),
+});
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    const parsed = ExplainBodySchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse(
+        "VALIDATION_ERROR",
+        "Invalid request body",
+        422,
+        parsed.error.issues.map((i) => ({
+          field: i.path.join("."),
+          message: i.message,
+        })),
+      );
+    }
+
     const {
       normId,
       lawKey,
@@ -22,14 +54,7 @@ export async function POST(req: NextRequest) {
       brokerUrl: bodyBrokerUrl,
       ollamaModel,
       ollamaParams,
-    } = body;
-
-    if (!normId || !lawKey || !content || !lang) {
-      return NextResponse.json(
-        { error: 'Missing required fields: normId, lawKey, content, lang' },
-        { status: 400 },
-      );
-    }
+    } = parsed.data;
 
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
@@ -37,30 +62,33 @@ export async function POST(req: NextRequest) {
 
     // 1. Check Supabase norm_explanations cache
     const { data: cached } = await supabase
-      .from('norm_explanations')
-      .select('*')
-      .eq('norm_id', normCacheId)
-      .eq('lang', lang)
+      .from("norm_explanations")
+      .select("*")
+      .eq("norm_id", normCacheId)
+      .eq("lang", lang)
       .single();
 
     if (cached) {
       return NextResponse.json({
         norm_id: normId,
         law_key: lawKey,
-        law_title: lawTitle || '',
+        law_title: lawTitle || "",
         lang,
         translation: cached.translation,
         summary: cached.summary,
         implications: cached.implications,
         next_steps: cached.next_steps,
-        disclaimer: '',
+        disclaimer: "",
       });
     }
 
     // 2. Generate via AI
-    if (mode === 'local') {
-      const brokerUrl = bodyBrokerUrl || process.env.NEXT_PUBLIC_BROKER_URL || 'http://localhost:9000';
-      const langName = LANGUAGE_NAMES[lang as AppLanguage] || 'English';
+    if (mode === "local") {
+      const brokerUrl =
+        bodyBrokerUrl ||
+        process.env.NEXT_PUBLIC_BROKER_URL ||
+        "http://localhost:9000";
+      const langName = LANGUAGE_NAMES[lang as AppLanguage] || "English";
 
       const explainPrompt = `Explain this German law section. Respond in ${langName}.
 
@@ -75,8 +103,8 @@ Return STRICT JSON with these exact fields:
 }`;
 
       const brokerRes = await fetch(`${brokerUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: explainPrompt,
           context: content,
@@ -92,7 +120,7 @@ Return STRICT JSON with these exact fields:
       });
 
       if (!brokerRes.ok) {
-        throw new Error('Broker returned error');
+        throw new Error("Broker returned error");
       }
 
       const data = await brokerRes.json();
@@ -117,49 +145,56 @@ Return STRICT JSON with these exact fields:
       return NextResponse.json({
         norm_id: normId,
         law_key: lawKey,
-        law_title: lawTitle || '',
+        law_title: lawTitle || "",
         lang,
-        translation: parsed.translation || '',
-        summary: parsed.summary || '',
-        implications: parsed.implications || '',
-        next_steps: parsed.next_steps || '',
-        disclaimer: '',
+        translation: parsed.translation || "",
+        summary: parsed.summary || "",
+        implications: parsed.implications || "",
+        next_steps: parsed.next_steps || "",
+        disclaimer: "",
       });
     }
 
     const explanation = await generateNormExplanation({
-      provider: (provider as CloudProvider) || 'openai',
-      apiKey: apiKey || '',
-      model: model || 'gpt-4o-mini',
-      customEndpoint: customEndpoint || '',
+      provider: (provider as CloudProvider) || "openai",
+      apiKey: apiKey || "",
+      model: model || "gpt-4o-mini",
+      customEndpoint: customEndpoint || "",
       normId,
       lawKey,
       content,
-      lang: (lang as AppLanguage) || 'en',
+      lang: (lang as AppLanguage) || "en",
     });
 
     // 3. Cache in Supabase
-    const { error: insertError } = await supabase.from('norm_explanations').insert({
-      norm_id: normCacheId,
-      law_key: lawKey,
-      lang,
-      translation: explanation.translation,
-      summary: explanation.summary,
-      implications: explanation.implications,
-      next_steps: explanation.next_steps,
-    });
+    const { error: insertError } = await supabase
+      .from("norm_explanations")
+      .insert({
+        norm_id: normCacheId,
+        law_key: lawKey,
+        lang,
+        translation: explanation.translation,
+        summary: explanation.summary,
+        implications: explanation.implications,
+        next_steps: explanation.next_steps,
+      });
 
     if (insertError) {
-      console.error('Failed to cache norm_explanation:', insertError);
+      console.error("Failed to cache norm_explanation:", insertError);
       // Non-fatal — return the generated explanation anyway
     }
 
     return NextResponse.json({
       ...explanation,
-      law_title: lawTitle || '',
+      law_title: lawTitle || "",
     });
-  } catch (err: any) {
-    console.error('Explain API error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Explain API error:", err);
+    return errorResponse(
+      "EXPLAIN_FAILED",
+      "Failed to generate explanation",
+      500,
+    );
   }
 }

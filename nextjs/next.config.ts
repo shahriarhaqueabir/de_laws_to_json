@@ -6,22 +6,22 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
           },
           {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp',
+            key: "Cross-Origin-Embedder-Policy",
+            value: "credentialless",
           },
         ],
       },
     ];
   },
   // Suppress warnings from Transformers.js about local models during build
-  serverExternalPackages: ['@huggingface/transformers'],
+  serverExternalPackages: ["@huggingface/transformers"],
 };
 
 export default nextConfig;

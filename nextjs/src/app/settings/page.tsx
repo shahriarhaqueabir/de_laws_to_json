@@ -75,15 +75,11 @@ const MODE_STATUS_NOTE: Record<ChatMode, string> = {
 };
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_CHAT_SETTINGS);
+  const [settings, setSettings] = useState<ChatSettings>(loadSettings);
   const [brokerOk, setBrokerOk] = useState<boolean | null>(null);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setSettings(loadSettings());
-  }, []);
 
   // Check broker health when in local mode
   useEffect(() => {
@@ -148,20 +144,20 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
+    <div className="max-w-3xl mx-auto px-4 py-12 bg-[#0d0d0d] min-h-screen">
       <div className="flex items-center gap-3 mb-10">
-        <Settings className="w-8 h-8 text-[#777777]" />
-        <h1 className="text-3xl font-bold text-[#c8c8c8]">Settings</h1>
+        <Settings className="w-8 h-8 text-[#888888]" />
+        <h1 className="text-3xl font-bold text-[#e8e8e8]">Settings</h1>
         {saved && (
-          <span className="text-sm text-green-600 font-medium ml-2">
+          <span className="text-sm text-[#888888] font-medium ml-2">
             Saved ✓
           </span>
         )}
       </div>
 
       {/* ── Chat Mode Selector ── */}
-      <section className="bg-[#0e0e0e] border border-[#1a1a1a] rounded-none p-6 mb-6">
-        <h2 className="text-xl font-bold text-[#c8c8c8] mb-6">AI Chat Mode</h2>
+      <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
+        <h2 className="text-xl font-bold text-[#e8e8e8] mb-6">AI Chat Mode</h2>
 
         <div className="grid gap-4">
           {(
@@ -176,44 +172,44 @@ export default function SettingsPage() {
               <button
                 key={mode}
                 onClick={() => update({ mode })}
-                className={`flex items-start gap-4 p-4 rounded-none border text-left transition-all duration-100 active:translate-y-[1px] ${
+                className={`flex items-start gap-4 p-4 border text-left transition-colors duration-100 active:translate-y-[1px] bg-[#141414] ${
                   isActive
-                    ? "border-[#666666] bg-[#1a1a1a]"
-                    : "border-[#1a1a1a] hover:border-[#666666]"
+                    ? "border-[#888888]"
+                    : "border-[#2a2a2a] hover:border-[#888888]"
                 }`}
               >
                 <div
-                  className={`p-2 rounded-none ${
+                  className={`p-2 ${
                     isActive
-                      ? "bg-[#666666] text-[#070707]"
-                      : "bg-[#1a1a1a] text-[#777777]"
+                      ? "bg-[#888888] text-[#e8e8e8]"
+                      : "bg-[#1a1a1a] text-[#6b6b6b]"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-[#c8c8c8]">
-                      {info.icon} {info.label}
+                    <span className="font-bold text-[#e8e8e8]">
+                      {info.label}
                     </span>
                     {isActive && (
-                      <span className="text-xs font-medium text-[#666666] bg-[#1a1a1a] px-2 py-0.5 rounded-none">
+                      <span className="text-xs font-medium text-[#e8e8e8] bg-[#888888] px-2 py-0.5">
                         Active
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-[#777777]">{info.description}</p>
+                  <p className="text-sm text-[#a3a3a3]">{info.description}</p>
                   {isActive && (
                     <div className="mt-3 space-y-1">
-                      <p className="text-xs font-semibold text-[#888888] uppercase tracking-wider">
+                      <p className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-wider">
                         Limitations
                       </p>
                       {MODE_LIMITATIONS[mode].map((lim, i) => (
                         <p
                           key={i}
-                          className="text-xs text-[#777777] flex items-start gap-1.5"
+                          className="text-xs text-[#6b6b6b] flex items-start gap-1.5"
                         >
-                          <span className="text-[#666666] mt-0.5">⚠️</span>
+                          <ShieldAlert className="w-3.5 h-3.5 text-[#6b6b6b] mt-0.5 shrink-0" />
                           {lim}
                         </p>
                       ))}
@@ -229,59 +225,59 @@ export default function SettingsPage() {
       {/* ── Mode-specific Configuration ── */}
 
       {settings.mode === "local" && (
-        <section className="bg-[#0e0e0e] border border-[#1a1a1a] rounded-none p-6 mb-6">
+        <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <Plug className="w-5 h-5 text-[#666666]" />
-            <h2 className="text-xl font-bold text-[#c8c8c8]">
+            <Plug className="w-5 h-5 text-[#888888]" />
+            <h2 className="text-xl font-bold text-[#e8e8e8]">
               Local AI Configuration
             </h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#777777] mb-1">
+              <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
                 Broker URL
               </label>
               <input
                 type="text"
                 value={settings.brokerUrl}
                 onChange={(e) => update({ brokerUrl: e.target.value })}
-                className="w-full px-3 py-2 border border-[#1a1a1a] rounded-none bg-[#070707] text-[#c8c8c8]"
+                className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] focus:outline-none focus:ring-1 focus:ring-[#888888]"
               />
             </div>
 
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-[#777777]">Status:</span>
+              <span className="text-[#a3a3a3]">Status:</span>
               {brokerOk === null ? (
-                <span className="text-[#444444]">Checking...</span>
+                <span className="text-[#6b6b6b]">Checking...</span>
               ) : brokerOk ? (
-                <span className="flex items-center gap-1 text-green-600">
+                <span className="flex items-center gap-1 text-[#888888]">
                   <CheckCircle className="w-4 h-4" /> Connected
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-red-600">
+                <span className="flex items-center gap-1 text-[#6b6b6b]">
                   <XCircle className="w-4 h-4" /> Offline
                 </span>
               )}
             </div>
 
-            <p className="text-xs text-[#777777]">{MODE_STATUS_NOTE.local}</p>
+            <p className="text-xs text-[#6b6b6b]">{MODE_STATUS_NOTE.local}</p>
           </div>
         </section>
       )}
 
       {settings.mode === "cloud" && (
-        <section className="bg-[#0e0e0e] border border-[#1a1a1a] rounded-none p-6 mb-6">
+        <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <Cloud className="w-5 h-5 text-[#666666]" />
-            <h2 className="text-xl font-bold text-[#c8c8c8]">
+            <Cloud className="w-5 h-5 text-[#888888]" />
+            <h2 className="text-xl font-bold text-[#e8e8e8]">
               Cloud AI Configuration
             </h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#777777] mb-1">
+              <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
                 Provider
               </label>
               <select
@@ -289,7 +285,7 @@ export default function SettingsPage() {
                 onChange={(e) =>
                   update({ provider: e.target.value as CloudProvider })
                 }
-                className="w-full px-3 py-2 border border-[#1a1a1a] rounded-none bg-[#070707] text-[#c8c8c8]"
+                className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] focus:outline-none focus:ring-1 focus:ring-[#888888]"
               >
                 <option value="openai">
                   OpenAI — GPT-4o, GPT-4, GPT-4.1 series
@@ -304,7 +300,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#777777] mb-1">
+              <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
                 API Key
               </label>
               <input
@@ -312,15 +308,15 @@ export default function SettingsPage() {
                 value={settings.apiKey}
                 onChange={(e) => update({ apiKey: e.target.value })}
                 placeholder={settings.apiKey ? "••••••••" : "sk-..."}
-                className="w-full px-3 py-2 border border-[#1a1a1a] rounded-none bg-[#070707] text-[#c8c8c8] font-mono text-sm"
+                className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] font-mono text-sm focus:outline-none focus:ring-1 focus:ring-[#888888]"
               />
-              <p className="text-xs text-[#777777] mt-1">
+              <p className="text-xs text-[#6b6b6b] mt-1">
                 Stored in your browser only. Never sent to our servers.
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#777777] mb-1">
+              <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
                 Model
               </label>
               <input
@@ -328,16 +324,16 @@ export default function SettingsPage() {
                 value={settings.model}
                 onChange={(e) => update({ model: e.target.value })}
                 placeholder="e.g. gpt-4o-mini, claude-3-haiku, gemini-pro, mistral-tiny"
-                className="w-full px-3 py-2 border border-[#1a1a1a] rounded-none bg-[#070707] text-[#c8c8c8] font-mono text-sm"
+                className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] font-mono text-sm focus:outline-none focus:ring-1 focus:ring-[#888888]"
               />
-              <p className="text-xs text-[#555555] mt-1">
+              <p className="text-xs text-[#6b6b6b] mt-1">
                 Enter any model name supported by your provider.
               </p>
             </div>
 
             {settings.provider === "openai-compatible" && (
               <div>
-                <label className="block text-sm font-medium text-[#777777] mb-1">
+                <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
                   Custom Endpoint URL
                 </label>
                 <input
@@ -345,49 +341,49 @@ export default function SettingsPage() {
                   value={settings.customEndpoint}
                   onChange={(e) => update({ customEndpoint: e.target.value })}
                   placeholder="https://api.openai.com"
-                  className="w-full px-3 py-2 border border-[#1a1a1a] rounded-none bg-[#070707] text-[#c8c8c8] font-mono text-sm"
+                  className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] font-mono text-sm focus:outline-none focus:ring-1 focus:ring-[#888888]"
                 />
               </div>
             )}
 
-            <p className="text-xs text-[#777777]">{MODE_STATUS_NOTE.cloud}</p>
+            <p className="text-xs text-[#6b6b6b]">{MODE_STATUS_NOTE.cloud}</p>
           </div>
         </section>
       )}
 
       {settings.mode === "browser" && (
-        <section className="bg-[#0e0e0e] border border-[#1a1a1a] rounded-none p-6 mb-6">
+        <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <Brain className="w-5 h-5 text-[#666666]" />
-            <h2 className="text-xl font-bold text-[#c8c8c8]">
+            <Brain className="w-5 h-5 text-[#888888]" />
+            <h2 className="text-xl font-bold text-[#e8e8e8]">
               Browser AI Configuration
             </h2>
           </div>
 
           <div className="space-y-4">
-            <div className="p-4 bg-[#070707] rounded-none">
-              <p className="text-sm font-medium text-[#c8c8c8] mb-1">
+            <div className="p-4 bg-[#1a1a1a] border border-[#2a2a2a]">
+              <p className="text-sm font-medium text-[#e8e8e8] mb-1">
                 Model: LaMini-Flan-T5-783M
               </p>
-              <p className="text-xs text-[#777777]">
+              <p className="text-xs text-[#a3a3a3]">
                 Size: ~1.5GB • Type: Instruction-following • Runs entirely in
                 your browser
               </p>
             </div>
 
-            <p className="text-xs text-[#777777]">{MODE_STATUS_NOTE.browser}</p>
+            <p className="text-xs text-[#6b6b6b]">{MODE_STATUS_NOTE.browser}</p>
           </div>
         </section>
       )}
 
       {settings.mode === "basic" && (
-        <section className="bg-[#0e0e0e] border border-[#1a1a1a] rounded-none p-6 mb-6">
+        <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <FileText className="w-5 h-5 text-[#666666]" />
-            <h2 className="text-xl font-bold text-[#c8c8c8]">Basic Search</h2>
+            <FileText className="w-5 h-5 text-[#888888]" />
+            <h2 className="text-xl font-bold text-[#e8e8e8]">Basic Search</h2>
           </div>
 
-          <p className="text-sm text-[#777777]">
+          <p className="text-sm text-[#a3a3a3]">
             No configuration needed. This mode searches German laws via Qdrant
             and shows relevant paragraphs directly in the chat. Always
             available.
@@ -401,7 +397,7 @@ export default function SettingsPage() {
           <button
             onClick={handleTestConnection}
             disabled={testing}
-            className="px-4 py-2 bg-[#666666] text-[#070707] rounded-none hover:bg-[#888888] disabled:opacity-50 transition-all duration-100 active:translate-y-[1px] text-sm font-medium"
+            className="px-4 py-2 bg-[#888888] hover:bg-[#aaaaaa] text-[#e8e8e8] disabled:opacity-50 transition-colors duration-100 active:translate-y-[1px] text-sm font-medium"
           >
             {testing ? "Testing..." : "Test Connection"}
           </button>
@@ -409,8 +405,8 @@ export default function SettingsPage() {
             <span
               className={`text-sm ${
                 testResult.includes("✓") || testResult.includes("reachable")
-                  ? "text-green-600"
-                  : "text-red-600"
+                  ? "text-[#888888]"
+                  : "text-[#6b6b6b]"
               }`}
             >
               {testResult}
@@ -420,12 +416,12 @@ export default function SettingsPage() {
       )}
 
       {/* ── Data Store ── */}
-      <section className="bg-[#0e0e0e] border border-[#1a1a1a] rounded-none p-6">
+      <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6">
         <div className="flex items-center gap-3 mb-6">
-          <Database className="w-5 h-5 text-[#666666]" />
-          <h2 className="text-xl font-bold text-[#c8c8c8]">Data Store</h2>
+          <Database className="w-5 h-5 text-[#888888]" />
+          <h2 className="text-xl font-bold text-[#e8e8e8]">Data Store</h2>
         </div>
-        <p className="text-sm text-[#777777]">
+        <p className="text-sm text-[#a3a3a3]">
           Connected to Qdrant Cloud (managed e5-small, 107K norms) and Supabase
           (PostgreSQL + Auth).
         </p>

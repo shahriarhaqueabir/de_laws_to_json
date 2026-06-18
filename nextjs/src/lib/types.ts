@@ -35,63 +35,70 @@ export interface LawSearchResult {
 
 // ── Chat Modes ──
 
-export type ChatMode = 'local' | 'cloud' | 'browser' | 'basic';
+export type ChatMode = "local" | "cloud" | "browser" | "basic";
 
-export type CloudProvider = 'openai' | 'anthropic' | 'openai-compatible';
+export type CloudProvider = "openai" | "anthropic" | "openai-compatible";
 
-
-
-
-
-export const MODE_LABELS: Record<ChatMode, { label: string; icon: string; description: string }> = {
+export const MODE_LABELS: Record<
+  ChatMode,
+  { label: string; description: string }
+> = {
   local: {
-    label: 'Local AI',
-    icon: '🔌',
-    description: 'Uses Ollama on your machine via the local broker.',
+    label: "Local AI",
+    description: "Uses Ollama on your machine via the local broker.",
   },
   cloud: {
-    label: 'Cloud AI',
-    icon: '☁️',
-    description: 'Uses your API key to call OpenAI, Anthropic, or any OpenAI-compatible provider.',
+    label: "Cloud AI",
+    description:
+      "Uses your API key to call OpenAI, Anthropic, or any OpenAI-compatible provider.",
   },
   browser: {
-    label: 'Browser AI',
-    icon: '🧠',
-    description: 'Runs a Transformers.js model in your browser (~1GB download). Fully private.',
+    label: "Browser AI",
+    description:
+      "Runs a Transformers.js model in your browser (~1GB download). Fully private.",
   },
   basic: {
-    label: 'Basic Search',
-    icon: '📄',
-    description: 'Searches laws and shows relevant paragraphs. No AI generation.',
+    label: "Basic Search",
+    description:
+      "Searches laws and shows relevant paragraphs. No AI generation.",
   },
 };
 
 // ── Language Support ──
 
-export type AppLanguage = 'de' | 'en' | 'tr' | 'ar' | 'fr' | 'es' | 'pl' | 'uk' | 'ru';
+export type AppLanguage =
+  | "de"
+  | "en"
+  | "tr"
+  | "ar"
+  | "fr"
+  | "es"
+  | "pl"
+  | "uk"
+  | "ru";
 
 export const LANGUAGE_LABELS: Record<AppLanguage, string> = {
-  de: 'Deutsch',
-  en: 'English',
-  tr: 'Türkçe',
-  ar: 'العربية',
-  fr: 'Français',
-  es: 'Español',
-  pl: 'Polski',
-  uk: 'Українська',
-  ru: 'Русский',
+  de: "Deutsch",
+  en: "English",
+  tr: "Türkçe",
+  ar: "العربية",
+  fr: "Français",
+  es: "Español",
+  pl: "Polski",
+  uk: "Українська",
+  ru: "Русский",
 };
 
 export const LANGUAGE_NAMES: Record<AppLanguage, string> = {
-  de: 'German',
-  en: 'English',
-  tr: 'Turkish',
-  ar: 'Arabic',
-  fr: 'French',
-  es: 'Spanish',
-  pl: 'Polish',
-  uk: 'Ukrainian',
-  ru: 'Russian',
+  de: "German",
+  en: "English",
+  tr: "Turkish",
+  ar: "Arabic",
+  fr: "French",
+  es: "Spanish",
+  pl: "Polish",
+  uk: "Ukrainian",
+  ru: "Russian",
 };
 
 // ── Ollama Parameters ──
@@ -109,7 +116,8 @@ export const DEFAULT_OLLAMA_PARAMS: OllamaParams = {
   top_p: 0.9,
   top_k: 40,
   max_tokens: 1024,
-  system_prompt: 'You are a multilingual German legal expert. Your role is to read the user\'s situation, search through provided German legal context, explain which laws and paragraphs are relevant, and apply logical reasoning to explain how the law likely applies. Cite specific law keys and section numbers.',
+  system_prompt:
+    "You are a multilingual German legal expert. Your role is to read the user's situation, search through provided German legal context, explain which laws and paragraphs are relevant, and apply logical reasoning to explain how the law likely applies. Cite specific law keys and section numbers.",
 };
 
 export interface ChatSettings {
@@ -127,15 +135,15 @@ export interface ChatSettings {
 }
 
 export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
-  mode: 'basic',
-  language: 'en',
-  brokerUrl: 'http://localhost:9000',
-  ollamaModel: '',
+  mode: "basic",
+  language: "en",
+  brokerUrl: "http://localhost:9000",
+  ollamaModel: "",
   ollamaParams: DEFAULT_OLLAMA_PARAMS,
-  provider: 'openai',
-  apiKey: '',
-  model: 'gpt-4o-mini',
-  customEndpoint: '',
+  provider: "openai",
+  apiKey: "",
+  model: "gpt-4o-mini",
+  customEndpoint: "",
 };
 
 export interface CitedLaw {

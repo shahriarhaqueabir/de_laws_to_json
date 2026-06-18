@@ -1,29 +1,35 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
 
 interface Toast {
   id: string;
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: "success" | "error" | "info";
 }
 
 interface ToastContextValue {
-  toast: (message: string, type?: Toast['type']) => void;
+  toast: (message: string, type?: Toast["type"]) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function useToast() {
   const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error('useToast must be used within ToastProvider');
+  if (!ctx) throw new Error("useToast must be used within ToastProvider");
   return ctx;
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const toast = useCallback((message: string, type: Toast['type'] = 'info') => {
+  const toast = useCallback((message: string, type: Toast["type"] = "info") => {
     const id = crypto.randomUUID();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
@@ -38,25 +44,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`px-4 py-3 border text-sm font-medium transition-all duration-200 animate-in slide-in-from-right ${
-              t.type === 'success'
-                ? 'bg-[#0e0e0e] border-green-700 text-green-400'
-                : t.type === 'error'
-                ? 'bg-[#0e0e0e] border-red-700 text-red-400'
-                : 'bg-[#0e0e0e] border-[#1a1a1a] text-[#cccccc]'
+            className={`px-4 py-3 bg-[#141414] border text-sm font-medium shadow-[0_4px_12px_rgba(0,0,0,0.7)] transition-colors duration-200 animate-slide-in ${
+              t.type === "success"
+                ? "border-[#888888] text-[#888888]"
+                : "border-[#2a2a2a] text-[#a3a3a3]"
             }`}
           >
             {t.message}
           </div>
         ))}
       </div>
-      <style jsx>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-        .animate-in { animation: slideIn 0.2s ease-out; }
-      `}</style>
     </ToastContext.Provider>
   );
 }
