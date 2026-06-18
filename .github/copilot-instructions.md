@@ -2,7 +2,14 @@
 
 ## Project Overview
 
-**German Law Vault** (formerly de_laws_to_json) provides a comprehensive search engine for all German federal laws (>6,000 laws) from [gesetze-im-internet.de](https://www.gesetze-im-internet.de/). The project fetches, processes, and serves German legal texts with natural language search in both English and German.
+**German Law Vault** (formerly de_laws_to_json) provides a comprehensive search engine for all German federal laws (>6,000 laws) from [gesetze-im-internet.de](https://www.gesetze-im-internet.de/).
+
+> **⚠️ This project is undergoing a full serverless overhaul.**
+> See [`plans/2026-06-15-serverless-overhaul.md`](../blob/main/plans/2026-06-15-serverless-overhaul.md) for the complete migration plan.
+> **New architecture:** Vercel (Next.js) → Qdrant Cloud (managed E5-small vectors) + Supabase (DB/Auth).
+> **Legacy Flask/Ollama/SQLite backend** is being archived to `_archive/backend/`.
+
+The current system fetches, processes, and serves German legal texts with natural language search in both English and German.
 
 ## Quick Reference
 

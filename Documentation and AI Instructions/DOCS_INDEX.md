@@ -13,6 +13,7 @@
 | Document | Purpose | Priority |
 |----------|---------|----------|
 | [README.md](README.md) | Getting started, setup, usage | 🔴 Essential |
+| [../plans/2026-06-15-serverless-overhaul.md](../plans/2026-06-15-serverless-overhaul.md) | **Serverless overhaul plan** — Vercel + Qdrant + Supabase migration | 🔴 Essential |
 | [AI_GUIDE.md](AI_GUIDE.md) | AI agent handover guide | 🔴 Essential |
 | [API_REFERENCE.md](API_REFERENCE.md) | Complete API documentation | 🔴 Essential |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design & architecture | 🟡 Important |
@@ -349,10 +350,12 @@ curl -X POST http://localhost:5000/api/search \
 
 | File | Purpose |
 |------|---------|
-| `app.py` | Flask backend (1,870+ lines) |
-| `templates/index.html` | Frontend (3,230+ lines) |
-| `de_federal_json/` | Processed laws (6,500+ files) |
-| `search_index.json` | Search index cache |
+| `nextjs/` | New Next.js frontend (serverless) |
+| `plans/2026-06-15-serverless-overhaul.md` | Full migration plan |
+| `app.py` | Flask backend — **being archived** |
+| `templates/index.html` | Old frontend — **being archived** |
+| `de_federal_json/` | Processed laws (6,500+ files — kept) |
+| `search_index.json` | Search index cache — **deprecated** |
 
 ---
 

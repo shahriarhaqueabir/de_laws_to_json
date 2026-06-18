@@ -84,6 +84,8 @@ logs/
 extract_*.py
 app_from_pyc.py
 app_recovered*.py
+laws_metadata.*
+*.jsonl
 *.bak
 *.tmp
 

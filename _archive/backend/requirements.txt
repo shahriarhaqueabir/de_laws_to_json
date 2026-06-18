@@ -24,6 +24,10 @@ PyYAML>=6.0
 # Desktop App Packaging (Phase 6)
 pywebview>=4.4
 
+# Database and vector seeding
+psycopg[binary]>=3.2.10
+qdrant-client>=1.18.0
+
 # Vector search: cosine similarity for embeddings (Phase 2)
 numpy>=1.26
 
