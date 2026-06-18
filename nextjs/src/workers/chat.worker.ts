@@ -10,24 +10,32 @@ env.allowLocalModels = false;
 /* eslint-disable @typescript-eslint/no-explicit-any -- Transformers.js pipeline API is dynamic */
 
 const TASK = 'text-generation';
-const MODEL = 'Xenova/Qwen1.5-0.5B-Chat';
+const DEFAULT_MODEL = 'Xenova/Qwen1.5-0.5B-Chat';
 
 let generator: any = null;
+let currentModel: string | null = null;
 
-async function getGenerator(progress_callback?: (x: any) => void) {
-  if (!generator) {
-    generator = await pipeline(TASK, MODEL, { progress_callback });
+async function getGenerator(modelName: string, progress_callback?: (x: any) => void) {
+  if (!generator || currentModel !== modelName) {
+    generator = await pipeline(TASK, modelName, { progress_callback });
+    currentModel = modelName;
   }
   return generator;
 }
 
 self.addEventListener('message', async (event: MessageEvent) => {
-  const { id, prompt } = event.data;
+  const { id, prompt, model } = event.data;
+  const modelToUse = model || DEFAULT_MODEL;
 
   try {
-    const gen = await getGenerator((x: any) => {
+    const gen = await getGenerator(modelToUse, (x: any) => {
       self.postMessage({ status: 'progress', id, ...x });
     });
+
+    if (prompt === 'INIT_ONLY') {
+      self.postMessage({ status: 'ready', id });
+      return;
+    }
 
     const output = await gen(prompt, {
       max_new_tokens: 512,

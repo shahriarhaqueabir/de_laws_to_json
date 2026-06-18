@@ -36,44 +36,56 @@ const modes = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-transparent">
-      <div className="max-w-6xl mx-auto px-4 py-20 lg:py-32">
-        <header className="text-center mb-20 relative">
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-accent-cobalt/5 blur-[100px] rounded-full" />
-          <h1 className="font-serif font-extrabold text-white text-6xl md:text-7xl mb-6 tracking-tight">
-            German Law Vault
+    <main className="min-h-screen bg-transparent relative overflow-hidden">
+      {/* ── Background Elements ── */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] h-[800px] pointer-events-none opacity-30">
+        <div className="absolute inset-0 bg-radial-[at_50%_0%] from-accent-gold/20 via-transparent to-transparent blur-[120px]" />
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-24 lg:py-40 relative z-10">
+        <header className="text-center mb-24">
+          <p className="monumental-type mb-6 animate-fade-in">
+            Bundesrepublik Deutschland
+          </p>
+          <h1 className="font-serif font-bold text-white text-7xl md:text-8xl mb-8 tracking-tighter leading-[0.9]">
+            The Law Vault
           </h1>
-          <p className="text-xl text-[#a3a3a3] max-w-2xl mx-auto legal-text italic">
-            Search 6,000+ German federal laws with sub-second semantic retrieval.
-            Powered by high-authority AI and private on-device intelligence.
+          <div className="h-px w-24 bg-gradient-to-r from-transparent via-accent-gold/50 to-transparent mx-auto mb-10" />
+          <p className="text-xl text-zinc-400 max-w-2xl mx-auto legal-text italic font-serif">
+            A precise repository of over 6,000 federal statutes. Powered by
+            authoritative intelligence and sovereign privacy.
           </p>
         </header>
 
-        <div className="mb-24">
+        <div className="mb-32">
           <SearchBar />
         </div>
 
         <div className="mt-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {modes.map((mode) => {
               const Icon = mode.icon;
               return (
                 <Link
                   key={mode.label}
                   href={mode.href}
-                  className="premium-card p-6 flex flex-col justify-between group"
+                  className="premium-card p-8 flex flex-col justify-between group h-full"
                 >
                   <div>
-                    <div className="p-3 bg-white/5 w-fit mb-4 group-hover:bg-accent-cobalt/10 transition-colors">
-                      <Icon className="w-6 h-6 text-accent-cobalt" />
+                    <div className="mb-6 group-hover:scale-110 transition-transform duration-500 origin-left">
+                      <Icon className="w-8 h-8 text-accent-gold opacity-60 group-hover:opacity-100 group-hover:text-accent-gold-bright transition-all" />
                     </div>
-                    <h3 className="font-serif font-bold text-lg text-white mb-2 flex items-center gap-2">
+                    <h3 className="font-serif font-bold text-xl text-white mb-3 flex items-center gap-2">
                       {mode.label}
-                      <ArrowRight className="w-4 h-4 text-accent-cobalt opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </h3>
-                    <p className="text-xs text-[#a3a3a3] leading-relaxed">
+                    <p className="text-[13px] text-zinc-500 leading-relaxed font-medium">
                       {mode.description}
                     </p>
+                  </div>
+                  <div className="mt-8">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 group-hover:text-accent-gold transition-colors flex items-center gap-2">
+                      Initialize <ArrowRight className="w-3 h-3" />
+                    </span>
                   </div>
                 </Link>
               );
@@ -81,17 +93,25 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-32">
-          <h2 className="text-3xl font-serif font-bold text-white mb-10 text-center tracking-tight">
-            Jurisdiction Domains
-          </h2>
-          <div className="glass-panel p-8">
+        <div className="mt-40">
+          <div className="flex items-center gap-4 mb-12">
+            <h2 className="text-2xl font-serif font-bold text-white tracking-tight shrink-0">
+              Jurisdiction Domains
+            </h2>
+            <div className="h-px w-full bg-zinc-800" />
+          </div>
+          <div className="glass-panel p-10 border-white/5">
             <CategoryGrid />
           </div>
         </div>
 
-        <footer className="mt-40 py-10 border-t border-white/5 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-[#6b6b6b]">
-          <p>© 2026 German Law Vault // Professional Legal Intelligence Repository</p>
+        <footer className="mt-48 pb-20 text-center">
+          <div className="monumental-type opacity-20 mb-4">
+            Sub lege libertas
+          </div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-zinc-700">
+            © 2026 German Law Vault — Official Legal Intelligence Repository
+          </p>
         </footer>
       </div>
     </main>

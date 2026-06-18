@@ -192,12 +192,8 @@ Return STRICT JSON with these exact fields:
       law_title: lawTitle || "",
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("Explain API error:", err);
-    return errorResponse(
-      "EXPLAIN_FAILED",
-      "Failed to generate explanation",
-      500,
-    );
+    console.error("Explain API Error:", err);
+    const message = err instanceof Error ? err.message : "Failed to generate explanation";
+    return errorResponse("EXPLAIN_FAILED", message, 500);
   }
 }

@@ -19,6 +19,7 @@ import {
   ChatSettings,
   DEFAULT_CHAT_SETTINGS,
   MODE_LABELS,
+  BROWSER_MODELS,
 } from "../../lib/types";
 
 const STORAGE_KEY = "glv_chat_settings";
@@ -131,8 +132,36 @@ export default function SettingsPage() {
         });
         const data = await res.json();
         setTestResult(
-          res.ok ? "API key works ✓" : `Error: ${data.error || res.status}`,
+          res.ok ? "API key works ✓" : `Error: ${data.error?.message || data.error || res.status}`,
         );
+      } else if (settings.mode === "browser") {
+        // Test browser model download/init
+        setTestResult("Initializing model worker...");
+        const worker = new Worker(
+          new URL("../../workers/chat.worker.ts", import.meta.url),
+          { type: "module" },
+        );
+
+        const result = await new Promise<string>((resolve, reject) => {
+          worker.onmessage = (e) => {
+            if (e.data.status === "progress") {
+              if (e.data.status === "download") {
+                setTestResult(
+                  `Downloading... ${Math.round((e.data.loaded / e.data.total) * 100)}%`,
+                );
+              }
+            } else if (e.data.status === "ready" || e.data.status === "complete") {
+              resolve("Model ready ✓");
+            } else if (e.data.status === "error") {
+              reject(new Error(e.data.error));
+            }
+          };
+          worker.onerror = (err) => reject(err);
+          worker.postMessage({ id: "test", prompt: "INIT_ONLY", model: settings.browserModel });
+        });
+
+        setTestResult(result);
+        worker.terminate();
       } else {
         setTestResult("No test available for this mode");
       }
@@ -360,14 +389,39 @@ export default function SettingsPage() {
             </h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-[#a3a3a3] mb-3">
+                Select Model
+              </label>
+              <div className="grid gap-3">
+                {BROWSER_MODELS.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => update({ browserModel: m.id })}
+                    className={`p-4 border text-left transition-all ${
+                      settings.browserModel === m.id
+                        ? "border-[#888888] bg-[#1a1a1a]"
+                        : "border-[#2a2a2a] hover:border-[#888888]"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-bold text-[#e8e8e8]">{m.name}</span>
+                      <span className="text-[10px] uppercase font-bold text-[#6b6b6b] px-1.5 py-0.5 border border-[#2a2a2a]">
+                        {m.size}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#6b6b6b]">{m.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="p-4 bg-[#1a1a1a] border border-[#2a2a2a]">
-              <p className="text-sm font-medium text-[#e8e8e8] mb-1">
-                Model: LaMini-Flan-T5-783M
-              </p>
-              <p className="text-xs text-[#a3a3a3]">
-                Size: ~1.5GB • Type: Instruction-following • Runs entirely in
-                your browser
+              <p className="text-xs text-[#6b6b6b] leading-relaxed">
+                <ShieldAlert className="w-3.5 h-3.5 inline mr-1 text-[#6b6b6b]" />
+                The model will be stored in your browser's Cache Storage. Total
+                download size is ~1.2GB - 1.5GB. Use a fast connection.
               </p>
             </div>
 
@@ -392,14 +446,20 @@ export default function SettingsPage() {
       )}
 
       {/* ── Test Connection Button ── */}
-      {(settings.mode === "local" || settings.mode === "cloud") && (
+      {(settings.mode === "local" ||
+        settings.mode === "cloud" ||
+        settings.mode === "browser") && (
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={handleTestConnection}
             disabled={testing}
             className="px-4 py-2 bg-[#888888] hover:bg-[#aaaaaa] text-[#e8e8e8] disabled:opacity-50 transition-colors duration-100 active:translate-y-[1px] text-sm font-medium"
           >
-            {testing ? "Testing..." : "Test Connection"}
+            {testing
+              ? "Initializing..."
+              : settings.mode === "browser"
+                ? "Download / Initialize Model"
+                : "Test Connection"}
           </button>
           {testResult && (
             <span
