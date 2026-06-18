@@ -5,9 +5,16 @@
 export interface Question {
   id: string;
   text: string;
-  type: 'choice' | 'date' | 'number' | 'text';
+  type: "choice" | "date" | "number" | "text";
   options?: { label: string; value: string }[];
-  nextId?: string | ((answer: any) => string);
+  nextId?: string | ((answer: string | number | boolean | null) => string);
+}
+
+export interface SituationData {
+  notice_received?: string;
+  date_received?: string;
+  employee_count?: string;
+  [key: string]: string | number | boolean | undefined | null;
 }
 
 export interface DiagnosisResult {
@@ -66,7 +73,10 @@ export function calculateDeadline(incidentDate: Date, days: number): Date {
 /**
  * Determines the legal roadmap based on situation data
  */
-export function diagnoseCase(category: string, data: any): DiagnosisResult {
+export function diagnoseCase(
+  category: string,
+  data: SituationData,
+): DiagnosisResult {
   const result: DiagnosisResult = {
     category,
     issueType: 'general',

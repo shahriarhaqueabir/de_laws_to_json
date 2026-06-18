@@ -65,19 +65,20 @@ export default function NavBar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const [mode, setMode] = useState<ChatMode>("basic");
-  const [hydrated, setHydrated] = useState(false);
   const [open, setOpen] = useState(false);
 
+  // Use a separate effect for hydration to avoid cascading renders
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as ChatSettings;
-        setMode(parsed.mode || "basic");
+        if (parsed.mode && parsed.mode !== mode) {
+          setMode(parsed.mode);
+        }
       }
     } catch {}
-    setHydrated(true);
-  }, []);
+  }, [mode]);
 
   const switchMode = (m: ChatMode) => {
     try {

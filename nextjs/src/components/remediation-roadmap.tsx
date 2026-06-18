@@ -114,7 +114,7 @@ export default function RemediationRoadmap({
             />
           </div>
           <p className="text-sm text-[#a3a3a3] italic">
-            "{diagnosis.potentialOutcome.reasoning}"
+            &quot;{diagnosis.potentialOutcome.reasoning}&quot;
           </p>
         </div>
       </div>
