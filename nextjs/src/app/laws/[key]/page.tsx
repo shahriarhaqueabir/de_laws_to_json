@@ -2,8 +2,8 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import NormViewer from '@/components/norm-viewer';
-import { Law, Norm } from '@/lib/types';
+import NormViewer from '../../../components/norm-viewer';
+import { Law, Norm } from '../../../lib/types';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 

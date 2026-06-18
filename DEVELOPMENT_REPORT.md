@@ -18,4 +18,5 @@ Successfully transitioned the German Law Vault from a monolithic local Flask/SQL
 1. **Always Use Managed Inference**: For small-to-medium datasets, letting the vector database handle embeddings reduces complexity and client-side load.
 2. **Quantization is Essential**: Using `int8` quantization on Qdrant kept the memory usage well within the 1GB free tier limit for ~100k norms.
 3. **Lazy Load Large AI Models**: Only initialize the `transformers` pipeline when the user explicitly requests a translation to save bandwidth.
-4. **Environment Sync**: Maintain a 1:1 match between workstation env vars and Vercel secrets to avoid "it works on my machine" issues.
+4. **Security Patching**: When using bleeding-edge frameworks (like Next.js 16), use the `overrides` field in `package.json` to force-patch transitive vulnerabilities like the `postcss` XSS issue.
+5. **Environment Sync**: Maintain a 1:1 match between workstation env vars and Vercel secrets to avoid "it works on my machine" issues.

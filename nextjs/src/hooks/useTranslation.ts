@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { translateText, LANG_CODES } from '@/lib/translate';
+import { translateText, LANG_CODES } from '../lib/translate';
 
 export function useTranslation() {
   const [translating, setTranslating] = useState(false);

@@ -2,9 +2,9 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import SearchBar from '@/components/search-bar';
-import LawCard from '@/components/law-card';
-import { LawSearchResult } from '@/lib/types';
+import SearchBar from '../../components/search-bar';
+import LawCard from '../../components/law-card';
+import { LawSearchResult } from '../../lib/types';
 import { Loader2 } from 'lucide-react';
 
 function SearchResults() {
