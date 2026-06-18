@@ -196,3 +196,5 @@ LibreTranslate-main/
 # Worktrees
 .worktrees/
 worktrees/
+.vercel
+.env*
