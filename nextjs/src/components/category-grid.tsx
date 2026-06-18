@@ -26,7 +26,7 @@ export default function CategoryGrid() {
       {categories.map((cat) => (
         <Link
           key={cat.key}
-          href={`/api/laws?category=${cat.key}`} // Temporarily point to API to test, later to a UI route
+          href={`/search?category=${cat.key}`}
           className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200
                      dark:border-gray-700 hover:shadow-md transition-shadow group text-center"
         >
