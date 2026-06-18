@@ -33,11 +33,11 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
   };
 
   return (
-    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-none p-6 hover:border-[#c4a86a] transition-colors relative">
+    <div className="bg-[#0e0e0e] border border-[#1a1a1a] rounded-none p-6 hover:border-[#777777] transition-colors relative">
       <button
         onClick={toggleBookmark}
         className={`absolute top-4 right-4 p-1.5 transition-all duration-100 active:translate-y-[1px] ${
-          bookmarked ? 'text-[#c4a86a]' : 'text-[#6b6a66] hover:text-[#c4a86a]'
+          bookmarked ? 'text-[#777777]' : 'text-[#555555] hover:text-[#777777]'
         }`}
         title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
       >
@@ -46,11 +46,11 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
 
       <div className="flex justify-between items-start mb-4">
         <div>
-          <span className="inline-block px-2 py-1 text-xs font-semibold bg-[#c4a86a] text-[#0d0d0d] mb-2 capitalize rounded-none">
+          <span className="inline-block px-2 py-1 text-xs font-semibold bg-[#777777] text-[#070707] mb-2 capitalize rounded-none">
             {law.category}
           </span>
-          <h3 className="text-xl font-bold text-[#e8e6e3]">
-            <Link href={`/laws/${law.key}`} className="hover:text-[#c4a86a] transition-all duration-100 active:translate-y-[1px]">
+          <h3 className="text-xl font-bold text-[#cccccc]">
+            <Link href={`/laws/${law.key}`} className="hover:text-[#999999] transition-all duration-100 active:translate-y-[1px]">
               {law.key} — {law.title}
             </Link>
           </h3>
@@ -59,7 +59,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
           <div className="text-sm font-medium text-green-600 dark:text-green-400">
             {law.relevance}% relevant
           </div>
-          <div className="text-xs text-[#a09e9a]">
+          <div className="text-xs text-[#888888]">
             {law.normHits} matches
           </div>
         </div>
@@ -67,11 +67,11 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
 
       <div className="space-y-3">
         {law.relevantNorms.map((norm, idx) => (
-          <div key={idx} className="bg-[#0d0d0d] p-3 rounded-none border border-[#2a2a2a]">
-                      <h4 className="text-sm font-semibold text-[#e8e6e3] mb-1">
+          <div key={idx} className="bg-[#070707] p-3 rounded-none border border-[#1a1a1a]">
+                      <h4 className="text-sm font-semibold text-[#cccccc] mb-1">
                         {norm.normId} {norm.title}
                       </h4>
-                      <p className="text-sm text-[#a09e9a] line-clamp-2">
+                      <p className="text-sm text-[#888888] line-clamp-2">
               {norm.content}
             </p>
           </div>
@@ -80,7 +80,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
 
       <Link
         href={`/laws/${law.key}`}
-        className="mt-4 flex items-center text-sm font-medium text-[#c4a86a] hover:text-[#d4b87a] transition-all duration-100 active:translate-y-[1px]"
+        className="mt-4 flex items-center text-sm font-medium text-[#777777] hover:text-[#999999] transition-all duration-100 active:translate-y-[1px]"
       >
         View full law <ChevronRight className="w-4 h-4 ml-1" />
       </Link>

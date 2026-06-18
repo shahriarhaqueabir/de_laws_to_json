@@ -42,55 +42,55 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#070707] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <div className="bg-[#2a2a2a] w-14 h-14 flex items-center justify-center mx-auto mb-4 rounded-none">
-            <ShieldAlert className="w-7 h-7 text-[#c4a86a]" />
+          <div className="bg-[#1a1a1a] w-14 h-14 flex items-center justify-center mx-auto mb-4 rounded-none">
+            <ShieldAlert className="w-7 h-7 text-[#777777]" />
           </div>
-          <h1 className="text-3xl font-bold text-[#e8e6e3]">
+          <h1 className="text-3xl font-bold text-[#cccccc]">
             {mode === 'signin' ? 'Sign In' : 'Create Account'}
           </h1>
-          <p className="text-[#a09e9a] mt-2">
+          <p className="text-[#888888] mt-2">
             {mode === 'signin'
               ? 'Sign in to sync bookmarks across devices'
               : 'Create an account to save your progress'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-[#1a1a1a] border border-[#2a2a2a] p-8 rounded-none space-y-5">
+        <form onSubmit={handleSubmit} className="bg-[#0e0e0e] border border-[#1a1a1a] p-8 rounded-none space-y-5">
           {error && (
-            <div className="bg-[#2a2a2a] border border-red-700 text-red-400 px-4 py-3 text-sm rounded-none">
+            <div className="bg-[#1a1a1a] border border-red-700 text-red-400 px-4 py-3 text-sm rounded-none">
               {error}
             </div>
           )}
           {success && (
-            <div className="bg-[#2a2a2a] border border-green-700 text-green-400 px-4 py-3 text-sm rounded-none">
+            <div className="bg-[#1a1a1a] border border-green-700 text-green-400 px-4 py-3 text-sm rounded-none">
               {success}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-[#e8e6e3] mb-1">Email</label>
+            <label className="block text-sm font-medium text-[#cccccc] mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 bg-[#0d0d0d] border border-[#2a2a2a] rounded-none text-[#e8e6e3] focus:outline-none focus:ring-1 focus:ring-[#c4a86a] transition-all duration-100"
+              className="w-full px-3 py-2 bg-[#070707] border border-[#1a1a1a] rounded-none text-[#cccccc] focus:outline-none focus:ring-1 focus:ring-[#777777] transition-all duration-100"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#e8e6e3] mb-1">Password</label>
+            <label className="block text-sm font-medium text-[#cccccc] mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-3 py-2 bg-[#0d0d0d] border border-[#2a2a2a] rounded-none text-[#e8e6e3] focus:outline-none focus:ring-1 focus:ring-[#c4a86a] transition-all duration-100"
+              className="w-full px-3 py-2 bg-[#070707] border border-[#1a1a1a] rounded-none text-[#cccccc] focus:outline-none focus:ring-1 focus:ring-[#777777] transition-all duration-100"
               placeholder="••••••••"
             />
           </div>
@@ -98,23 +98,23 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#c4a86a] text-[#0d0d0d] font-bold py-3 rounded-none hover:bg-[#d4b87a] disabled:opacity-50 transition-all duration-100 active:translate-y-[1px] flex items-center justify-center gap-2"
+            className="w-full bg-[#777777] text-[#070707] font-bold py-3 rounded-none hover:bg-[#999999] disabled:opacity-50 transition-all duration-100 active:translate-y-[1px] flex items-center justify-center gap-2"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogIn className="w-5 h-5" />}
             {mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-[#6b6a66] mt-6">
+        <p className="text-center text-sm text-[#555555] mt-6">
           {mode === 'signin' ? (
-            <>No account?{' '}<button onClick={() => { setMode('signup'); setError(null); setSuccess(null); }} className="text-[#c4a86a] hover:underline">Create one</button></>
+            <>No account?{' '}<button onClick={() => { setMode('signup'); setError(null); setSuccess(null); }} className="text-[#777777] hover:underline">Create one</button></>
           ) : (
-            <>Already have an account?{' '}<button onClick={() => { setMode('signin'); setError(null); setSuccess(null); }} className="text-[#c4a86a] hover:underline">Sign in</button></>
+            <>Already have an account?{' '}<button onClick={() => { setMode('signin'); setError(null); setSuccess(null); }} className="text-[#777777] hover:underline">Sign in</button></>
           )}
         </p>
 
         <p className="text-center mt-4">
-          <Link href="/" className="text-xs text-[#6b6a66] hover:text-[#c4a86a] transition-all duration-100">← Back to search</Link>
+          <Link href="/" className="text-xs text-[#555555] hover:text-[#999999] transition-all duration-100">← Back to search</Link>
         </p>
       </div>
     </div>

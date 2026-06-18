@@ -46,16 +46,16 @@ function SearchResults() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 className="w-10 h-10 text-[#c4a86a] animate-spin mb-4" />
-                    <p className="text-[#a09e9a]">Searching German laws...</p>
+          <Loader2 className="w-10 h-10 text-[#777777] animate-spin mb-4" />
+                    <p className="text-[#888888]">Searching German laws...</p>
         </div>
       ) : error ? (
-        <div className="p-4 bg-[#2a2a2a] text-red-400 rounded-none border border-[#2a2a2a]">
+        <div className="p-4 bg-[#1a1a1a] text-red-400 rounded-none border border-[#1a1a1a]">
                   {error}
                 </div>
       ) : results.length > 0 ? (
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-[#e8e6e3]">
+          <h2 className="text-xl font-semibold text-[#cccccc]">
                       Found {results.length} relevant laws
                     </h2>
           {results.map((law) => (
@@ -64,7 +64,7 @@ function SearchResults() {
         </div>
       ) : query || category ? (
         <div className="text-center py-20">
-          <p className="text-[#a09e9a] text-lg">No laws found matching your criteria.</p>
+          <p className="text-[#888888] text-lg">No laws found matching your criteria.</p>
         </div>
       ) : null}
     </div>
@@ -73,7 +73,7 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <main className="min-h-screen bg-[#0d0d0d]">
+    <main className="min-h-screen bg-[#070707]">
       <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
         <SearchResults />
       </Suspense>

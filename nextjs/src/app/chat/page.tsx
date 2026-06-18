@@ -153,13 +153,23 @@ export default function ChatPage() {
 
     try {
       // Build request body based on mode
-      const body: Record<string, any> = { message: userMsg, mode };
+      const body: Record<string, any> = {
+        message: userMsg,
+        mode,
+        language: settings.language,
+      };
 
       if (mode === 'cloud') {
         body.provider = settings.provider;
         body.apiKey = settings.apiKey;
         body.model = settings.model;
         body.customEndpoint = settings.customEndpoint;
+      }
+
+      if (mode === 'local') {
+        body.language = settings.language;
+        body.ollamaModel = settings.ollamaModel;
+        body.ollamaParams = settings.ollamaParams;
       }
 
       // For browser mode, we need Qdrant results from the server but generate client-side
@@ -231,14 +241,14 @@ export default function ChatPage() {
   }, [input, loading, mode, settings]);
 
   return (
-    <main className="flex flex-col h-[calc(100vh-64px)] bg-[#0d0d0d]">
+    <main className="flex flex-col h-[calc(100vh-64px)] bg-[#070707]">
       {/* ── Header ── */}
-      <div className="bg-[#1a1a1a] border-b border-[#2a2a2a] p-4">
+      <div className="bg-[#0e0e0e] border-b border-[#1a1a1a] p-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-[#c4a86a]" />
-                        <h1 className="font-bold text-[#e8e6e3]">AI Legal Assistant</h1>
-                        <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-none ${modeMeta.color} bg-[#2a2a2a]`}>
+            <Scale className="w-5 h-5 text-[#777777]" />
+                        <h1 className="font-bold text-[#cccccc]">AI Legal Assistant</h1>
+                        <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-none ${modeMeta.color} bg-[#1a1a1a]`}>
               <ModeIcon className="w-3 h-3" />
               {modeMeta.label}
             </span>
@@ -258,15 +268,15 @@ export default function ChatPage() {
               </span>
             )}
           </div>
-          <Link href="/settings" className="text-xs text-[#6b6a66] hover:text-[#c4a86a] transition-all duration-100 active:translate-y-[1px]">Settings</Link>
+          <Link href="/settings" className="text-xs text-[#555555] hover:text-[#999999] transition-all duration-100 active:translate-y-[1px]">Settings</Link>
         </div>
       </div>
 
       {/* ── Mode Limitation Banner ── */}
       <div className={`px-4 py-2 text-xs text-center ${
               mode === 'basic'
-                ? 'bg-[#1a1a1a] text-[#a09e9a]'
-                : 'bg-[#2a2a2a] text-[#d4b87a]'
+                ? 'bg-[#0e0e0e] text-[#888888]'
+                : 'bg-[#1a1a1a] text-[#999999]'
             }`}>
         {LIMITATION_BANNERS[mode]}
       </div>
@@ -276,16 +286,16 @@ export default function ChatPage() {
         <div className="max-w-4xl mx-auto space-y-6 pb-20">
           {messages.length === 0 && (
             <div className="text-center py-20">
-              <div className="bg-[#2a2a2a] w-16 h-16 rounded-none flex items-center justify-center mx-auto mb-4">
-                              <MessageSquare className="w-8 h-8 text-[#c4a86a]" />
+              <div className="bg-[#1a1a1a] w-16 h-16 rounded-none flex items-center justify-center mx-auto mb-4">
+                              <MessageSquare className="w-8 h-8 text-[#777777]" />
               </div>
-              <h2 className="text-xl font-bold text-[#e8e6e3] mb-2">
+              <h2 className="text-xl font-bold text-[#cccccc] mb-2">
                               How can I help you today?
                             </h2>
-              <p className="text-[#a09e9a] max-w-md mx-auto mb-4">
+              <p className="text-[#888888] max-w-md mx-auto mb-4">
                 Describe a situation (e.g., &quot;My landlord wants to increase my rent&quot;) and I will search relevant German laws to provide guidance.
               </p>
-              <p className="text-xs text-[#6b6a66] max-w-sm mx-auto">
+              <p className="text-xs text-[#555555] max-w-sm mx-auto">
                 Mode: {MODE_LABELS[mode].icon} {MODE_LABELS[mode].label} — {MODE_LABELS[mode].description}
               </p>
             </div>
@@ -295,16 +305,16 @@ export default function ChatPage() {
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[85%] rounded-none px-5 py-3 ${
                               m.role === 'user'
-                                ? 'bg-[#c4a86a] text-[#0d0d0d] rounded-tr-none'
-                                : 'bg-[#1a1a1a] text-[#e8e6e3] border border-[#2a2a2a] rounded-tl-none'
+                                ? 'bg-[#777777] text-[#070707] rounded-tr-none'
+                                : 'bg-[#0e0e0e] text-[#cccccc] border border-[#1a1a1a] rounded-tl-none'
                             }`}>
                 <div className="prose dark:prose-invert max-w-none text-inherit whitespace-pre-wrap leading-relaxed">
                   {m.content}
                 </div>
 
                 {m.citedLaws && m.citedLaws.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-[#2a2a2a]">
-                                      <p className="text-xs font-bold uppercase tracking-wider text-[#6b6a66] mb-2">
+                  <div className="mt-4 pt-4 border-t border-[#1a1a1a]">
+                                      <p className="text-xs font-bold uppercase tracking-wider text-[#555555] mb-2">
                       Relevant Sources
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -312,7 +322,7 @@ export default function ChatPage() {
                         <Link
                                                   key={j}
                                                   href={`/laws/${law.law_key}`}
-                                                  className="text-xs bg-[#2a2a2a] hover:bg-[#c4a86a] hover:text-[#0d0d0d] text-[#e8e6e3] px-2 py-1 rounded-none transition-all duration-100 active:translate-y-[1px]"
+                                                  className="text-xs bg-[#1a1a1a] hover:bg-[#999999] hover:text-[#070707] text-[#cccccc] px-2 py-1 rounded-none transition-all duration-100 active:translate-y-[1px]"
                                                 >
                                                   {law.law_key} {law.norm_id}
                                                 </Link>
@@ -326,11 +336,11 @@ export default function ChatPage() {
 
           {loading && (
             <div className="flex justify-start">
-                          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-none px-5 py-3">
+                          <div className="bg-[#0e0e0e] border border-[#1a1a1a] rounded-none px-5 py-3">
                             <div className="flex items-center gap-2">
-                              <Loader2 className="w-5 h-5 text-[#c4a86a] animate-spin" />
+                              <Loader2 className="w-5 h-5 text-[#777777] animate-spin" />
                               {mode === 'browser' && workerStatus && (
-                                <span className="text-xs text-[#a09e9a]">{workerStatus}</span>
+                                <span className="text-xs text-[#888888]">{workerStatus}</span>
                               )}
                 </div>
               </div>
@@ -342,7 +352,7 @@ export default function ChatPage() {
       </div>
 
       {/* ── Input Area ── */}
-      <div className="bg-[#1a1a1a] border-t border-[#2a2a2a] p-4">
+      <div className="bg-[#0e0e0e] border-t border-[#1a1a1a] p-4">
         <form onSubmit={handleSend} className="max-w-4xl mx-auto flex gap-3">
           <input
                       type="text"
@@ -353,18 +363,18 @@ export default function ChatPage() {
                           ? 'Search German laws... (e.g., Mietrecht, BGB § 558)'
                           : 'Describe your situation...'
                       }
-                      className="flex-1 bg-[#0d0d0d] border border-[#2a2a2a] rounded-none px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#c4a86a] text-[#e8e6e3]"
+                      className="flex-1 bg-[#070707] border border-[#1a1a1a] rounded-none px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#777777] text-[#cccccc]"
                       disabled={loading}
                     />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="bg-[#c4a86a] hover:bg-[#d4b87a] text-[#0d0d0d] p-3 rounded-none disabled:opacity-50 transition-all duration-100 active:translate-y-[1px]"
+            className="bg-[#777777] hover:bg-[#999999] text-[#070707] p-3 rounded-none disabled:opacity-50 transition-all duration-100 active:translate-y-[1px]"
           >
             <Send className="w-6 h-6" />
           </button>
         </form>
-        <p className="text-[10px] text-center text-[#6b6a66] mt-2 uppercase tracking-widest font-medium">
+        <p className="text-[10px] text-center text-[#555555] mt-2 uppercase tracking-widest font-medium">
           AI-generated guidance is not legal advice.
         </p>
       </div>

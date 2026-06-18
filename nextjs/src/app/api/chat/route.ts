@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import { getServerClient } from '../../../lib/supabase-server';
 import { searchNorms } from '../../../lib/qdrant';
 import { generateChatResponse } from '../../../lib/chat';
-import type { ChatMode, CloudProvider, CitedLaw } from '../../../lib/types';
+import type { ChatMode, CloudProvider, AppLanguage, CitedLaw } from '../../../lib/types';
+import { LANGUAGE_NAMES } from '../../../lib/types';
 
 const BROKER_URL =
   process.env.NEXT_PUBLIC_BROKER_URL || 'http://localhost:9000';
@@ -11,14 +12,17 @@ const BROKER_URL =
 export async function POST(req: NextRequest) {
   try {
     const {
-      message,
-      conversationId,
-      mode: rawMode,
-      provider,
-      apiKey,
-      model,
-      customEndpoint,
-    } = await req.json();
+          message,
+          conversationId,
+          mode: rawMode,
+          provider,
+          apiKey,
+          model,
+          customEndpoint,
+          language,
+          ollamaModel,
+          ollamaParams,
+        } = await req.json();
 
     const mode: ChatMode = rawMode || 'basic';
     const cookieStore = await cookies();
@@ -44,10 +48,22 @@ export async function POST(req: NextRequest) {
       case 'local': {
         // Mode 1: Local Ollama via broker
         try {
+          const langName = LANGUAGE_NAMES[language as AppLanguage] || 'English';
           const brokerRes = await fetch(`${BROKER_URL}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, context: contextStr, conversationId }),
+            body: JSON.stringify({
+              message,
+              context: contextStr,
+              conversationId,
+              model: ollamaModel || undefined,
+              language: langName,
+              temperature: ollamaParams?.temperature ?? 0.3,
+              top_p: ollamaParams?.top_p ?? 0.9,
+              top_k: ollamaParams?.top_k ?? 40,
+              max_tokens: ollamaParams?.max_tokens ?? 1024,
+              system_prompt: ollamaParams?.system_prompt || undefined,
+            }),
             signal: AbortSignal.timeout(120000),
           });
 
@@ -90,6 +106,7 @@ export async function POST(req: NextRequest) {
             question: message,
             norms: citedLaws,
             context: contextStr,
+            language: (language as AppLanguage) || 'en',
           });
           brokerAvailable = null;
         } catch (err: any) {

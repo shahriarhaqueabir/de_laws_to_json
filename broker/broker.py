@@ -5,7 +5,7 @@ Serves as an optional AI guidance layer.
 Usage:
     pip install -r requirements.txt
     python broker.py
-    # Server starts on http://localhost:9000
+    # Server starts on http://localhost:9090
 """
 
 import logging
@@ -37,40 +37,39 @@ app.add_middleware(
 )
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:1.5b")
 
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     context: str = Field(default="")
     conversationId: Optional[str] = None
+    model: str = Field(default="qwen2.5:1.5b")
+    language: str = Field(default="English")
+    temperature: float = Field(default=0.3, ge=0.0, le=2.0)
+    top_p: float = Field(default=0.9, ge=0.0, le=1.0)
+    top_k: int = Field(default=40, ge=0)
+    max_tokens: int = Field(default=1024, ge=1, le=4096)
+    system_prompt: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
     response: str
-    model: str = OLLAMA_MODEL
-
-
-LEGAL_DISCLAIMER = (
-    "\n\n---\n"
-    "*This guidance is based on mathematical reasoning applied to legal text. "
-    "It is **not legally binding advice**. Consult a licensed attorney for your specific situation.*"
-)
-
-SYSTEM_PROMPT = """You are a German law assistant. Your role is to:
-1. Read the user's situation carefully.
-2. Search through the provided legal context from German federal laws.
-3. Explain which laws and paragraphs are relevant.
-4. Apply logical reasoning to explain how the law likely applies.
-5. Always respond in the user's language (German or English).
-6. Cite specific law keys and section numbers.
-"""
+    model: str
 
 
 @app.get("/health")
 async def health():
     """Health check — called by the frontend to detect broker availability."""
-    return {"status": "ok", "model": OLLAMA_MODEL}
+    return {"status": "ok", "ollama_url": OLLAMA_URL}
+
+
+@app.get("/api/tags")
+async def list_models():
+    """Proxy Ollama's /api/tags to list available models."""
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(f"{OLLAMA_URL}/api/tags")
+        resp.raise_for_status()
+        return resp.json()
 
 
 @app.post("/api/chat", response_model=ChatResponse)
@@ -84,13 +83,25 @@ User situation:
 
 Provide guidance based on the relevant laws above. Include citations."""
 
+    system = (
+        req.system_prompt
+        or "You are a multilingual German legal assistant. Always respond in the user's language."
+    )
+    # Inject language into the system prompt
+    system = (
+        system
+        + f"\n\nThe user's language is: {req.language}. Always respond in {req.language}."
+    )
+
     payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": f"{SYSTEM_PROMPT}\n\n{user_prompt}",
+        "model": req.model,
+        "prompt": f"{system}\n\n{user_prompt}",
         "stream": False,
         "options": {
-            "temperature": 0.3,
-            "num_predict": 1024,
+            "temperature": req.temperature,
+            "top_p": req.top_p,
+            "top_k": req.top_k,
+            "num_predict": req.max_tokens,
         },
     }
 
@@ -102,12 +113,12 @@ Provide guidance based on the relevant laws above. Include citations."""
             )
             resp.raise_for_status()
             data = resp.json()
-            response_text = data.get("response", "").strip() + LEGAL_DISCLAIMER
-            return ChatResponse(response=response_text)
+            response_text = data.get("response", "").strip()
+            return ChatResponse(response=response_text, model=req.model)
     except Exception as e:
         logger.error("Ollama request failed: %s", e)
         raise HTTPException(status_code=503, detail=f"Ollama unavailable: {str(e)}")
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=9090)
+    uvicorn.run(app, host="0.0.0.0", port=9000)
