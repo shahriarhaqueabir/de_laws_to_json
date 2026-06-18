@@ -1,5 +1,7 @@
 /**
  * Web Worker for client-side translation via Transformers.js.
+ * Model: opus-mt-de-en — dedicated German→English translation.
+ * Much smaller and faster than NLLB-600M.
  */
 import { pipeline, env } from '@huggingface/transformers';
 
@@ -10,7 +12,7 @@ env.allowLocalModels = false;
 
 class TranslationWorker {
   static task = 'translation' as const;
-  static model = 'Xenova/nllb-200-distilled-600M';
+  static model = 'Xenova/opus-mt-de-en';
   static instance: any = null;
 
   static async getInstance(progress_callback?: (x: any) => void) {
@@ -24,17 +26,14 @@ class TranslationWorker {
 }
 
 self.addEventListener('message', async (event: MessageEvent) => {
-  const { id, text, src_lang, tgt_lang } = event.data;
+  const { id, text } = event.data;
 
   try {
     const translator = await TranslationWorker.getInstance((x) => {
       self.postMessage({ status: 'progress', id, ...x });
     });
 
-    const output = await translator(text, {
-      src_lang,
-      tgt_lang,
-    });
+    const output = await translator(text);
 
     self.postMessage({
       status: 'complete',

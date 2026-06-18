@@ -22,7 +22,7 @@ export default function NormViewer({ normId, title, content }: NormViewerProps) 
       const result = await translate(content);
       setTranslation(result);
     } catch {
-      alert('Translation failed. The model might still be loading (~600MB).');
+      alert('Translation failed. The model might still be loading (~300MB).');
     }
   };
 

@@ -28,19 +28,10 @@ function getWorker(): Worker {
   return worker!;
 }
 
-export async function translateText(
-  text: string,
-  sourceLang: string = 'deu_Latn',
-  targetLang: string = 'eng_Latn',
-): Promise<string> {
+export async function translateText(text: string): Promise<string> {
   const id = crypto.randomUUID();
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject });
-    getWorker().postMessage({ id, text, src_lang: sourceLang, tgt_lang: targetLang });
+    getWorker().postMessage({ id, text });
   });
 }
-
-export const LANG_CODES = {
-  de: 'deu_Latn',
-  en: 'eng_Latn',
-} as const;
