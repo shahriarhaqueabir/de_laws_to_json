@@ -185,7 +185,7 @@ export default function NormViewer({
                    <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold-bright opacity-30" />
                   <div className="flex items-center gap-3 monumental-type mb-6 opacity-60">
                     <Languages className="w-3.5 h-3.5" />
-                    Vernacular Translation
+                    {explanation.is_official ? "Official Translation" : "Vernacular Translation"}
                   </div>
                   <p className="legal-text text-white font-sans font-medium leading-relaxed">
                     {explanation.translation}

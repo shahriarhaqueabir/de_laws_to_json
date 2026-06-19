@@ -31,6 +31,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         setSettings((prev) => {
           const loaded = JSON.parse(raw);
+          // Auto-migrate legacy 9090 port to new 9000 standard
+          if (loaded.brokerUrl === "http://localhost:9090") {
+            loaded.brokerUrl = "http://localhost:9000";
+          }
           // Ensure system prompt is synced if empty in storage
           if (!loaded.ollamaParams?.system_prompt) {
             loaded.ollamaParams = {

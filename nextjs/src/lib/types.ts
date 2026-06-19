@@ -171,4 +171,5 @@ export interface NormExplanation {
   implications: string;
   next_steps: string;
   disclaimer: string;
+  is_official?: boolean;
 }

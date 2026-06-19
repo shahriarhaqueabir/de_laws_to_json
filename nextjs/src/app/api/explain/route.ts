@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
         implications: cached.implications,
         next_steps: cached.next_steps,
         disclaimer: "",
+        is_official: cached.is_official,
       });
     }
 
