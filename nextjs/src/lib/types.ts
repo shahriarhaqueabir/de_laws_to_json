@@ -116,8 +116,7 @@ export const DEFAULT_OLLAMA_PARAMS: OllamaParams = {
   top_p: 0.9,
   top_k: 40,
   max_tokens: 1024,
-  system_prompt:
-    "You are a multilingual German legal expert. Your role is to read the user's situation, search through provided German legal context, explain which laws and paragraphs are relevant, and apply logical reasoning to explain how the law likely applies. Cite specific law keys and section numbers.",
+  system_prompt: "", // Will be populated from SYSTEM_PROMPT in chat.ts if empty
 };
 
 export interface ChatSettings {

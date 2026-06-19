@@ -34,7 +34,17 @@ const modes = [
   },
 ];
 
+const LAW_QUOTES = [
+  { text: "The law is reason, free from passion.", author: "Aristotle" },
+  { text: "Justice delayed is justice denied.", author: "William E. Gladstone" },
+  { text: "Law is the art of the good and the equitable.", author: "Celsus" },
+  { text: "The more laws, the less justice.", author: "Marcus Tullius Cicero" },
+  { text: "Lawyers are the only persons in whom ignorance of the law is not punished.", author: "Jeremy Bentham" }
+];
+
 export default function Home() {
+  const quote = LAW_QUOTES[new Date().getDay() % LAW_QUOTES.length];
+
   return (
     <main className="min-h-screen bg-transparent relative overflow-hidden">
       {/* ── Background Elements ── */}
@@ -44,6 +54,9 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto px-4 py-24 lg:py-40 relative z-10">
         <header className="text-center mb-24">
+          <p className="monumental-type mb-6 animate-fade-in text-accent-gold/60">
+            &ldquo;{quote.text}&rdquo; &mdash; {quote.author}
+          </p>
           <p className="monumental-type mb-6 animate-fade-in">
             Bundesrepublik Deutschland
           </p>

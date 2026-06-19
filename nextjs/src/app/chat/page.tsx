@@ -253,7 +253,10 @@ function ChatContent() {
             body: JSON.stringify({ ...body, mode: "basic" }),
           });
           const data = await res.json();
-          const prompt = `Context from German laws:\n${(data.citedLaws || []).map((l: CitedLaw) => `[${l.law_key} ${l.norm_id}] ${l.law_title}`).join("\n")}\n\nUser situation:\n${userMsg}\n\nProvide guidance based on the relevant laws above. Include citations.`;
+          const langName = LANGUAGE_NAMES[settings.language] || "English";
+          const baseSystem = settings.ollamaParams?.system_prompt || "";
+
+          const prompt = `${baseSystem}\n\nThe user's language is: ${langName}. Always respond in ${langName}.\n\nContext from German laws:\n${(data.citedLaws || []).map((l: CitedLaw) => `[${l.law_key} ${l.norm_id}] ${l.law_title}`).join("\n")}\n\nUser situation:\n${userMsg}\n\nProvide guidance based on the relevant laws above. Include citations.`;
 
           let workerResponse: string;
           if (workerRef.current) {
@@ -490,6 +493,13 @@ function ChatContent() {
             <Send className="w-5 h-5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
           </button>
         </form>
+
+        {mode === "local" && brokerAvailable === false && (
+          <p className="text-[9px] text-center text-red-500 mt-4 uppercase tracking-[0.2em] font-black animate-pulse">
+            Local Node Offline — Ensure Ollama and Broker are running
+          </p>
+        )}
+
         <p className="text-[8px] text-center text-zinc-700 mt-5 uppercase tracking-[0.5em] font-bold">
           The Vault provides statutory analysis. This is not legally binding.
         </p>

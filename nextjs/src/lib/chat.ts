@@ -42,6 +42,7 @@ async function callOpenAI(
   model: string,
   messages: Array<{ role: string; content: string }>,
   maxTokens: number = 1024,
+  temperature: number = 0.3,
 ): Promise<string> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -49,7 +50,7 @@ async function callOpenAI(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: maxTokens }),
+    body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
   });
   if (!res.ok) throw new Error(`OpenAI API error: ${res.status} ${await res.text()}`);
   const data = await res.json();
@@ -64,6 +65,7 @@ async function callAnthropic(
   system: string,
   messages: Array<{ role: string; content: string }>,
   maxTokens: number = 1024,
+  temperature: number = 0.3,
 ): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -77,7 +79,7 @@ async function callAnthropic(
       system,
       messages: messages.map((m) => ({ role: m.role, content: m.content })),
       max_tokens: maxTokens,
-      temperature: 0.3,
+      temperature,
     }),
   });
   if (!res.ok) throw new Error(`Anthropic API error: ${res.status} ${await res.text()}`);
@@ -93,6 +95,7 @@ async function callOpenAICompatible(
   model: string,
   messages: Array<{ role: string; content: string }>,
   maxTokens: number = 1024,
+  temperature: number = 0.3,
 ): Promise<string> {
   const res = await fetch(`${endpoint.replace(/\/$/, '')}/v1/chat/completions`, {
     method: 'POST',
@@ -100,7 +103,7 @@ async function callOpenAICompatible(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: maxTokens }),
+    body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
   });
   if (!res.ok) throw new Error(`Provider API error: ${res.status} ${await res.text()}`);
   const data = await res.json();
@@ -118,12 +121,16 @@ export interface GenerateParams {
   norms: CitedLaw[];
   context: string;
   language: AppLanguage;
+  temperature?: number;
+  maxTokens?: number;
+  systemPrompt?: string;
 }
 
 export async function generateChatResponse(params: GenerateParams): Promise<string> {
-  const { provider, apiKey, model, customEndpoint, question, context, language } = params;
+  const { provider, apiKey, model, customEndpoint, question, context, language, temperature, maxTokens, systemPrompt } = params;
   const langName = LANGUAGE_NAMES[language] || 'English';
-  const systemWithLang = `${SYSTEM_PROMPT}\n\nThe user's language is: ${langName}. Always respond in ${langName}.`;
+  const baseSystem = systemPrompt || SYSTEM_PROMPT;
+  const systemWithLang = `${baseSystem}\n\nThe user's language is: ${langName}. Always respond in ${langName}.`;
 
   const messages = [
     { role: 'system', content: systemWithLang },
@@ -134,15 +141,15 @@ export async function generateChatResponse(params: GenerateParams): Promise<stri
 
   switch (provider) {
     case 'openai':
-      response = await callOpenAI(apiKey, model, messages);
+      response = await callOpenAI(apiKey, model, messages, maxTokens, temperature);
       break;
     case 'anthropic':
       response = await callAnthropic(apiKey, model, systemWithLang, [
         { role: 'user', content: buildUserPrompt(question, params.norms, context) },
-      ]);
+      ], maxTokens, temperature);
       break;
     case 'openai-compatible':
-      response = await callOpenAICompatible(customEndpoint || 'https://api.openai.com', apiKey, model, messages);
+      response = await callOpenAICompatible(customEndpoint || 'https://api.openai.com', apiKey, model, messages, maxTokens, temperature);
       break;
     default:
       throw new Error(`Unknown provider: ${provider}`);

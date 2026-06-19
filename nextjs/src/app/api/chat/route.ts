@@ -68,6 +68,11 @@ export async function POST(req: NextRequest) {
 
     // 1. Search Qdrant for relevant norms (always)
     // Safety: limit context to 10 norms or ~12k characters total for smaller model safety
+
+    // Check if query needs translation for better Qdrant matching
+    // (Only if not English/German and we have a way to detect/translate)
+    // For now, we use the message directly as the multilingual-e5 model handles many languages.
+
     const norms = await searchNorms(message, undefined, 10);
     const contextStr = norms
       .map((n) => `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 1200)}`)
@@ -149,6 +154,9 @@ export async function POST(req: NextRequest) {
             norms: citedLaws,
             context: contextStr,
             language: (language as AppLanguage) || "en",
+            temperature: ollamaParams?.temperature as number,
+            maxTokens: ollamaParams?.max_tokens as number,
+            systemPrompt: ollamaParams?.system_prompt as string,
           });
           brokerAvailable = null;
         } catch (err: unknown) {

@@ -252,6 +252,72 @@ export default function SettingsPage() {
 
       {/* ── Mode-specific Configuration ── */}
 
+      {/* Global AI Constraints (Parameters) */}
+      {(settings.mode === "local" || settings.mode === "cloud") && (
+        <section className="mb-12">
+            <div className="flex items-center gap-4 mb-8">
+                <h2 className="monumental-type opacity-50 shrink-0">Global AI Constraints</h2>
+                <div className="h-px w-full bg-zinc-800/50" />
+            </div>
+
+            <div className="glass-panel p-8 border-white/5 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                            Inference Temperature ({settings.ollamaParams.temperature})
+                        </label>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={settings.ollamaParams.temperature}
+                            onChange={(e) => update({
+                                ollamaParams: { ...settings.ollamaParams, temperature: parseFloat(e.target.value) }
+                            })}
+                            className="w-full accent-accent-gold"
+                        />
+                        <div className="flex justify-between mt-2">
+                            <span className="text-[9px] font-bold text-zinc-600 uppercase">Precise</span>
+                            <span className="text-[9px] font-bold text-zinc-600 uppercase">Creative</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                            Max Generation Tokens
+                        </label>
+                        <input
+                            type="number"
+                            value={settings.ollamaParams.max_tokens}
+                            onChange={(e) => update({
+                                ollamaParams: { ...settings.ollamaParams, max_tokens: parseInt(e.target.value) }
+                            })}
+                            className="w-full px-4 py-2 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 transition-all font-mono text-sm"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                        Master System Guidelines (Consistency Logic)
+                    </label>
+                    <textarea
+                        rows={6}
+                        value={settings.ollamaParams.system_prompt}
+                        onChange={(e) => update({
+                            ollamaParams: { ...settings.ollamaParams, system_prompt: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-sans text-xs leading-relaxed"
+                    />
+                    <p className="text-[10px] text-zinc-600 font-bold mt-3 italic">
+                        These guidelines ensure all AI modes (Local & Cloud) maintain the same "Rechtsexperte" persona and citation standards.
+                    </p>
+                </div>
+            </div>
+        </section>
+      )}
+
       {settings.mode === "local" && (
         <section className="glass-panel p-8 mb-8 border-white/5">
           <div className="flex items-center gap-4 mb-8">
@@ -262,16 +328,42 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-6">
-            <div className="max-w-md">
-              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                Endpoint Protocol (BROKER_URL)
-              </label>
-              <input
-                type="text"
-                value={settings.brokerUrl}
-                onChange={(e) => update({ brokerUrl: e.target.value })}
-                className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                  Endpoint Protocol (BROKER_URL)
+                </label>
+                <input
+                  type="text"
+                  value={settings.brokerUrl}
+                  onChange={(e) => update({ brokerUrl: e.target.value })}
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                  Ollama Model Designation
+                </label>
+                <input
+                  type="text"
+                  value={settings.ollamaModel}
+                  onChange={(e) => update({ ollamaModel: e.target.value })}
+                  placeholder="e.g. qwen2.5:1.5b"
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 bg-accent-gold/5 border border-accent-gold/20 flex items-start gap-4">
+              <ShieldAlert className="w-5 h-5 text-accent-gold mt-0.5" />
+              <div>
+                <p className="text-[10px] font-black text-accent-gold uppercase tracking-[0.2em] mb-1">Architecture Requirement</p>
+                <p className="text-xs text-zinc-400 font-bold leading-relaxed">
+                  Ensure you have <span className="text-white">Ollama</span> running on your machine and have started the <span className="text-white">local broker</span> script:
+                  <code className="block mt-2 p-2 bg-black/40 border border-white/5 text-accent-gold">cd broker && python broker.py</code>
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">

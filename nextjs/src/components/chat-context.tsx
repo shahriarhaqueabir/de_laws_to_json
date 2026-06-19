@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { ChatMode, ChatSettings, DEFAULT_CHAT_SETTINGS } from "../lib/types";
+import { SYSTEM_PROMPT } from "../lib/chat";
 
 const STORAGE_KEY = "glv_chat_settings";
 
@@ -15,14 +16,30 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_CHAT_SETTINGS);
+  const [settings, setSettings] = useState<ChatSettings>(() => {
+    const base = { ...DEFAULT_CHAT_SETTINGS };
+    if (!base.ollamaParams.system_prompt) {
+      base.ollamaParams.system_prompt = SYSTEM_PROMPT;
+    }
+    return base;
+  });
   const [mounted, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        setSettings((prev) => ({ ...prev, ...JSON.parse(raw) }));
+        setSettings((prev) => {
+          const loaded = JSON.parse(raw);
+          // Ensure system prompt is synced if empty in storage
+          if (!loaded.ollamaParams?.system_prompt) {
+            loaded.ollamaParams = {
+              ...(loaded.ollamaParams || DEFAULT_CHAT_SETTINGS.ollamaParams),
+              system_prompt: SYSTEM_PROMPT
+            };
+          }
+          return { ...prev, ...loaded };
+        });
       }
     } catch {}
     setHydrated(true);
