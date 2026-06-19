@@ -1,9 +1,11 @@
-import sys
-import os
 import json
+import os
+import sys
 
-# Add parent directory to path (go up one level from tests/)
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add project root and archive backend path
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _project_root)
+sys.path.insert(0, os.path.join(_project_root, "_archive", "backend"))
 
 from dictionary.legal_dict import get_legal_dictionary
 

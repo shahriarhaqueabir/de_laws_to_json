@@ -60,28 +60,34 @@ export async function GET(req: NextRequest) {
     let allResults: SearchResult[] = [];
 
     if (safeQuery) {
+      console.log(`[API Search] Executing Qdrant query: "${safeQuery}" (category: ${category || 'none'})`);
       // 1. Semantic Search via Qdrant
       const offset = (page - 1) * PAGE_SIZE;
       allResults = await searchNorms(safeQuery, category, 50, offset);
+      console.log(`[API Search] Qdrant returned ${allResults.length} points.`);
     } else if (category) {
       // 2. Browse Category via Supabase
+      console.log(`[API Search] Browsing category: "${category}"`);
       const cookieStore = await cookies();
       const supabase = getServerClient(cookieStore);
-      const { data: laws } = await supabase
+      const { data: laws, error: dbError } = await supabase
         .from("laws")
         .select("*")
         .eq("category", category)
         .limit(20);
 
+      if (dbError) throw dbError;
+
       allResults = (laws || []).map((l) => ({
         law_key: l.key,
         law_title: l.title,
         category: l.category,
-        norm_id: "", // Browse mode doesn't highlight specific norms
+        norm_id: "",
         norm_title: "",
-        content: "",
+        content: `Search focused on ${l.title}`,
         score: 1.0,
       }));
+      console.log(`[API Search] Supabase returned ${allResults.length} laws.`);
     }
 
     // Group by law_key for law-level results
@@ -102,8 +108,8 @@ export async function GET(req: NextRequest) {
     const lawResults = Array.from(lawMap.entries())
       .map(([key, data]) => ({
         key,
-        title: data.norms[0]?.law_title || "",
-        category: data.norms[0]?.category || "",
+        title: data.norms[0]?.law_title || key,
+        category: data.norms[0]?.category || "other",
         relevance: Math.round(data.topScore * 100),
         normHits: data.hits,
         contextSummary:
@@ -111,12 +117,14 @@ export async function GET(req: NextRequest) {
             ? `Found ${data.hits} relevant sections in this law.`
             : "",
         relevantNorms: data.norms.map((n) => ({
-          normId: n.norm_id,
-          title: n.norm_title,
-          content: n.content?.slice(0, 300) || "",
+          normId: n.norm_id || "",
+          title: n.norm_title || "",
+          content: n.content?.slice(0, 300) || "Read full text for details.",
         })),
       }))
       .sort((a, b) => b.relevance - a.relevance);
+
+    console.log(`[API Search] Success: Returning ${lawResults.length} unique laws.`);
 
     return NextResponse.json({
       results: lawResults,
@@ -124,7 +132,11 @@ export async function GET(req: NextRequest) {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("Search error:", message);
-    return errorResponse("SEARCH_FAILED", "Search failed", 500);
+    console.error("[API Search] Fatal error:", message);
+    return errorResponse(
+      "SEARCH_FAILED",
+      `Search failed: ${message}`,
+      500,
+    );
   }
 }

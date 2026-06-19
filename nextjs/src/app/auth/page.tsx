@@ -37,6 +37,8 @@ export default function AuthPage() {
     } else if (mode === "signup") {
       setSuccess("Account created! Check your email for confirmation.");
     } else {
+      // Clear guest chat history on successful sign-in
+      sessionStorage.removeItem("glv_guest_chat");
       router.push("/");
     }
     setLoading(false);
@@ -50,11 +52,11 @@ export default function AuthPage() {
             <ShieldAlert className="w-7 h-7 text-[#888888]" />
           </div>
           <h1 className="text-3xl font-bold text-[#e8e8e8]">
-            {mode === "signin" ? "Sign In" : "Create Account"}
+            {mode === "signin" ? "Initialize Session" : "Create Account"}
           </h1>
           <p className="text-[#a3a3a3] mt-2">
             {mode === "signin"
-              ? "Sign in to sync bookmarks across devices"
+              ? "Establish a secure link to sync bookmarks"
               : "Create an account to save your progress"}
           </p>
         </div>
@@ -99,7 +101,7 @@ export default function AuthPage() {
               required
               minLength={6}
               className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] text-[#e8e8e8] focus:outline-none focus:ring-1 focus:ring-[#888888] transition-shadow duration-100"
-              placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+              placeholder="••••••••"
             />
           </div>
 
@@ -113,7 +115,7 @@ export default function AuthPage() {
             ) : (
               <LogIn className="w-5 h-5" />
             )}
-            {mode === "signin" ? "Sign In" : "Create Account"}
+            {mode === "signin" ? "Initialize Session" : "Create Account"}
           </button>
         </form>
 
@@ -143,7 +145,7 @@ export default function AuthPage() {
                 }}
                 className="text-[#888888] hover:underline"
               >
-                Sign in
+                Initialize session
               </button>
             </>
           )}

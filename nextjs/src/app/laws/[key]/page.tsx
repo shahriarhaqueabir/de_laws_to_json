@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import NormViewer from "../../../components/norm-viewer";
 import { Law, Norm } from "../../../lib/types";
-import { Loader2, ArrowLeft, BookmarkPlus, BookmarkCheck } from "lucide-react";
+import { Loader2, ArrowLeft, BookmarkPlus, BookmarkCheck, Scale } from "lucide-react";
 import Link from "next/link";
 import {
   isBookmarked,
@@ -49,7 +49,7 @@ export default function LawDetailPage() {
     if (bookmarked) {
       removeBookmark(data.key);
       setBookmarked(false);
-      toast("Bookmark removed", "info");
+      toast("Archive entry removed", "info");
     } else {
       addBookmark({
         law_key: data.key,
@@ -58,108 +58,113 @@ export default function LawDetailPage() {
         added_at: new Date().toISOString().split("T")[0],
       });
       setBookmarked(true);
-      toast("Law bookmarked", "success");
+      toast("Statute archived", "success");
     }
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-12 h-12 text-[#888888] animate-spin" />
-        <p className="mt-4 text-[#a3a3a3]">Loading law and paragraphs...</p>
+      <div className="flex flex-col items-center justify-center min-h-[70vh] animate-pulse">
+        <Loader2 className="w-16 h-16 text-accent-gold animate-spin mb-6" />
+        <p className="monumental-type opacity-40">Decrypting Statute...</p>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-2xl font-bold text-[#a3a3a3] mb-4">
-          {error || "Law not found"}
+      <div className="max-w-4xl mx-auto px-6 py-40 text-center">
+        <h2 className="text-3xl font-serif font-bold text-white mb-6">
+          {error || "Statute Registry Empty"}
         </h2>
         <Link
           href="/"
-          className="text-[#888888] hover:text-[#aaaaaa] flex items-center justify-center gap-2"
+          className="text-accent-gold hover:text-accent-gold-bright flex items-center justify-center gap-3 monumental-type"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to search
+          <ArrowLeft className="w-4 h-4" /> Return to Vault
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
+    <div className="max-w-5xl mx-auto px-6 py-20">
       <Link
         href="/"
-        className="inline-flex items-center gap-2 text-sm text-[#888888] hover:text-[#aaaaaa] mb-8 transition-colors duration-100 active:translate-y-[1px]"
+        className="inline-flex items-center gap-3 monumental-type opacity-40 hover:opacity-100 hover:text-accent-gold mb-16 transition-all duration-500"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to search
+        <ArrowLeft className="w-4 h-4" /> Return to Vault
       </Link>
 
-      <header className="mb-12">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="px-3 py-1 text-sm font-bold bg-[#888888] text-[#e8e8e8]">
+      <header className="mb-20">
+        <div className="flex flex-wrap items-center gap-6 mb-10">
+          <div className="px-6 py-2 border border-accent-gold/40 bg-accent-gold/10 text-accent-gold-bright font-black tracking-[0.3em] text-sm">
             {data.key}
-          </span>
-          <span className="text-sm font-medium text-[#a3a3a3] uppercase tracking-widest">
+          </div>
+          <div className="monumental-type opacity-40">
             {data.category}
-          </span>
+          </div>
           <button
             onClick={toggleBookmark}
-            className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border transition-colors duration-100 active:translate-y-[1px] ${
+            className={`ml-auto flex items-center gap-3 px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] border transition-all duration-500 active:scale-95 ${
               bookmarked
-                ? "bg-[#888888] text-[#e8e8e8] border-[#888888]"
-                : "bg-transparent text-[#a3a3a3] border-[#2a2a2a] hover:text-[#888888] hover:border-[#888888]"
+                ? "bg-accent-gold text-black border-accent-gold"
+                : "bg-transparent text-zinc-500 border-white/10 hover:text-accent-gold hover:border-accent-gold/40"
             }`}
           >
             {bookmarked ? (
-              <BookmarkCheck className="w-3.5 h-3.5" />
+              <BookmarkCheck className="w-4 h-4" />
             ) : (
-              <BookmarkPlus className="w-3.5 h-3.5" />
+              <BookmarkPlus className="w-4 h-4" />
             )}
-            {bookmarked ? "Bookmarked" : "Bookmark This Law"}
+            {bookmarked ? "Archived" : "Add to Archives"}
           </button>
         </div>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-[#e8e8e8] mb-4 leading-tight">
+
+        <h1 className="text-5xl md:text-6xl font-serif font-bold text-white mb-8 leading-[1.1] tracking-tight">
           {data.title}
         </h1>
         {data.alt_title && (
-          <p className="text-xl text-[#a3a3a3] italic mb-6">
-            ({data.alt_title})
+          <p className="text-2xl text-zinc-500 font-serif italic mb-10 opacity-60">
+            {data.alt_title}
           </p>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm border-t border-b border-[#2a2a2a] py-6 my-8">
-          <div>
-            <span className="block text-[#6b6b6b] mb-1">Status</span>
-            <span className="font-semibold text-[#e8e8e8]">{data.status}</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5 border border-white/5 overflow-hidden rounded-sm mt-16">
+          <div className="bg-zinc-950/40 p-8">
+            <span className="monumental-type opacity-30 block mb-3 text-[8px]">Status</span>
+            <span className="font-bold text-zinc-300 tracking-wide">{data.status}</span>
           </div>
-          <div>
-            <span className="block text-[#6b6b6b] mb-1">Authority</span>
-            <span className="font-semibold text-[#e8e8e8]">
+          <div className="bg-zinc-950/40 p-8">
+            <span className="monumental-type opacity-30 block mb-3 text-[8px]">Authority</span>
+            <span className="font-bold text-zinc-300 tracking-wide">
               {data.authority}
             </span>
           </div>
-          <div>
-            <span className="block text-[#6b6b6b] mb-1">Last Changed</span>
-            <span className="font-semibold text-[#e8e8e8]">
-              {data.last_changed || "N/A"}
+          <div className="bg-zinc-950/40 p-8">
+            <span className="monumental-type opacity-30 block mb-3 text-[8px]">Modified</span>
+            <span className="font-bold text-zinc-300 tracking-wide">
+              {data.last_changed || "Inert"}
             </span>
           </div>
-          <div>
-            <span className="block text-[#6b6b6b] mb-1">Paragraphs</span>
-            <span className="font-semibold text-[#e8e8e8]">
-              {data.total_norms}
+          <div className="bg-zinc-950/40 p-8">
+            <span className="monumental-type opacity-30 block mb-3 text-[8px]">Density</span>
+            <span className="font-bold text-zinc-300 tracking-wide">
+              {data.total_norms} Sections
             </span>
           </div>
         </div>
       </header>
 
       <section>
-        <h2 className="text-2xl font-bold text-[#e8e8e8] mb-6">
-          Paragraphs (Normen)
-        </h2>
-        <div className="space-y-4">
+        <div className="flex items-center gap-6 mb-12">
+            <h2 className="monumental-type opacity-40 shrink-0">
+            Statutory Framework
+            </h2>
+            <div className="h-px w-full bg-white/5" />
+        </div>
+
+        <div className="space-y-6">
           {data.norms && data.norms.length > 0 ? (
             data.norms.map((norm, idx) => (
               <NormViewer
@@ -171,14 +176,18 @@ export default function LawDetailPage() {
               />
             ))
           ) : (
-            <div className="text-center py-10 bg-[#141414] border border-[#2a2a2a]">
-              <p className="text-[#6b6b6b] italic">
-                No paragraphs available for this law in the vector store.
+            <div className="text-center py-20 glass-panel border-white/5">
+              <p className="text-zinc-600 font-serif italic text-lg opacity-40">
+                Statutory fragments not currently indexed in neural memory.
               </p>
             </div>
           )}
         </div>
       </section>
+
+      <footer className="mt-40 pt-12 border-t border-white/5 flex justify-center opacity-20">
+        <Scale className="w-10 h-10 text-accent-gold" />
+      </footer>
     </div>
   );
 }

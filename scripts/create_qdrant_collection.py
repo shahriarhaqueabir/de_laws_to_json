@@ -13,11 +13,12 @@ client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 print(f"Connecting to Qdrant at {QDRANT_URL}...")
 
 # Create collection with managed inference configuration
-# Note: You should also select "intfloat/multilingual-e5-small" in the Qdrant Cloud Dashboard
-# if the SDK doesn't support setting the inference model directly on creation for your tier.
+# We explicitly link the intfloat/multilingual-e5-small model
 client.recreate_collection(
     collection_name="german_norms",
-    vectors_config=models.VectorParams(
+    vectors_config=client.get_fastembed_vector_params(
+        model="intfloat/multilingual-e5-small"
+    ) if hasattr(client, 'get_fastembed_vector_params') else models.VectorParams(
         size=384,
         distance=models.Distance.COSINE,
     ),

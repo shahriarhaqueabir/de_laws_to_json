@@ -92,19 +92,19 @@ const categories = [
 
 export default function CategoryGrid() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-12">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
       {categories.map((cat) => (
         <Link
           key={cat.key}
           href={`/search?category=${cat.key}`}
-          className="p-4 bg-[#141414] border border-[#2a2a2a]
-                     shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)]
-                     hover:shadow-[0_4px_12px_rgba(0,0,0,0.7),0_2px_4px_rgba(0,0,0,0.5)]
-                     hover:border-[#888888] transition-shadow group text-center"
+          className="p-6 bg-white/[0.01] border border-white/5
+                     hover:bg-white/[0.03] hover:border-accent-gold/20
+                     transition-all duration-500 group text-center relative overflow-hidden"
         >
-          <cat.icon className="w-8 h-8 mx-auto mb-3 text-[#888888] group-hover:scale-110 transition-transform" />
-          <h3 className="font-semibold text-[#e8e8e8] text-sm">{cat.name}</h3>
-          <p className="text-xs text-[#a3a3a3]">{cat.en}</p>
+          <div className="absolute top-0 left-0 w-1 h-0 bg-accent-gold group-hover:h-full transition-all duration-700" />
+          <cat.icon className="w-6 h-6 mx-auto mb-4 text-zinc-600 group-hover:text-accent-gold transition-colors duration-500" />
+          <h3 className="font-serif font-bold text-white text-[13px] tracking-tight mb-1">{cat.name}</h3>
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">{cat.en}</p>
         </Link>
       ))}
     </div>

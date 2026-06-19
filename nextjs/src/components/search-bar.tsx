@@ -1,7 +1,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, Brain } from "lucide-react";
 
 export default function SearchBar({
   initialValue = "",
@@ -12,9 +12,18 @@ export default function SearchBar({
   const router = useRouter();
 
   const handleSearch = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (query.trim()) {
+    (e: React.FormEvent, forceChat = false) => {
+      if (e) e.preventDefault();
+      if (!query.trim()) return;
+
+      const isQuestion =
+        query.length > 20 ||
+        /\?$/.test(query) ||
+        /how|what|why|who|where|when|my|I|increase|landlord|rent/i.test(query);
+
+      if (forceChat || isQuestion) {
+        router.push(`/chat?q=${encodeURIComponent(query.trim())}`);
+      } else {
         router.push(`/search?q=${encodeURIComponent(query.trim())}`);
       }
     },
@@ -22,26 +31,46 @@ export default function SearchBar({
   );
 
   return (
-    <form onSubmit={handleSearch} className="w-full max-w-3xl mx-auto group">
-      <div className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search German laws... (e.g., Mietrecht, BGB § 823)"
-          className="w-full px-6 py-4 pr-14 text-xl glass-panel-heavy border-white/5
-                               focus:outline-none focus:border-accent-cobalt focus:ring-4 focus:ring-accent-cobalt-glow
-                               text-white placeholder:text-[#6b6b6b] transition-all duration-300"
-        />
-        <button
-          type="submit"
-          aria-label="Search"
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5
-                               text-[#888888] hover:text-white transition-all duration-300 active:scale-95"
-        >
-          <Search className="w-7 h-7" />
-        </button>
-      </div>
-    </form>
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-6">
+      <form onSubmit={(e) => handleSearch(e)} className="group w-full">
+        <div className="relative">
+          <div className="absolute inset-0 bg-accent-gold/5 blur-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="SEARCH STATUTE REPOSITORY... (E.G., MIETRECHT, BGB § 823)"
+            className="w-full px-8 py-6 pr-40 text-xl glass-panel-heavy border-white/5
+                                focus:outline-none focus:border-accent-gold/30 focus:bg-white/[0.04]
+                                text-white placeholder:text-zinc-600 transition-all duration-500 font-bold tracking-widest uppercase"
+          />
+          <div className="absolute right-2 top-2 bottom-2 flex gap-1">
+            <button
+              type="submit"
+              aria-label="Search"
+              className="aspect-square bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white transition-all duration-500 active:scale-95 flex items-center justify-center border border-white/5"
+            >
+              <Search className="w-6 h-6" />
+            </button>
+            <button
+                type="button"
+                onClick={(e) => handleSearch(e as any, true)}
+                className="px-6 bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright transition-all duration-500 active:scale-95 flex items-center gap-3 border border-accent-gold/20 font-black uppercase tracking-widest text-[10px]"
+            >
+                <Brain className="w-4 h-4" />
+                Analyze via AI
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {query.length > 5 && (
+        <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.4em] text-center animate-fade-in">
+            {/how|what|why|my|landlord|rent/i.test(query)
+              ? "Inquiry detected. Neural analysis recommended."
+              : "Technical retrieval active."}
+        </p>
+      )}
+    </div>
   );
 }

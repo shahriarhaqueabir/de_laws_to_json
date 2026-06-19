@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { Suspense, useState, useRef, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import { useChat } from "../../components/chat-context";
+import { useAuth } from "../../components/auth-context";
 import {
   MessageSquare,
   Send,
@@ -10,29 +13,15 @@ import {
   Cloud,
   Brain,
   FileText,
-  CheckCircle,
-  XCircle,
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 import {
   ChatMode,
-  ChatSettings,
   CitedLaw,
-  DEFAULT_CHAT_SETTINGS,
   MODE_LABELS,
+  LANGUAGE_NAMES,
 } from "../../lib/types";
-
-const STORAGE_KEY = "glv_chat_settings";
-
-function loadSettings(): ChatSettings {
-  if (typeof window === "undefined") return DEFAULT_CHAT_SETTINGS;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_CHAT_SETTINGS, ...JSON.parse(raw) };
-  } catch {}
-  return DEFAULT_CHAT_SETTINGS;
-}
 
 interface Message {
   role: "user" | "assistant";
@@ -52,35 +41,54 @@ const MODE_META: Record<
 
 const LIMITATION_BANNERS: Record<ChatMode, string | null> = {
   local:
-    "Local AI — only works when broker.py + Ollama are running on your machine. Unavailable on the live site.",
+    "Local AI — only works when broker.py + Ollama are running on your machine.",
   cloud:
-    "Cloud AI — uses your own API key. You are billed by your provider. Key stored in browser only.",
+    "Cloud AI — uses your own API key. You are billed by your provider.",
   browser:
-    "Browser AI — downloads a ~1GB model on first use (Qwen1.5). Slower than cloud AI. Fully private.",
+    "Browser AI — downloads a ~1GB model on first use. Fully private.",
   basic:
-    "Basic Search — searches laws and shows relevant excerpts. No AI analysis. You interpret the results.",
+    "Basic Search — searches laws and shows relevant excerpts. No AI analysis.",
 };
 
-export default function ChatPage() {
-  const [settings, setSettings] = useState<ChatSettings>(loadSettings);
+function ChatContent() {
+  const { settings, mode } = useChat();
+  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q");
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [brokerAvailable, setBrokerAvailable] = useState<boolean | null>(null);
   const [workerStatus, setWorkerStatus] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+
   const workerRef = useRef<Worker | null>(null);
   const pendingRef = useRef<{
     resolve: (v: string) => void;
     reject: (e: any) => void;
   } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const initializedRef = useRef(false);
 
-  const mode = settings.mode;
+  // ── Session Storage for Guests ──
+  useEffect(() => {
+    if (!user) {
+      const saved = sessionStorage.getItem("glv_guest_chat");
+      if (saved) setMessages(JSON.parse(saved));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user && messages.length > 0) {
+      sessionStorage.setItem("glv_guest_chat", JSON.stringify(messages));
+    }
+  }, [messages, user]);
+
   const modeMeta = MODE_META[mode];
   const ModeIcon = modeMeta.icon;
 
   // Check broker health in local mode
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (mode !== "local") {
       setBrokerAvailable(null);
@@ -116,13 +124,13 @@ export default function ChatPage() {
     );
 
     worker.onmessage = (event) => {
-      const { status, id, output, error } = event.data;
+      const { status, output, error } = event.data;
       if (status === "progress") {
         if (event.data.status === "download") {
           setWorkerStatus(
-            `Downloading model... ${Math.round((event.data.loaded / event.data.total) * 100)}%`,
+            `Downloading core... ${Math.round((event.data.loaded / event.data.total) * 100)}%`,
           );
-        } else if (event.data.status === "progress") {
+        } else {
           setWorkerStatus(`Generating...`);
         }
       } else if (status === "complete") {
@@ -136,12 +144,6 @@ export default function ChatPage() {
       }
     };
 
-    worker.onerror = (err) => {
-      setWorkerStatus("Worker error");
-      pendingRef.current?.reject(err);
-      pendingRef.current = null;
-    };
-
     workerRef.current = worker;
     setWorkerStatus("AI model ready");
 
@@ -152,21 +154,38 @@ export default function ChatPage() {
   }, [mode]);
 
   const handleSend = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!input.trim() || loading) return;
+    async (e: React.FormEvent | null, overrideInput?: string) => {
+      if (e) e.preventDefault();
+      const userMsg = overrideInput || input;
+      if (!userMsg.trim() || loading) return;
 
-      const userMsg = input;
-      setInput("");
+      if (!overrideInput) setInput("");
       setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
       setLoading(true);
 
       try {
+        let currentConvId = conversationId;
+
+        // Auto-create conversation for logged-in users if not exists
+        if (user && !currentConvId) {
+          const createRes = await fetch("/api/chat/conversations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: userMsg.slice(0, 50) }),
+          });
+          if (createRes.ok) {
+            const conv = await createRes.json();
+            currentConvId = conv.id;
+            setConversationId(conv.id);
+          }
+        }
+
         // Build request body based on mode
         const body: Record<string, any> = {
           message: userMsg,
           mode,
           language: settings.language,
+          conversationId: currentConvId || undefined,
         };
 
         if (mode === "cloud") {
@@ -177,22 +196,63 @@ export default function ChatPage() {
         }
 
         if (mode === "local") {
-          body.language = settings.language;
-          body.ollamaModel = settings.ollamaModel;
-          body.ollamaParams = settings.ollamaParams;
+          // Mode 1: Local Ollama via broker (CLIENT SIDE)
+          const langName = LANGUAGE_NAMES[settings.language] || "English";
+
+          // Get Qdrant results from server first (no AI generation)
+          const searchRes = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...body, mode: "basic" }),
+          });
+          const searchData = await searchRes.json();
+          const contextStr = (searchData.citedLaws || [])
+            .map((l: CitedLaw) => `[${l.law_key} ${l.norm_id}] ${l.law_title}`)
+            .join("\n\n");
+
+          const brokerRes = await fetch(`${settings.brokerUrl}/api/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: userMsg,
+              context: contextStr,
+              conversationId: currentConvId || undefined,
+              model: settings.ollamaModel || undefined,
+              language: langName,
+              temperature: settings.ollamaParams?.temperature ?? 0.3,
+              top_p: settings.ollamaParams?.top_p ?? 0.9,
+              top_k: settings.ollamaParams?.top_k ?? 40,
+              max_tokens: settings.ollamaParams?.max_tokens ?? 1024,
+              system_prompt: settings.ollamaParams?.system_prompt || undefined,
+            }),
+          });
+
+          if (!brokerRes.ok) {
+            throw new Error(`Local broker error: ${brokerRes.status}`);
+          }
+
+          const localData = await brokerRes.json();
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: localData.response + "\n\n---\n*Generated by Local AI (Ollama).* ",
+              citedLaws: searchData.citedLaws || [],
+            },
+          ]);
+          setBrokerAvailable(true);
+          setLoading(false);
+          return;
         }
 
-        // For browser mode, we need Qdrant results from the server but generate client-side
         if (mode === "browser") {
-          // Get Qdrant results from server (no AI generation)
           const res = await fetch("/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...body, mode: "basic" }),
           });
           const data = await res.json();
-
-          // Now generate with Transformers.js worker
           const prompt = `Context from German laws:\n${(data.citedLaws || []).map((l: CitedLaw) => `[${l.law_key} ${l.norm_id}] ${l.law_title}`).join("\n")}\n\nUser situation:\n${userMsg}\n\nProvide guidance based on the relevant laws above. Include citations.`;
 
           let workerResponse: string;
@@ -207,17 +267,14 @@ export default function ChatPage() {
               });
             });
           } else {
-            workerResponse =
-              "Browser AI worker not available. Please reload or switch to another mode.";
+            workerResponse = "Browser AI worker not available.";
           }
 
           setMessages((prev) => [
             ...prev,
             {
               role: "assistant",
-              content:
-                workerResponse +
-                "\n\n---\n*Generated by Browser AI (Transformers.js). This is **not legally binding advice**.*",
+              content: workerResponse + "\n\n---\n*Generated by Browser AI.*",
               citedLaws: data.citedLaws || [],
             },
           ]);
@@ -225,7 +282,7 @@ export default function ChatPage() {
           return;
         }
 
-        // All other modes: server generates the response
+        // All other modes: server generates the response (Cloud / Basic)
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -233,14 +290,13 @@ export default function ChatPage() {
         });
 
         const data = await res.json();
-
         if (!res.ok) {
           const errMsg = data.error?.message || data.error || "Unknown error";
           setMessages((prev) => [
             ...prev,
             {
               role: "assistant",
-              content: `⚠️ **API Error (${res.status}):** ${errMsg}\n\nPlease check your settings and connectivity.`,
+              content: `⚠️ **API Error (${res.status}):** ${errMsg}`,
             },
           ]);
           setLoading(false);
@@ -255,24 +311,26 @@ export default function ChatPage() {
             citedLaws: data.citedLaws || [],
           },
         ]);
-        if (data.brokerAvailable !== undefined) {
-          setBrokerAvailable(data.brokerAvailable);
-        }
+        if (data.brokerAvailable !== undefined) setBrokerAvailable(data.brokerAvailable);
       } catch (err) {
         setMessages((prev) => [
           ...prev,
-          {
-            role: "assistant",
-            content:
-              "Sorry, I encountered an error. Please check your settings and try again.",
-          },
+          { role: "assistant", content: "Sorry, I encountered an error." },
         ]);
       } finally {
         setLoading(false);
       }
     },
-    [input, loading, mode, settings],
+    [input, loading, mode, settings, user, conversationId],
   );
+
+  // Initial trigger from search param
+  useEffect(() => {
+    if (initialQuery && !initializedRef.current) {
+      initializedRef.current = true;
+      handleSend(null, initialQuery);
+    }
+  }, [initialQuery, handleSend]);
 
   return (
     <main className="flex flex-col h-[calc(100vh-64px)] bg-transparent">
@@ -347,7 +405,6 @@ export default function ChatPage() {
                     : "px-8 py-8 glass-panel text-zinc-300"
                 }`}
               >
-                {/* ── Visual Flourishes for Assistant ── */}
                 {m.role === "assistant" && (
                   <>
                     <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-accent-gold/30" />
@@ -412,7 +469,7 @@ export default function ChatPage() {
 
       {/* ── Input Area ── */}
       <div className="glass-panel-heavy border-t border-white/5 p-8 relative z-20">
-        <form onSubmit={handleSend} className="max-w-4xl mx-auto relative group">
+        <form onSubmit={(e) => handleSend(e)} className="max-w-4xl mx-auto relative group">
           <input
             type="text"
             value={input}
@@ -438,5 +495,18 @@ export default function ChatPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={
+        <div className="flex flex-col items-center justify-center min-h-[60vh] animate-pulse">
+            <Loader2 className="w-12 h-12 text-accent-gold animate-spin mb-4" />
+            <p className="monumental-type opacity-40">Initializing Channel...</p>
+        </div>
+    }>
+      <ChatContent />
+    </Suspense>
   );
 }

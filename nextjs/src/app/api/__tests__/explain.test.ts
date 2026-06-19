@@ -1,0 +1,213 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
+
+const mockGenerateNormExplanation = vi.fn();
+const mockFetch = vi.fn();
+
+vi.mock("@/lib/chat", () => ({
+  generateNormExplanation: mockGenerateNormExplanation,
+}));
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockResolvedValue({
+    getAll: vi.fn().mockReturnValue([]),
+    set: vi.fn(),
+  }),
+}));
+
+const mockSupabaseResult = vi.hoisted(() => ({
+  data: null as any,
+  error: null as any,
+  count: 0,
+}));
+
+vi.mock("@supabase/ssr", () => {
+  const buildThenable = (result: any) => {
+    const thenable = Promise.resolve(result);
+    return Object.assign(thenable, {
+      from: vi.fn(() => thenable),
+      select: vi.fn(() => thenable),
+      eq: vi.fn(() => thenable),
+      order: vi.fn(() => thenable),
+      range: vi.fn(() => thenable),
+      limit: vi.fn(() => thenable),
+      single: vi.fn(() => thenable),
+      insert: vi.fn(() => thenable),
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
+    });
+  };
+  return { createServerClient: vi.fn(() => buildThenable(mockSupabaseResult)) };
+});
+
+global.fetch = mockFetch;
+
+function makePostRequest(url: string, body: any): NextRequest {
+  return new NextRequest(new URL(url, "http://localhost:3000"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+beforeEach(() => {
+  mockGenerateNormExplanation.mockReset();
+  mockFetch.mockReset();
+  mockSupabaseResult.data = null;
+  mockSupabaseResult.error = null;
+  mockSupabaseResult.count = 0;
+});
+
+describe("POST /api/explain", () => {
+  it("Supabase cache hit returns cached explanation without AI call", async () => {
+    mockSupabaseResult.data = {
+      norm_id: "BGB-§ 433",
+      translation: "Cached translation",
+      summary: "Cached summary",
+      implications: "Cached implications",
+      next_steps: "Cached next steps",
+    };
+
+    const { POST } = await import("../explain/route");
+    const req = makePostRequest("/api/explain", {
+      normId: "§ 433",
+      lawKey: "BGB",
+      content: "Der Verkäufer einer Sache...",
+      lang: "en",
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.translation).toBe("Cached translation");
+    expect(body.summary).toBe("Cached summary");
+    // AI should not be called for cache hit
+    expect(mockGenerateNormExplanation).not.toHaveBeenCalled();
+  });
+
+  it("cloud mode generates explanation via generateNormExplanation", async () => {
+    mockGenerateNormExplanation.mockResolvedValue({
+      norm_id: "§ 433",
+      law_key: "BGB",
+      law_title: "",
+      lang: "en",
+      translation: "The seller of an item...",
+      summary: "Defines a sales contract.",
+      implications: "You have rights.",
+      next_steps: "Contact a lawyer.",
+      disclaimer: "",
+    });
+
+    const { POST } = await import("../explain/route");
+    const req = makePostRequest("/api/explain", {
+      normId: "§ 433",
+      lawKey: "BGB",
+      content: "Der Verkäufer einer Sache...",
+      lang: "en",
+      lawTitle: "Bürgerliches Gesetzbuch",
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.translation).toBe("The seller of an item...");
+    expect(body.summary).toBe("Defines a sales contract.");
+    expect(body.law_title).toBe("Bürgerliches Gesetzbuch");
+    expect(mockGenerateNormExplanation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        normId: "§ 433",
+        lawKey: "BGB",
+      }),
+    );
+  });
+
+  it("local mode calls broker and parses JSON response", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        response: JSON.stringify({
+          translation: "Broker translation",
+          summary: "Broker summary",
+          implications: "Broker implications",
+          next_steps: "Broker next steps",
+        }),
+      }),
+    });
+
+    const { POST } = await import("../explain/route");
+    const req = makePostRequest("/api/explain", {
+      normId: "§ 433",
+      lawKey: "BGB",
+      content: "Der Verkäufer einer Sache...",
+      lang: "en",
+      mode: "local",
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.translation).toBe("Broker translation");
+    expect(body.summary).toBe("Broker summary");
+    expect(body.implications).toBe("Broker implications");
+    expect(body.next_steps).toBe("Broker next steps");
+  });
+
+  it("local mode handles broker error gracefully", async () => {
+    mockFetch.mockRejectedValue(new Error("Broker unreachable"));
+
+    const { POST } = await import("../explain/route");
+    const req = makePostRequest("/api/explain", {
+      normId: "§ 433",
+      lawKey: "BGB",
+      content: "Content",
+      lang: "en",
+      mode: "local",
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(body.error.code).toBe("EXPLAIN_FAILED");
+  });
+
+  it("missing required field returns 422", async () => {
+    const { POST } = await import("../explain/route");
+    const req = makePostRequest("/api/explain", {
+      // Missing normId
+      lawKey: "BGB",
+      content: "Content",
+      lang: "en",
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(422);
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("Supabase insert failure is non-fatal (returns explanation anyway)", async () => {
+    mockGenerateNormExplanation.mockResolvedValue({
+      norm_id: "§ 433",
+      law_key: "BGB",
+      law_title: "",
+      lang: "en",
+      translation: "Shown despite DB error",
+      summary: "Summary",
+      implications: "Implications",
+      next_steps: "Next steps",
+      disclaimer: "",
+    });
+
+    const { POST } = await import("../explain/route");
+    const req = makePostRequest("/api/explain", {
+      normId: "§ 433",
+      lawKey: "BGB",
+      content: "Der Verkäufer einer Sache...",
+      lang: "en",
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.translation).toBe("Shown despite DB error");
+  });
+});

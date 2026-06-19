@@ -1,0 +1,63 @@
+"use client";
+
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { ChatMode, ChatSettings, DEFAULT_CHAT_SETTINGS } from "../lib/types";
+
+const STORAGE_KEY = "glv_chat_settings";
+
+interface ChatContextType {
+  settings: ChatSettings;
+  updateSettings: (patch: Partial<ChatSettings>) => void;
+  mode: ChatMode;
+  setMode: (m: ChatMode) => void;
+}
+
+const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+export function ChatProvider({ children }: { children: React.ReactNode }) {
+  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_CHAT_SETTINGS);
+  const [mounted, setHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        setSettings((prev) => ({ ...prev, ...JSON.parse(raw) }));
+      }
+    } catch {}
+    setHydrated(true);
+  }, []);
+
+  const updateSettings = (patch: Partial<ChatSettings>) => {
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+
+    // Dispatch a custom event to notify other tabs/components if needed,
+    // but within the same context it's already updated.
+    window.dispatchEvent(new Event("glv_settings_updated"));
+  };
+
+  const setMode = (mode: ChatMode) => updateSettings({ mode });
+
+  return (
+    <ChatContext.Provider
+      value={{
+        settings,
+        updateSettings,
+        mode: settings.mode,
+        setMode,
+      }}
+    >
+      {mounted ? children : <div className="opacity-0">{children}</div>}
+    </ChatContext.Provider>
+  );
+}
+
+export function useChat() {
+  const context = useContext(ChatContext);
+  if (context === undefined) {
+    throw new Error("useChat must be used within a ChatProvider");
+  }
+  return context;
+}

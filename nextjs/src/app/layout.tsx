@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import NavBar from "../components/nav-bar";
 import { AuthProvider } from "../components/auth-context";
+import { ChatProvider } from "../components/chat-context";
 import { ToastProvider } from "../components/toast";
 
 const inter = Inter({
@@ -31,10 +32,12 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="min-h-full flex flex-col bg-[#0d0d0d] text-[#a3a3a3]">
         <AuthProvider>
-          <ToastProvider>
-            <NavBar />
-            <div className="flex-1">{children}</div>
-          </ToastProvider>
+          <ChatProvider>
+            <ToastProvider>
+              <NavBar />
+              <div className="flex-1">{children}</div>
+            </ToastProvider>
+          </ChatProvider>
         </AuthProvider>
       </body>
     </html>

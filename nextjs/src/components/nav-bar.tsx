@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Gavel,
   Search,
   MessageSquare,
   Bookmark,
@@ -15,12 +14,13 @@ import {
   FileText,
   Check,
   ChevronDown,
-  LogIn,
   User,
   LogOut,
+  Scale,
 } from "lucide-react";
 import { useAuth } from "./auth-context";
-import type { ChatMode, ChatSettings } from "../lib/types";
+import { useChat } from "./chat-context";
+import type { ChatMode } from "../lib/types";
 
 const STORAGE_KEY = "glv_chat_settings";
 
@@ -30,64 +30,43 @@ const MODE_META: Record<
 > = {
   local: {
     icon: Plug,
-    color: "text-[#888888]",
-    bg: "bg-[#222222]",
+    color: "text-zinc-500",
+    bg: "bg-white/5",
     label: "Local AI",
   },
   cloud: {
     icon: Cloud,
-    color: "text-[#888888]",
-    bg: "bg-[#222222]",
+    color: "text-zinc-500",
+    bg: "bg-white/5",
     label: "Cloud AI",
   },
   browser: {
     icon: Brain,
-    color: "text-[#888888]",
-    bg: "bg-[#222222]",
+    color: "text-zinc-500",
+    bg: "bg-white/5",
     label: "Browser AI",
   },
   basic: {
     icon: FileText,
-    color: "text-[#888888]",
-    bg: "bg-[#222222]",
+    color: "text-zinc-500",
+    bg: "bg-white/5",
     label: "Basic Search",
   },
 };
 
 const navItems = [
-  { href: "/", label: "Search", icon: Search },
-  { href: "/chat", label: "AI Chat", icon: MessageSquare },
-  { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/", label: "Vault", icon: Search },
+  { href: "/chat", label: "Consult", icon: MessageSquare },
+  { href: "/bookmarks", label: "Archives", icon: Bookmark },
 ];
 
 export default function NavBar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const [mode, setMode] = useState<ChatMode>("basic");
+  const { mode, setMode } = useChat();
   const [open, setOpen] = useState(false);
 
-  // Use a separate effect for hydration to avoid cascading renders
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as ChatSettings;
-        if (parsed.mode && parsed.mode !== mode) {
-          setMode(parsed.mode);
-        }
-      }
-    } catch {}
-  }, [mode]);
-
   const switchMode = (m: ChatMode) => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const settings: ChatSettings = raw
-        ? { ...JSON.parse(raw), mode: m }
-        : ({ mode: m } as ChatSettings);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    } catch {}
     setMode(m);
     setOpen(false);
   };
@@ -96,82 +75,78 @@ export default function NavBar() {
   const ModeIcon = meta.icon;
 
   return (
-    <nav className="sticky top-4 z-50 w-full px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto glass-panel shadow-premium px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-14">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="p-1.5 bg-accent-cobalt text-white shadow-[0_0_15px_rgba(46,91,255,0.4)] group-hover:scale-110 transition-transform duration-200">
-                <Gavel className="w-4 h-4" />
-              </div>
+    <nav className="sticky top-6 z-50 w-full px-6">
+      <div className="max-w-5xl mx-auto glass-panel-heavy shadow-premium px-6 py-2 border-white/5">
+        <div className="flex justify-between items-center h-12">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-3 group">
+              <Scale className="w-5 h-5 text-accent-gold transition-transform duration-500 group-hover:rotate-12" />
               <span className="font-serif font-bold text-lg tracking-tight text-white hidden sm:block">
-                German Law Vault
+                Vault
               </span>
             </Link>
+
+            <div className="hidden sm:flex sm:items-center sm:gap-2">
+              {navItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/" && pathname.startsWith(item.href));
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 active:translate-y-[1px] relative group ${
+                      isActive ? "text-accent-gold" : "text-zinc-500 hover:text-white"
+                    }`}
+                  >
+                    {item.label}
+                    {isActive && (
+                      <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent-gold shadow-[0_0_8px_var(--accent-gold-bright)]" />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="hidden sm:flex sm:items-center sm:gap-1">
-            {navItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium transition-all duration-200 active:translate-y-[1px] relative group ${
-                    isActive ? "text-accent-cobalt" : "text-[#a3a3a3] hover:text-white"
-                  }`}
-                >
-                  <item.icon className="w-3.5 h-3.5" />
-                  {item.label}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-cobalt shadow-[0_0_8px_rgba(46,91,255,0.6)]" />
-                  )}
-                </Link>
-              );
-            })}
-
-            {/* Auth indicator */}
+          <div className="flex items-center gap-2">
             <Link
               href={user ? "/settings" : "/auth"}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors duration-100 active:translate-y-[1px] text-[#e8e8e8] hover:text-[#888888]"
+              className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 text-zinc-500 hover:text-white"
               title={user?.email ?? ""}
             >
               {user ? (
-                <>
-                  <User className="w-4 h-4" />
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 border border-white/10 bg-white/5 flex items-center justify-center">
+                    <User className="w-3 h-3 text-accent-gold" />
+                  </div>
                   <span className="max-w-[120px] truncate hidden lg:inline">
-                    {user.email}
+                    {user.email?.split("@")[0]}
                   </span>
-                </>
+                </div>
               ) : (
-                <>
-                  <LogIn className="w-4 h-4" />
-                  <span className="hidden lg:inline">Sign in</span>
-                </>
+                <span className="hidden lg:inline">Initialize Session</span>
               )}
             </Link>
 
             {user && (
               <button
                 onClick={() => signOut()}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors duration-100 active:translate-y-[1px] text-[#6b6b6b] hover:text-[#888888]"
+                className="p-2 text-zinc-600 hover:text-white transition-colors duration-300"
                 title="Sign out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             )}
 
-            {/* Mode indicator + quick switcher */}
             <div className="relative ml-2">
               <button
                 onClick={() => setOpen(!open)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-colors duration-100 active:translate-y-[1px] ${meta.bg} text-[#e8e8e8] hover:bg-[#2a2a2a]`}
+                className={`flex items-center gap-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 border border-white/5 ${meta.bg} text-zinc-400 hover:bg-white/10 hover:border-white/10`}
               >
-                <ModeIcon className="w-3.5 h-3.5 text-[#888888]" />
-                <span>{meta.label}</span>
-                <ChevronDown className="w-3 h-3 text-[#6b6b6b]" />
+                <ModeIcon className="w-3 h-3" />
+                <span className="hidden md:inline">{meta.label}</span>
+                <ChevronDown className="w-2.5 h-2.5 opacity-40" />
               </button>
 
               {open && (
@@ -180,7 +155,12 @@ export default function NavBar() {
                     className="fixed inset-0 z-10"
                     onClick={() => setOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-[#222222] z-20 py-2 shadow-lg">
+                  <div className="absolute right-0 mt-3 w-64 glass-panel-heavy border-white/10 z-20 py-3 shadow-2xl animate-fade-in">
+                    <div className="px-4 pb-2 mb-2 border-b border-white/5">
+                      <p className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-600">
+                        Operational Mode
+                      </p>
+                    </div>
                     {(["basic", "browser", "cloud", "local"] as ChatMode[]).map(
                       (m) => {
                         const mm = MODE_META[m];
@@ -190,126 +170,37 @@ export default function NavBar() {
                           <button
                             key={m}
                             onClick={() => switchMode(m)}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors duration-100 active:translate-y-[1px] ${
+                            className={`w-full flex items-center gap-4 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
                               isActive
-                                ? "bg-[#222222] text-[#e8e8e8]"
-                                : "text-[#6b6b6b] hover:bg-[#2a2a2a] hover:text-[#e8e8e8]"
+                                ? "bg-accent-gold/10 text-accent-gold-bright"
+                                : "text-zinc-500 hover:bg-white/5 hover:text-white"
                             }`}
                           >
-                            <MI className={`w-4 h-4 ${mm.color}`} />
-                            <span className="flex-1 font-medium">
+                            <MI className={`w-4 h-4 ${isActive ? "text-accent-gold" : "text-zinc-600"}`} />
+                            <span className="flex-1">
                               {mm.label}
                             </span>
                             {isActive && (
-                              <Check className="w-4 h-4 text-[#888888]" />
+                              <Check className="w-3 h-3" />
                             )}
                           </button>
                         );
                       },
                     )}
-                    <div className="border-t border-[#222222] mt-2 pt-2 px-4">
+                    <div className="border-t border-white/5 mt-3 pt-3 px-4">
                       <Link
                         href="/settings"
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-2 text-xs text-[#6b6b6b] hover:text-[#888888] transition-colors duration-100 active:translate-y-[1px] py-1"
+                        className="flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-600 hover:text-accent-gold transition-colors duration-300 py-1"
                       >
                         <Settings className="w-3 h-3" />
-                        Detailed settings
+                        System Core Config
                       </Link>
                     </div>
                   </div>
                 </>
               )}
             </div>
-          </div>
-
-          {/* Mobile: icon only */}
-          <div className="flex items-center sm:hidden gap-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-label={item.label}
-                  className={`p-2 transition-colors duration-100 active:translate-y-[1px] ${
-                    isActive ? "text-[#888888]" : "text-[#6b6b6b]"
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                </Link>
-              );
-            })}
-
-            {/* Mobile mode indicator */}
-            <div className="relative">
-              <button
-                onClick={() => setOpen(!open)}
-                className="p-2 text-[#6b6b6b]"
-                aria-label="Switch mode"
-              >
-                <ModeIcon className="w-5 h-5" />
-              </button>
-              {open && (
-                <>
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setOpen(false)}
-                  />
-                  <div className="absolute right-0 mt-2 w-48 bg-[#0a0a0a] border border-[#222222] z-20 py-2 shadow-lg">
-                    {(["basic", "browser", "cloud", "local"] as ChatMode[]).map(
-                      (m) => {
-                        const mm = MODE_META[m];
-                        const MI = mm.icon;
-                        const isActive = m === mode;
-                        return (
-                          <button
-                            key={m}
-                            onClick={() => switchMode(m)}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors duration-100 active:translate-y-[1px] ${
-                              isActive
-                                ? "bg-[#222222] text-[#e8e8e8]"
-                                : "text-[#6b6b6b] hover:bg-[#2a2a2a] hover:text-[#e8e8e8]"
-                            }`}
-                          >
-                            <MI className="w-4 h-4 text-[#888888]" />
-                            <span className="flex-1 font-medium">
-                              {mm.label}
-                            </span>
-                            {isActive && (
-                              <Check className="w-4 h-4 text-[#888888]" />
-                            )}
-                          </button>
-                        );
-                      },
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
-            <Link
-              href={user ? "/settings" : "/auth"}
-              className={`p-2 transition-colors duration-100 active:translate-y-[1px] ${
-                user ? "text-[#e8e8e8]" : "text-[#6b6b6b]"
-              }`}
-            >
-              {user ? (
-                <User className="w-5 h-5" />
-              ) : (
-                <LogIn className="w-5 h-5" />
-              )}
-            </Link>
-
-            {user && (
-              <button
-                onClick={() => signOut()}
-                className="p-2 text-[#6b6b6b]"
-                aria-label="Sign out"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            )}
           </div>
         </div>
       </div>

@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     const citedLaws: CitedLaw[] = norms.map((n) => ({
       law_key: n.law_key,
       norm_id: n.norm_id,
-      law_title: n.law_title,
+      law_title: n.law_title || n.law_key,
     }));
 
     // 2. Generate response based on mode

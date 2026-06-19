@@ -13,29 +13,13 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { useChat } from "../../components/chat-context";
 import {
   ChatMode,
   CloudProvider,
-  ChatSettings,
-  DEFAULT_CHAT_SETTINGS,
   MODE_LABELS,
   BROWSER_MODELS,
 } from "../../lib/types";
-
-const STORAGE_KEY = "glv_chat_settings";
-
-function loadSettings(): ChatSettings {
-  if (typeof window === "undefined") return DEFAULT_CHAT_SETTINGS;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_CHAT_SETTINGS, ...JSON.parse(raw) };
-  } catch {}
-  return DEFAULT_CHAT_SETTINGS;
-}
-
-function saveSettings(s: ChatSettings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-}
 
 const MODE_ICONS: Record<ChatMode, typeof Plug> = {
   local: Plug,
@@ -76,7 +60,7 @@ const MODE_STATUS_NOTE: Record<ChatMode, string> = {
 };
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<ChatSettings>(loadSettings);
+  const { settings, updateSettings } = useChat();
   const [brokerOk, setBrokerOk] = useState<boolean | null>(null);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -95,10 +79,8 @@ export default function SettingsPage() {
     return () => clearInterval(interval);
   }, [settings.mode, settings.brokerUrl]);
 
-  const update = (patch: Partial<ChatSettings>) => {
-    const next = { ...settings, ...patch };
-    setSettings(next);
-    saveSettings(next);
+  const update = (patch: Partial<any>) => {
+    updateSettings(patch);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -110,11 +92,11 @@ export default function SettingsPage() {
       if (settings.mode === "local") {
         const res = await fetch(`${settings.brokerUrl}/health`);
         setTestResult(
-          res.ok ? "Broker is reachable ✓" : `Broker returned ${res.status}`,
+          res.ok ? "System Reachable ✓" : `Protocol Error: ${res.status}`,
         );
       } else if (settings.mode === "cloud") {
         if (!settings.apiKey) {
-          setTestResult("Enter an API key first");
+          setTestResult("Authentication Required");
           setTesting(false);
           return;
         }
@@ -132,11 +114,11 @@ export default function SettingsPage() {
         });
         const data = await res.json();
         setTestResult(
-          res.ok ? "API key works ✓" : `Error: ${data.error?.message || data.error || res.status}`,
+          res.ok ? "Access Verified ✓" : `Gateway Error: ${data.error?.message || data.error || res.status}`,
         );
       } else if (settings.mode === "browser") {
         // Test browser model download/init
-        setTestResult("Initializing model worker...");
+        setTestResult("Initializing Neural Bridge...");
         const worker = new Worker(
           new URL("../../workers/chat.worker.ts", import.meta.url),
           { type: "module" },
@@ -147,11 +129,11 @@ export default function SettingsPage() {
             if (e.data.status === "progress") {
               if (e.data.status === "download") {
                 setTestResult(
-                  `Downloading... ${Math.round((e.data.loaded / e.data.total) * 100)}%`,
+                  `Retrieving Core... ${Math.round((e.data.loaded / e.data.total) * 100)}%`,
                 );
               }
             } else if (e.data.status === "ready" || e.data.status === "complete") {
-              resolve("Model ready ✓");
+              resolve("Cognition Ready ✓");
             } else if (e.data.status === "error") {
               reject(new Error(e.data.error));
             }
@@ -163,32 +145,42 @@ export default function SettingsPage() {
         setTestResult(result);
         worker.terminate();
       } else {
-        setTestResult("No test available for this mode");
+        setTestResult("Operational Mode Fixed");
       }
     } catch (err: unknown) {
-      setTestResult(`Connection failed: ${(err as Error).message}`);
+      setTestResult(`Link Failure: ${(err as Error).message}`);
     } finally {
       setTesting(false);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12 bg-[#0d0d0d] min-h-screen">
-      <div className="flex items-center gap-3 mb-10">
-        <Settings className="w-8 h-8 text-[#888888]" />
-        <h1 className="text-3xl font-bold text-[#e8e8e8]">Settings</h1>
+    <div className="max-w-4xl mx-auto px-6 py-20 bg-transparent min-h-screen relative">
+      <div className="flex items-center justify-between mb-16 pb-8 border-b border-white/5">
+        <div className="flex items-center gap-4">
+          <div className="p-3 border border-accent-gold/20 bg-accent-gold/5">
+            <Settings className="w-6 h-6 text-accent-gold" />
+          </div>
+          <div>
+            <p className="monumental-type opacity-40 mb-1">System Core</p>
+            <h1 className="text-4xl font-serif font-bold text-white tracking-tight">Configuration</h1>
+          </div>
+        </div>
         {saved && (
-          <span className="text-sm text-[#888888] font-medium ml-2">
-            Saved ✓
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-gold-bright animate-fade-in bg-accent-gold/10 px-3 py-1 border border-accent-gold/20">
+            States Synchronized
           </span>
         )}
       </div>
 
       {/* ── Chat Mode Selector ── */}
-      <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
-        <h2 className="text-xl font-bold text-[#e8e8e8] mb-6">AI Chat Mode</h2>
+      <section className="mb-12">
+        <div className="flex items-center gap-4 mb-8">
+          <h2 className="monumental-type opacity-50 shrink-0">Inference Protocols</h2>
+          <div className="h-px w-full bg-zinc-800/50" />
+        </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {(
             Object.entries(MODE_LABELS) as [
               ChatMode,
@@ -201,47 +193,54 @@ export default function SettingsPage() {
               <button
                 key={mode}
                 onClick={() => update({ mode })}
-                className={`flex items-start gap-4 p-4 border text-left transition-colors duration-100 active:translate-y-[1px] bg-[#141414] ${
+                className={`flex items-start gap-6 p-6 border text-left transition-all duration-500 relative overflow-hidden group ${
                   isActive
-                    ? "border-[#888888]"
-                    : "border-[#2a2a2a] hover:border-[#888888]"
+                    ? "border-accent-gold/40 bg-white/[0.03] shadow-premium"
+                    : "border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]"
                 }`}
               >
+                {isActive && (
+                    <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold shadow-[0_0_15px_var(--accent-gold-glow)]" />
+                )}
                 <div
-                  className={`p-2 ${
+                  className={`p-3 border transition-colors duration-500 ${
                     isActive
-                      ? "bg-[#888888] text-[#e8e8e8]"
-                      : "bg-[#1a1a1a] text-[#6b6b6b]"
+                      ? "border-accent-gold/30 bg-accent-gold/10 text-accent-gold-bright"
+                      : "border-white/5 bg-white/5 text-zinc-600 group-hover:text-zinc-400"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-[#e8e8e8]">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-serif font-bold text-xl text-white">
                       {info.label}
                     </span>
                     {isActive && (
-                      <span className="text-xs font-medium text-[#e8e8e8] bg-[#888888] px-2 py-0.5">
-                        Active
+                      <span className="text-[8px] font-black uppercase tracking-[0.2em] text-accent-gold bg-accent-gold/10 px-2 py-0.5 border border-accent-gold/20">
+                        Operational
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-[#a3a3a3]">{info.description}</p>
+                  <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-xl">
+                    {info.description}
+                  </p>
                   {isActive && (
-                    <div className="mt-3 space-y-1">
-                      <p className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-wider">
-                        Limitations
+                    <div className="mt-4 space-y-2 pt-4 border-t border-white/5">
+                      <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                        Environmental Constraints
                       </p>
-                      {MODE_LIMITATIONS[mode].map((lim, i) => (
-                        <p
-                          key={i}
-                          className="text-xs text-[#6b6b6b] flex items-start gap-1.5"
-                        >
-                          <ShieldAlert className="w-3.5 h-3.5 text-[#6b6b6b] mt-0.5 shrink-0" />
-                          {lim}
-                        </p>
-                      ))}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                        {MODE_LIMITATIONS[mode].map((lim, i) => (
+                            <p
+                            key={i}
+                            className="text-[10px] text-zinc-500 font-bold flex items-start gap-2 italic"
+                            >
+                            <span className="text-accent-gold opacity-40">/</span>
+                            {lim}
+                            </p>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -254,193 +253,194 @@ export default function SettingsPage() {
       {/* ── Mode-specific Configuration ── */}
 
       {settings.mode === "local" && (
-        <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Plug className="w-5 h-5 text-[#888888]" />
-            <h2 className="text-xl font-bold text-[#e8e8e8]">
-              Local AI Configuration
+        <section className="glass-panel p-8 mb-8 border-white/5">
+          <div className="flex items-center gap-4 mb-8">
+            <Plug className="w-5 h-5 text-accent-gold" />
+            <h2 className="font-serif font-bold text-xl text-white">
+              Local Node Configuration
             </h2>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
-                Broker URL
+          <div className="space-y-6">
+            <div className="max-w-md">
+              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                Endpoint Protocol (BROKER_URL)
               </label>
               <input
                 type="text"
                 value={settings.brokerUrl}
                 onChange={(e) => update({ brokerUrl: e.target.value })}
-                className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] focus:outline-none focus:ring-1 focus:ring-[#888888]"
+                className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
               />
             </div>
 
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-[#a3a3a3]">Status:</span>
+            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
+              <span className="text-zinc-600">Connectivity Status:</span>
               {brokerOk === null ? (
-                <span className="text-[#6b6b6b]">Checking...</span>
+                <span className="text-zinc-500 flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-zinc-600 animate-pulse" />
+                    Pinging Node...
+                </span>
               ) : brokerOk ? (
-                <span className="flex items-center gap-1 text-[#888888]">
-                  <CheckCircle className="w-4 h-4" /> Connected
+                <span className="flex items-center gap-2 text-accent-gold-bright">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent-gold-bright shadow-[0_0_8px_var(--accent-gold-bright)]" />
+                  Link Established
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[#6b6b6b]">
-                  <XCircle className="w-4 h-4" /> Offline
+                <span className="flex items-center gap-2 text-red-500">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                  Node Offline
                 </span>
               )}
             </div>
 
-            <p className="text-xs text-[#6b6b6b]">{MODE_STATUS_NOTE.local}</p>
+            <p className="text-[10px] text-zinc-600 font-bold italic border-l border-accent-gold/20 pl-4">
+              Note: {MODE_STATUS_NOTE.local}
+            </p>
           </div>
         </section>
       )}
 
       {settings.mode === "cloud" && (
-        <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Cloud className="w-5 h-5 text-[#888888]" />
-            <h2 className="text-xl font-bold text-[#e8e8e8]">
-              Cloud AI Configuration
+        <section className="glass-panel p-8 mb-8 border-white/5">
+          <div className="flex items-center gap-4 mb-8">
+            <Cloud className="w-5 h-5 text-accent-gold" />
+            <h2 className="font-serif font-bold text-xl text-white">
+              Gateway Credentials
             </h2>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
-                Provider
-              </label>
-              <select
-                value={settings.provider}
-                onChange={(e) =>
-                  update({ provider: e.target.value as CloudProvider })
-                }
-                className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] focus:outline-none focus:ring-1 focus:ring-[#888888]"
-              >
-                <option value="openai">
-                  OpenAI — GPT-4o, GPT-4, GPT-4.1 series
-                </option>
-                <option value="anthropic">
-                  Anthropic — Claude 3.5, Claude 4 series
-                </option>
-                <option value="openai-compatible">
-                  OpenAI-Compatible — Groq, OpenRouter, Together, DeepSeek, any
-                </option>
-              </select>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                        Service Provider
+                    </label>
+                    <select
+                        value={settings.provider}
+                        onChange={(e) =>
+                        update({ provider: e.target.value as CloudProvider })
+                        }
+                        className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-bold text-sm"
+                    >
+                        <option value="openai">OpenAI Architecture</option>
+                        <option value="anthropic">Anthropic Models</option>
+                        <option value="openai-compatible">OpenAI-Compatible Gateway</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                        Model Designation
+                    </label>
+                    <input
+                        type="text"
+                        value={settings.model}
+                        onChange={(e) => update({ model: e.target.value })}
+                        placeholder="e.g. gpt-4o-mini"
+                        className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                    />
+                </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
-                API Key
+              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                Secure Access Key
               </label>
               <input
                 type="password"
                 value={settings.apiKey}
                 onChange={(e) => update({ apiKey: e.target.value })}
-                placeholder={settings.apiKey ? "••••••••" : "sk-..."}
-                className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] font-mono text-sm focus:outline-none focus:ring-1 focus:ring-[#888888]"
+                placeholder={settings.apiKey ? "••••••••••••••••" : "sk-..."}
+                className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
               />
-              <p className="text-xs text-[#6b6b6b] mt-1">
-                Stored in your browser only. Never sent to our servers.
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
-                Model
-              </label>
-              <input
-                type="text"
-                value={settings.model}
-                onChange={(e) => update({ model: e.target.value })}
-                placeholder="e.g. gpt-4o-mini, claude-3-haiku, gemini-pro, mistral-tiny"
-                className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] font-mono text-sm focus:outline-none focus:ring-1 focus:ring-[#888888]"
-              />
-              <p className="text-xs text-[#6b6b6b] mt-1">
-                Enter any model name supported by your provider.
+              <p className="text-[10px] text-zinc-600 font-bold mt-3 italic">
+                Encrypted in local browser storage. Never transmitted to Vault servers.
               </p>
             </div>
 
             {settings.provider === "openai-compatible" && (
               <div>
-                <label className="block text-sm font-medium text-[#a3a3a3] mb-1">
-                  Custom Endpoint URL
+                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                  Custom Gateway URL
                 </label>
                 <input
                   type="text"
                   value={settings.customEndpoint}
                   onChange={(e) => update({ customEndpoint: e.target.value })}
                   placeholder="https://api.openai.com"
-                  className="w-full px-3 py-2 border border-[#2a2a2a] bg-[#1a1a1a] text-[#e8e8e8] font-mono text-sm focus:outline-none focus:ring-1 focus:ring-[#888888]"
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
                 />
               </div>
             )}
-
-            <p className="text-xs text-[#6b6b6b]">{MODE_STATUS_NOTE.cloud}</p>
           </div>
         </section>
       )}
 
       {settings.mode === "browser" && (
-        <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Brain className="w-5 h-5 text-[#888888]" />
-            <h2 className="text-xl font-bold text-[#e8e8e8]">
-              Browser AI Configuration
+        <section className="glass-panel p-8 mb-8 border-white/5">
+          <div className="flex items-center gap-4 mb-8">
+            <Brain className="w-5 h-5 text-accent-gold" />
+            <h2 className="font-serif font-bold text-xl text-white">
+              Neural Weights Selection
             </h2>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <label className="block text-sm font-medium text-[#a3a3a3] mb-3">
-                Select Model
+              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">
+                Core Model (WASM-Optimized)
               </label>
-              <div className="grid gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {BROWSER_MODELS.map((m) => (
                   <button
                     key={m.id}
                     onClick={() => update({ browserModel: m.id })}
-                    className={`p-4 border text-left transition-all ${
+                    className={`p-6 border text-left transition-all duration-500 relative overflow-hidden group ${
                       settings.browserModel === m.id
-                        ? "border-[#888888] bg-[#1a1a1a]"
-                        : "border-[#2a2a2a] hover:border-[#888888]"
+                        ? "border-accent-gold/40 bg-accent-gold/5"
+                        : "border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]"
                     }`}
                   >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-bold text-[#e8e8e8]">{m.name}</span>
-                      <span className="text-[10px] uppercase font-bold text-[#6b6b6b] px-1.5 py-0.5 border border-[#2a2a2a]">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="font-serif font-bold text-lg text-white group-hover:text-accent-gold-bright transition-colors">
+                          {m.name}
+                      </span>
+                      <span className="text-[9px] uppercase font-black text-accent-gold bg-accent-gold/10 px-2 py-0.5 border border-accent-gold/20">
                         {m.size}
                       </span>
                     </div>
-                    <p className="text-xs text-[#6b6b6b]">{m.description}</p>
+                    <p className="text-[11px] text-zinc-500 font-bold leading-relaxed">{m.description}</p>
+                    {settings.browserModel === m.id && (
+                         <div className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-gold" />
+                    )}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="p-4 bg-[#1a1a1a] border border-[#2a2a2a]">
-              <p className="text-xs text-[#6b6b6b] leading-relaxed">
-                <ShieldAlert className="w-3.5 h-3.5 inline mr-1 text-[#6b6b6b]" />
-                The model will be stored in your browser's Cache Storage. Total
-                download size is ~1.2GB - 1.5GB. Use a fast connection.
+            <div className="p-5 bg-white/[0.02] border border-white/5">
+              <p className="text-[10px] text-zinc-500 font-bold leading-relaxed italic">
+                <ShieldAlert className="w-3.5 h-3.5 inline mr-2 text-accent-gold/40" />
+                The selected neural weights will be cached in your browser's persistent storage.
+                Initial retrieval requires a high-bandwidth link (~1.5GB).
               </p>
             </div>
-
-            <p className="text-xs text-[#6b6b6b]">{MODE_STATUS_NOTE.browser}</p>
           </div>
         </section>
       )}
 
       {settings.mode === "basic" && (
-        <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <FileText className="w-5 h-5 text-[#888888]" />
-            <h2 className="text-xl font-bold text-[#e8e8e8]">Basic Search</h2>
+        <section className="glass-panel p-8 mb-8 border-white/5">
+          <div className="flex items-center gap-4 mb-6">
+            <FileText className="w-5 h-5 text-accent-gold" />
+            <h2 className="font-serif font-bold text-xl text-white">Archives Only</h2>
           </div>
 
-          <p className="text-sm text-[#a3a3a3]">
-            No configuration needed. This mode searches German laws via Qdrant
-            and shows relevant paragraphs directly in the chat. Always
-            available.
+          <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-xl">
+            Inert search protocol. This mode bypasses AI analysis and retrieves
+            raw statutory text from the vector vault. High reliability, zero-latency
+            inference.
           </p>
         </section>
       )}
@@ -449,24 +449,24 @@ export default function SettingsPage() {
       {(settings.mode === "local" ||
         settings.mode === "cloud" ||
         settings.mode === "browser") && (
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-6 mb-16">
           <button
             onClick={handleTestConnection}
             disabled={testing}
-            className="px-4 py-2 bg-[#888888] hover:bg-[#aaaaaa] text-[#e8e8e8] disabled:opacity-50 transition-colors duration-100 active:translate-y-[1px] text-sm font-medium"
+            className="px-8 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-[10px] hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
           >
             {testing
-              ? "Initializing..."
+              ? "Running Sync..."
               : settings.mode === "browser"
-                ? "Download / Initialize Model"
-                : "Test Connection"}
+                ? "Initiate Neural Link"
+                : "Verify Link Integrity"}
           </button>
           {testResult && (
             <span
-              className={`text-sm ${
-                testResult.includes("✓") || testResult.includes("reachable")
-                  ? "text-[#888888]"
-                  : "text-[#6b6b6b]"
+              className={`text-[10px] font-black uppercase tracking-widest ${
+                testResult.includes("✓") || testResult.includes("Ready") || testResult.includes("Established")
+                  ? "text-accent-gold-bright"
+                  : "text-red-400"
               }`}
             >
               {testResult}
@@ -476,15 +476,22 @@ export default function SettingsPage() {
       )}
 
       {/* ── Data Store ── */}
-      <section className="bg-[#141414] border border-[#2a2a2a] shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Database className="w-5 h-5 text-[#888888]" />
-          <h2 className="text-xl font-bold text-[#e8e8e8]">Data Store</h2>
+      <section className="border-t border-white/5 pt-12">
+        <div className="flex items-center gap-4 mb-8">
+          <Database className="w-5 h-5 text-zinc-600" />
+          <h2 className="monumental-type opacity-50 shrink-0">Substrate Status</h2>
+          <div className="h-px w-full bg-zinc-800/50" />
         </div>
-        <p className="text-sm text-[#a3a3a3]">
-          Connected to Qdrant Cloud (managed e5-small, 107K norms) and Supabase
-          (PostgreSQL + Auth).
-        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 border border-white/5 bg-white/[0.01]">
+                <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2">Vector Reservoir</p>
+                <p className="text-xs text-zinc-400 font-bold">Qdrant Cloud (E5-Small // 107K Norms)</p>
+            </div>
+            <div className="p-5 border border-white/5 bg-white/[0.01]">
+                <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2">Relational Registry</p>
+                <p className="text-xs text-zinc-400 font-bold">Supabase (PostgreSQL 16 // Auth Tier 1)</p>
+            </div>
+        </div>
       </section>
     </div>
   );

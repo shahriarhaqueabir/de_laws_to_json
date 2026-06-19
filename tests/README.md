@@ -1,198 +1,150 @@
-# German Law Translation System - Test Suite
+# German Law Vault — Test Suite
 
-This folder contains all tests for the German Law translation system.
+Comprehensive test suite covering Python backend (pytest), data pipeline, AI guardrails, download verification, payload formats, log streams, and the Next.js frontend (Vitest + RTL).
 
 ---
 
 ## Quick Start
 
-### Run All Tests
+### Python Tests (pytest)
 ```bash
 cd tests
-python run_all_tests.py
+python run_all_tests.py          # All tests
+python run_all_tests.py --quick  # Skip slow network/AI tests
+python run_all_tests.py --test=broker  # Single test
 ```
 
-### Run Quick Tests Only (skip AI tests)
+### Next.js Tests (Vitest)
 ```bash
-python run_all_tests.py --quick
-```
-
-### Run Specific Test
-```bash
-python run_all_tests.py --test=translation
-python run_all_tests.py --test=dictionary
-python run_all_tests.py --test=qa
-```
-
-### Verbose Output
-```bash
-python run_all_tests.py --verbose
+cd nextjs
+npm test             # All tests
+npm run test:watch   # Watch mode
+npm run test:coverage
 ```
 
 ---
 
-## Available Tests
+## Python Test Inventory (19 test suites)
 
+### Data Pipeline & Processing
 | Test | File | Description | Quick |
 |------|------|-------------|-------|
-| **dictionary** | `test_dict_lookup.py` | Basic dictionary lookup tests | ✅ |
-| **dict_detailed** | `test_dict_detailed.py` | Detailed dictionary tests with JSON output | ✅ |
+| **download** | `test_download_de_laws.py` | HTTP retry config, `_safe_dir_name`, ZIP extraction, error handling | ✅ |
+| **process** | `test_process_de_laws.py` | Categorization, authority/status/jurisdiction inference, XML parsing, norm dedup, key resolution | ✅ |
+| **dedupe** | `test_dedupe_processed_data.py` | Title-based dedup, shortest-filename keep, corrupted JSON, missing dir | ✅ |
+| **data_pipeline** | `test_data_pipeline.py` | JSON schema, SQLite table existence, pagination offsets, token count, pipeline stages | ✅ |
+| **download_verify** | `test_download_verification.py` | TOC URL reachability, XML parsing, ZIP URL patterns, known law keys, local JSON validation | ❌ (network) |
+
+### APIs & Broker
+| Test | File | Description | Quick |
+|------|------|-------------|-------|
+| **broker** | `test_broker.py` | FastAPI health, `/api/chat`, `/api/tags`, CORS, validation, Ollama error handling | ✅ |
+| **payload_formats** | `test_payload_formats.py` | Search/Chat/Explain/Diagnostics API shapes, bookmark/error/broker shapes | ✅ |
+| **system_settings** | `test_system_settings.py` | Server status, AI status, admin info, rebuild index, frontend UI elements | ✅ |
+
+### AI & Translation
+| Test | File | Description | Quick |
+|------|------|-------------|-------|
+| **ai_guardrails** | `test_ai_guardrails.py` | Anti-hallucination, PII safety, version awareness, false friends, disclaimers | ✅ |
+| **dictionary** | `test_dict_lookup.py` | Basic dictionary lookup | ✅ |
+| **dict_detailed** | `test_dict_detailed.py` | Detailed dictionary tests | ✅ |
 | **diagnostic** | `test_translation_diagnostic.py` | Translation diagnostic (dictionary, Ollama, endpoints) | ❌ |
-| **unified** | `test_unified_translation.py` | Unified translation system end-to-end tests | ❌ |
+| **unified** | `test_unified_translation.py` | Unified translation system end-to-end | ❌ |
 | **qa** | `qa_translation_review.py` | Comprehensive QA review with benchmarks | ❌ |
 
----
+### Vector Search (Qdrant)
+| Test | File | Description | Quick |
+|------|------|-------------|-------|
+| **create_qdrant** | `test_create_qdrant_collection.py` | Collection name, vector size=384, COSINE, payload indexes, scalar quantization | ✅ |
+| **seed_qdrant** | `test_seed_norms_to_qdrant.py` | UUID v5 generation, PointStruct payload, content truncation, batch upsert | ✅ |
+| **extract_metadata** | `test_extract_laws_metadata.py` | CSV column headers, date formatting, category fallback, missing DB | ✅ |
 
-## Test Files
+### Infrastructure
+| Test | File | Description | Quick |
+|------|------|-------------|-------|
+| **log_stream** | `test_log_stream.py` | Log format patterns, module logger names, tqdm usage, no sensitive data, multiline | ✅ |
+| **migrations** | `test_supabase_migrations.py` | Table creation, RLS enabling, policy creation, indexes, naming conventions | ✅ |
 
-### `run_all_tests.py` ⭐
-Main test runner. Executes all tests and provides summary.
-
-**Features:**
-- Runs all tests automatically
-- Shows pass/fail status
-- Tracks execution time
-- Supports filtering and verbose mode
-
-### `test_dict_lookup.py`
-Basic dictionary lookup tests. Tests if dictionary database is accessible.
-
-**Requirements:**
-- Dictionary database (`dictionary/dictionary.db`)
-
-**Duration:** < 5 seconds
-
-### `test_dict_detailed.py`
-Detailed dictionary tests with structured JSON output.
-
-**Requirements:**
-- Dictionary database
-
-**Duration:** < 5 seconds
-
-### `test_translation_diagnostic.py`
-Comprehensive diagnostic tool that tests:
-1. Dictionary database
-2. JSON data files
-3. Ollama AI service
-4. Translation endpoints
-5. Log files
-
-**Requirements:**
-- Flask server running (`python app.py`)
-- Ollama running (`ollama serve`)
-- Dictionary database
-
-**Duration:** ~30 seconds
-
-### `test_unified_translation.py`
-Tests the unified translation system:
-- Ollama service check
-- Flask server check
-- Individual translations
-- Batch translations
-- Cache persistence
-
-**Requirements:**
-- Flask server running
-- Ollama running
-
-**Duration:** ~60 seconds
-
-### `qa_translation_review.py`
-Comprehensive QA review with 5 test suites:
-1. Dictionary lookup (word-for-word)
-2. Flask API endpoints
-3. Edge cases & error handling
-4. Performance benchmarks
-5. Quality spot checks
-
-**Requirements:**
-- Flask server running
-- Ollama running
-- Dictionary database
-
-**Duration:** ~90 seconds
+### Additional Scripts
+| File | Description |
+|------|-------------|
+| `run_all_tests.py` | Main test runner with CLI (`--quick`, `--verbose`, `--test=NAME`) |
+| `run_tests.bat` | Windows batch launcher |
 
 ---
 
-## Prerequisites
+## Next.js Test Inventory (114+ tests)
 
-### For Dictionary Tests
-```bash
-# Ensure dictionary database exists
-python dictionary/build_dictionary_db.py
-```
+### Lib & API Tests (14 files)
+- `src/lib/__tests__/api-utils.test.ts`
+- `src/lib/__tests__/bookmarks.test.ts`
+- `src/lib/__tests__/chat.test.ts`
+- `src/lib/__tests__/diagnosis.test.ts`
+- `src/lib/__tests__/fees.test.ts`
+- `src/lib/__tests__/qdrant.test.ts`
+- `src/lib/__tests__/translate.test.ts`
+- `src/lib/__tests__/types.test.ts`
+- `src/app/api/__tests__/search.test.ts`
+- `src/app/api/__tests__/laws.test.ts`
+- `src/app/api/__tests__/laws-key.test.ts`
+- `src/app/api/__tests__/chat.test.ts`
+- `src/app/api/__tests__/explain.test.ts`
+- `src/app/api/__tests__/diagnostics.test.ts`
 
-### For Translation Tests
-```bash
-# 1. Start Ollama
-ollama serve
+### Component Tests (9 files)
+- `src/components/__tests__/search-bar.test.tsx`
+- `src/components/__tests__/category-grid.test.tsx`
+- `src/components/__tests__/law-card.test.tsx`
+- `src/components/__tests__/norm-viewer.test.tsx`
+- `src/components/__tests__/nav-bar.test.tsx`
+- `src/components/__tests__/cost-risk-calculator.test.tsx`
+- `src/components/__tests__/remediation-roadmap.test.tsx`
+- `src/components/__tests__/toast.test.tsx`
+- `src/components/__tests__/auth-context.test.tsx`
 
-# 2. Start Flask server
-python app.py
+### Page Tests (4 files)
+- `src/app/__tests__/search-page.test.tsx`
+- `src/app/__tests__/bookmarks-page.test.tsx`
+- `src/app/__tests__/auth-page.test.tsx`
+- `src/app/__tests__/settings-page.test.tsx`
 
-# 3. In another terminal, run tests
-cd tests
-python run_all_tests.py
-```
+### Hook & Worker Tests (3 files)
+- `src/hooks/__tests__/useTranslation.test.ts`
+- `src/workers/__tests__/translate.worker.test.ts`
+- `src/workers/__tests__/chat.worker.test.ts`
 
 ---
 
-## Test Output
+## Test Coverage Map
 
-### Success Example
 ```
-================================================================================
-GERMAN LAW TRANSLATION SYSTEM - TEST SUITE
-================================================================================
-Timestamp: 2026-02-24 15:30:45
-Python: 3.11.0
-Working Directory: e:\Abir\LocalCodeRepo\German Law\tests
-================================================================================
-
-────────────────────────────────────────────────────────────────────────────────
-TEST: DICTIONARY
-...
-✅ DICTIONARY PASSED (2.34s)
-
-================================================================================
-TEST SUMMARY
-================================================================================
-Total duration: 45.67s
-Passed: 3
-Failed: 0
-Skipped: 2
-
-✅ Passed (3):
-   • dictionary (2.34s)
-   • diagnostic (15.23s)
-   • unified (28.10s)
-
-⏭️  Skipped (2):
-   • qa
-   • ...
-
-================================================================================
-🎉 ALL TESTS PASSED!
-```
-
-### Failure Example
-```
-❌ UNIFIED FAILED (30.45s)
-
-Error output:
-  ConnectionError: Flask server not running
-
-================================================================================
-TEST SUMMARY
-================================================================================
-Total duration: 45.67s
-Passed: 2
-Failed: 1
-Skipped: 2
-
-⚠️  1 TEST(S) FAILED
+User Request / System Component          → Python tests              → Next.js tests
+──────────────────────────────────────────────────────────────────────────────────────
+Search laws                              → test_payload_formats.py   → search.test.ts
+Chat with AI                             → test_broker.py            → chat.test.ts, chat.worker.test.ts
+Explain a norm                           → test_payload_formats.py   → explain.test.ts
+Bookmark results                         → test_payload_formats.py   → bookmarks.test.ts
+Diagnostics                              → test_payload_formats.py   → diagnostics.test.ts
+Download laws from gesetze-im-internet   → test_download_de_laws.py  → —
+                                           test_download_verification.py
+Process XML to DB                        → test_process_de_laws.py   → —
+                                           test_dedupe_processed_data.py
+                                           test_data_pipeline.py
+Qdrant vector search                     → test_create_qdrant_collection.py → qdrant.test.ts
+                                           test_seed_norms_to_qdrant.py
+                                           test_extract_laws_metadata.py
+Supabase schema                          → test_supabase_migrations.py → —
+Logging & observability                  → test_log_stream.py         → —
+AI guardrails                            → test_ai_guardrails.py      → —
+Translation system                       → test_dict_lookup.py,        → translate.test.ts
+                                           test_unified_translation.py,   useTranslation.test.ts
+                                           test_translation_diagnostic.py, translate.worker.test.ts
+                                           qa_translation_review.py
+UI components                            → —                          → search-bar, category-grid,
+                                                                        law-card, norm-viewer,
+                                                                        nav-bar, toast, etc.
+Pages                                    → —                          → search-page, bookmarks-page,
+                                                                        auth-page, settings-page
 ```
 
 ---
@@ -207,86 +159,9 @@ Skipped: 2
 
 ---
 
-## Troubleshooting
-
-### "Dictionary database not found"
-```bash
-cd ..
-python dictionary/build_dictionary_db.py
-```
-
-### "Ollama is not reachable"
-```bash
-# Start Ollama in another terminal
-ollama serve
-```
-
-### "Flask server not running"
-```bash
-# Start Flask in another terminal
-python app.py
-```
-
-### Tests timeout
-Increase timeout in `run_all_tests.py`:
-```python
-timeout=300  # Change to higher value (seconds)
-```
-
----
-
 ## Adding New Tests
 
-1. Create test file: `test_my_feature.py`
-2. Add to `TESTS` dict in `run_all_tests.py`:
-```python
-TESTS = {
-    'my_feature': {
-        'file': 'test_my_feature.py',
-        'description': 'My new feature tests',
-        'quick': False,
-    },
-    # ... other tests
-}
-```
-
-3. Run: `python run_all_tests.py --test=my_feature`
-
----
-
-## Continuous Integration
-
-Tests can be integrated into CI/CD pipelines:
-
-```yaml
-# Example GitHub Actions
-- name: Run Tests
-  run: |
-    cd tests
-    python run_all_tests.py --quick
-```
-
----
-
-## Performance Benchmarks
-
-Typical test durations:
-
-| Test Suite | Duration |
-|------------|----------|
-| Dictionary | < 5s |
-| Diagnostic | ~30s |
-| Unified | ~60s |
-| QA Review | ~90s |
-
----
-
-## Contact & Support
-
-For issues or questions about tests, check:
-- `../UNIFIED_TRANSLATION.md` - Translation system documentation
-- `../TRANSLATION_SYSTEM_CHANGES.md` - Recent changes summary
-
----
-
-*Last updated: 2026-02-24*
+1. Create test file in `tests/` (Python) or `nextjs/src/__tests__/` (Next.js)
+2. For Python: register in `TESTS` dict in `run_all_tests.py`
+3. For Next.js: Vitest auto-discovers `__tests__/` directories
+4. Run with `python run_all_tests.py --test=my_test` or `npm test`

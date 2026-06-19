@@ -31,10 +31,14 @@ export async function GET(req: NextRequest) {
     const qdrantResults = await searchNorms("test", undefined, 1);
     results.checks.qdrant = {
       status: "ok",
-      message: `Successfully queried Qdrant. Found ${qdrantResults.length} matches for 'test'.`,
+      message: `Successfully queried Qdrant via Universal Query API. Found ${qdrantResults.length} matches for 'test'.`,
     };
   } catch (err: any) {
-    results.checks.qdrant = { status: "error", message: err.message };
+    console.error("[Diagnostics] Qdrant check failed:", err.message);
+    results.checks.qdrant = {
+      status: "error",
+      message: `Qdrant check failed: ${err.message}. Ensure COLLECTION '${process.env.COLLECTION || 'german_norms'}' exists and Managed Inference is enabled.`
+    };
   }
 
   const allOk = Object.values(results.checks).every((c: any) => c.status === "ok");

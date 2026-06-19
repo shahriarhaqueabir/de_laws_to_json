@@ -33,62 +33,71 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
   };
 
   return (
-    <div className="bg-[#141414] border border-[#2a2a2a] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.6),0_1px_2px_rgba(0,0,0,0.4)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.7),0_2px_4px_rgba(0,0,0,0.5)] hover:border-[#888888] transition-shadow relative">
+    <div className="premium-card p-10 group relative border-white/5 bg-zinc-900/20">
       <button
         onClick={toggleBookmark}
-        className={`absolute top-4 right-4 p-1.5 transition-colors duration-100 active:translate-y-[1px] ${
-          bookmarked ? "text-[#888888]" : "text-[#6b6b6b] hover:text-[#888888]"
+        className={`absolute top-8 right-10 p-2 transition-all duration-500 active:scale-90 ${
+          bookmarked ? "text-accent-gold-bright" : "text-zinc-700 hover:text-accent-gold"
         }`}
         title={bookmarked ? "Remove bookmark" : "Add bookmark"}
       >
         {bookmarked ? (
-          <BookmarkCheck className="w-5 h-5" />
+          <BookmarkCheck className="w-6 h-6" />
         ) : (
-          <BookmarkPlus className="w-5 h-5" />
+          <BookmarkPlus className="w-6 h-6" />
         )}
       </button>
 
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <span className="inline-block px-2 py-1 text-xs font-semibold bg-[#888888] text-[#e8e8e8] mb-2 capitalize">
+      <div className="flex justify-between items-start mb-10">
+        <div className="max-w-[80%]">
+          <span className="monumental-type mb-4 block opacity-60">
             {law.category}
           </span>
-          <h3 className="text-xl font-bold text-[#e8e8e8]">
+          <h3 className="text-3xl font-serif font-bold text-white leading-tight">
             <Link
               href={`/laws/${law.key}`}
-              className="hover:text-[#888888] transition-colors duration-100 active:translate-y-[1px]"
+              className="hover:text-accent-gold-bright transition-colors duration-500"
             >
-              {law.key} — {law.title}
+              <span className="text-accent-gold/40 mr-3">{law.key}</span>
+              {law.title}
             </Link>
           </h3>
         </div>
         <div className="text-right">
-          <div className="text-sm text-[#888888] font-semibold">
-            {law.relevance}% relevant
+          <div className="text-xs text-accent-gold-bright font-black tracking-widest uppercase mb-1">
+            {law.relevance}% Match
           </div>
-          <div className="text-xs text-[#a3a3a3]">{law.normHits} matches</div>
+          <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">
+            {law.normHits} Relevant Sections
+          </div>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {law.relevantNorms.map((norm, idx) => (
-          <div key={idx} className="bg-[#1a1a1a] p-3 border border-[#2a2a2a]">
-            <h4 className="text-sm font-semibold text-[#e8e8e8] mb-1">
-              {norm.normId} {norm.title}
+          <div key={idx} className="bg-white/[0.02] p-6 border border-white/5 relative overflow-hidden group/norm">
+            <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold/20 group-hover/norm:bg-accent-gold transition-colors duration-500" />
+            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-accent-gold/60 mb-3">
+              Section {norm.normId} — {norm.title}
             </h4>
-            <p className="text-sm text-[#a3a3a3] line-clamp-2">
+            <p className="legal-text italic text-zinc-400 line-clamp-3 text-sm leading-relaxed">
               {norm.content}
             </p>
           </div>
         ))}
       </div>
 
-      <Link
-        href={`/laws/${law.key}`}
-        className="mt-4 flex items-center text-sm font-medium text-[#888888] hover:text-[#aaaaaa] transition-colors duration-100 active:translate-y-[1px]"
-      >
-        View full law <ChevronRight className="w-4 h-4 ml-1" />
-      </Link>
+      <div className="mt-10 pt-8 border-t border-white/5 flex items-center justify-between">
+        <Link
+          href={`/laws/${law.key}`}
+          className="monumental-type opacity-40 hover:opacity-100 hover:text-accent-gold transition-all flex items-center gap-3"
+        >
+          Detailed Examination <ChevronRight className="w-4 h-4" />
+        </Link>
+        <div className="text-[10px] font-bold text-zinc-700 italic font-serif">
+          Source: Bundesamt für Justiz
+        </div>
+      </div>
     </div>
   );
 }
