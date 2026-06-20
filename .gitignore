@@ -58,6 +58,10 @@ search_index.json
 ai_translations.json
 translation_cache.json
 
+# Vector embedding cache (regenerable, ~160MB)
+scripts/norms_vectors.npy
+*.npy
+
 # Law view counts and analytics
 law_view_counts.json
 

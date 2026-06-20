@@ -1,4 +1,5 @@
 import os
+
 from qdrant_client import QdrantClient, models
 
 QDRANT_URL = os.environ.get("QDRANT_URL")
@@ -12,13 +13,11 @@ client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 print(f"Connecting to Qdrant at {QDRANT_URL}...")
 
-# Create collection with managed inference configuration
-# We explicitly link the intfloat/multilingual-e5-small model
+# Create collection with 384-dim vectors for multilingual-e5-small embeddings
+# Vectors are pre-computed locally by seed_norms_to_qdrant.py
 client.recreate_collection(
     collection_name="german_norms",
-    vectors_config=client.get_fastembed_vector_params(
-        model="intfloat/multilingual-e5-small"
-    ) if hasattr(client, 'get_fastembed_vector_params') else models.VectorParams(
+    vectors_config=models.VectorParams(
         size=384,
         distance=models.Distance.COSINE,
     ),

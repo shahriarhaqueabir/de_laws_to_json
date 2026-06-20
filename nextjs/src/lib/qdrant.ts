@@ -43,7 +43,9 @@ export async function searchNorms(
 
   const queryFilter = filter.must.length > 0 ? filter : undefined;
 
-  console.log(`[Qdrant lib] Searching for: "${query}" in collection: ${COLLECTION}`);
+  console.log(
+    `[Qdrant lib] Searching for: "${query}" in collection: ${COLLECTION}`,
+  );
 
   try {
     const client = getQdrant();
@@ -58,19 +60,27 @@ export async function searchNorms(
       limit: topK,
       offset,
       filter: queryFilter,
+      with_payload: true,
     });
 
-    console.log(`[Qdrant lib] Search success. Points found: ${results.points.length}`);
+    console.log(
+      `[Qdrant lib] Search success. Points found: ${results.points.length}`,
+    );
 
-    return results.points.map((r) => ({
-      law_key: r.payload!.law_key as string,
-      law_title: (r.payload!.law_title || r.payload!.law_key) as string,
-      category: r.payload!.category as string,
-      norm_id: r.payload!.norm_id as string,
-      norm_title: r.payload!.norm_title as string,
-      content: r.payload!.content as string,
-      score: r.score ?? 0,
-    }));
+    return results.points.map((r) => {
+      const payload = r.payload as Record<string, unknown> | undefined;
+      return {
+        law_key: (payload?.law_key as string) ?? "",
+        law_title:
+          ((payload?.law_title as string) || (payload?.law_key as string)) ??
+          "",
+        category: (payload?.category as string) ?? "other",
+        norm_id: (payload?.norm_id as string) ?? "",
+        norm_title: (payload?.norm_title as string) ?? "",
+        content: (payload?.content as string) ?? "",
+        score: r.score ?? 0,
+      };
+    });
   } catch (err: any) {
     console.error(`[Qdrant lib] Search error: ${err.message}`);
     // Re-throw to be caught by the API route
