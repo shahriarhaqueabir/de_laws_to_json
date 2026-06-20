@@ -63,7 +63,15 @@ function makeRequest(url: string): NextRequest {
 describe("GET /api/diagnostics", () => {
   it("both Supabase and Qdrant healthy returns 200", async () => {
     mockSearchNorms.mockResolvedValue([
-      { law_key: "BGB", score: 0.5, law_title: "", category: "", norm_id: "", norm_title: "", content: "" },
+      {
+        law_key: "BGB",
+        score: 0.5,
+        law_title: "",
+        category: "",
+        norm_id: "",
+        norm_title: "",
+        content: "",
+      },
     ]);
 
     const { GET } = await import("../diagnostics/route");
@@ -87,7 +95,7 @@ describe("GET /api/diagnostics", () => {
 
     expect(res.status).toBe(500);
     expect(body.checks.supabase.status).toBe("error");
-    expect(body.checks.supabase.message).toBe("Permission denied");
+    expect(body.checks.supabase.message).toBe("Supabase query failed");
   });
 
   it("Qdrant failure returns overall 500", async () => {

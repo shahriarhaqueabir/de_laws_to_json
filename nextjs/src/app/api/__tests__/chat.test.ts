@@ -29,6 +29,22 @@ const mockSupabaseResult = vi.hoisted(() => ({
   count: 0,
 }));
 
+// Mock encryption to return/accept known values without needing SERVER_ENCRYPTION_KEY
+vi.mock("@/lib/encryption", () => ({
+  encryptApiKey: vi
+    .fn()
+    .mockResolvedValue(
+      JSON.stringify({ iv: "test", ciphertext: "encrypted-sk-test-123" }),
+    ),
+  decryptApiKey: vi.fn().mockImplementation(async (payload: string) => {
+    const parsed = JSON.parse(payload);
+    if (parsed.ciphertext === "encrypted-sk-test-123") {
+      return "sk-test-123";
+    }
+    throw new Error("Decryption failed");
+  }),
+}));
+
 vi.mock("@supabase/ssr", () => {
   const buildThenable = (result: any) => {
     const thenable = Promise.resolve(result);
@@ -40,8 +56,13 @@ vi.mock("@supabase/ssr", () => {
       range: vi.fn(() => thenable),
       limit: vi.fn(() => thenable),
       single: vi.fn(() => thenable),
+      maybeSingle: vi.fn(() => thenable),
       insert: vi.fn().mockResolvedValue({ error: null }),
-      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "test-user-123", email: "test@test.com" } },
+        }),
+      },
     });
   };
   return { createServerClient: vi.fn(() => buildThenable(mockSupabaseResult)) };
@@ -112,7 +133,16 @@ describe("POST /api/chat", () => {
     expect(mockGenerateChatResponse).not.toHaveBeenCalled();
   });
 
-  it("cloud mode with valid API key calls generateChatResponse", async () => {
+  it("cloud mode with DB-stored API key calls generateChatResponse", async () => {
+    // Simulate a stored encrypted key in the DB
+    mockSupabaseResult.data = {
+      encrypted_key: JSON.stringify({
+        iv: "test",
+        ciphertext: "encrypted-sk-test-123",
+      }),
+      provider: "openai",
+    };
+
     mockGenerateChatResponse.mockResolvedValue(
       "The BGB § 433 defines the obligations of a seller...",
     );
@@ -121,9 +151,8 @@ describe("POST /api/chat", () => {
     const req = makePostRequest("/api/chat", {
       message: "Explain BGB § 433",
       mode: "cloud",
-      apiKey: "sk-test-123",
-      provider: "openai",
       model: "gpt-4o-mini",
+      // No apiKey or provider in body — fetched from DB
     });
     const res = await POST(req);
     const body = await res.json();
@@ -140,6 +169,7 @@ describe("POST /api/chat", () => {
   });
 
   it("cloud mode with missing API key returns helpful message", async () => {
+    // No DB row — mockSupabaseResult.data is already null from beforeEach
     const { POST } = await import("../chat/route");
     const req = makePostRequest("/api/chat", {
       message: "Explain BGB",
@@ -159,7 +189,9 @@ describe("POST /api/chat", () => {
   it("local mode with broker online returns broker response", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ response: "Broker says: BGB § 433 is about sales contracts." }),
+      json: async () => ({
+        response: "Broker says: BGB § 433 is about sales contracts.",
+      }),
     });
 
     const { POST } = await import("../chat/route");

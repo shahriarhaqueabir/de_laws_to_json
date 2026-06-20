@@ -128,7 +128,7 @@ export interface ChatSettings {
   ollamaParams: OllamaParams;
   // Cloud AI
   provider: CloudProvider;
-  apiKey: string;
+  apiKey?: string;
   model: string;
   customEndpoint: string;
   // Browser AI
@@ -136,8 +136,18 @@ export interface ChatSettings {
 }
 
 export const BROWSER_MODELS = [
-  { id: "Xenova/Qwen1.5-0.5B-Chat", name: "Qwen 1.5 (0.5B)", size: "~1.2GB", description: "Default instruction-tuned model." },
-  { id: "Xenova/LaMini-Flan-T5-783M", name: "LaMini Flan T5 (783M)", size: "~1.5GB", description: "Good for general legal reasoning." },
+  {
+    id: "Xenova/Qwen1.5-0.5B-Chat",
+    name: "Qwen 1.5 (0.5B)",
+    size: "~1.2GB",
+    description: "Default instruction-tuned model.",
+  },
+  {
+    id: "Xenova/LaMini-Flan-T5-783M",
+    name: "LaMini Flan T5 (783M)",
+    size: "~1.5GB",
+    description: "Good for general legal reasoning.",
+  },
 ];
 
 export const DEFAULT_CHAT_SETTINGS: ChatSettings = {

@@ -1,8 +1,16 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { createClient } from '../lib/supabase';
-import type { User } from '@supabase/supabase-js';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { createClient } from "../lib/supabase";
+import type { User } from "@supabase/supabase-js";
+
+const supabase = createClient();
 
 interface AuthContextValue {
   user: User | null;
@@ -16,14 +24,13 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -31,19 +38,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string): Promise<string | null> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (
+    email: string,
+    password: string,
+  ): Promise<string | null> => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     return error?.message ?? null;
   };
 
-  const signUp = async (email: string, password: string): Promise<string | null> => {
+  const signUp = async (
+    email: string,
+    password: string,
+  ): Promise<string | null> => {
     const { error } = await supabase.auth.signUp({ email, password });
     return error?.message ?? null;
   };

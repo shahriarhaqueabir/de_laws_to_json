@@ -2,12 +2,21 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-const mockGetUser = vi.fn();
-const mockOnAuthStateChange = vi.fn();
-const mockSignInWithPassword = vi.fn();
-const mockSignUp = vi.fn();
-const mockSignOut = vi.fn();
-const mockUnsubscribe = vi.fn();
+const {
+  mockGetUser,
+  mockOnAuthStateChange,
+  mockSignInWithPassword,
+  mockSignUp,
+  mockSignOut,
+  mockUnsubscribe,
+} = vi.hoisted(() => ({
+  mockGetUser: vi.fn(),
+  mockOnAuthStateChange: vi.fn(),
+  mockSignInWithPassword: vi.fn(),
+  mockSignUp: vi.fn(),
+  mockSignOut: vi.fn(),
+  mockUnsubscribe: vi.fn(),
+}));
 
 vi.mock("../../lib/supabase", () => ({
   createClient: () => ({
@@ -223,9 +232,7 @@ describe("AuthContext", () => {
   });
 
   it("throws error when used outside AuthProvider", () => {
-    const consoleSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     function BadComponent() {
       useAuth();

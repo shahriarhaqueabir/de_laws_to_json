@@ -12,21 +12,32 @@ import type {
 } from "../../../lib/types";
 import { LANGUAGE_NAMES } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
+import { decryptApiKey } from "../../../lib/encryption";
+import { sanitizeErrorMessage } from "../../../lib/sanitize";
 
 const BROKER_URL =
   process.env.NEXT_PUBLIC_BROKER_URL || "http://localhost:9000";
+
+const OllamaParamsSchema = z
+  .object({
+    temperature: z.number().min(0).max(2).optional(),
+    top_p: z.number().min(0).max(1).optional(),
+    top_k: z.number().int().min(0).optional(),
+    max_tokens: z.number().int().min(1).max(4096).optional(),
+    system_prompt: z.string().optional(),
+  })
+  .strict()
+  .optional();
 
 const ChatBodySchema = z.object({
   message: z.string().min(1, "message is required"),
   conversationId: z.string().optional(),
   mode: z.string().optional(),
-  provider: z.string().optional(),
-  apiKey: z.string().optional(),
   model: z.string().optional(),
   customEndpoint: z.string().optional(),
   language: z.string().optional(),
   ollamaModel: z.string().optional(),
-  ollamaParams: z.record(z.string(), z.unknown()).optional(),
+  ollamaParams: OllamaParamsSchema,
 });
 
 export async function POST(req: NextRequest) {
@@ -50,8 +61,6 @@ export async function POST(req: NextRequest) {
       message,
       conversationId,
       mode: rawMode,
-      provider,
-      apiKey,
       model,
       customEndpoint,
       language,
@@ -86,6 +95,7 @@ export async function POST(req: NextRequest) {
     // 2. Generate response based on mode
     let response: string;
     let brokerAvailable: boolean | null = null;
+    let providerUsed: string | undefined;
 
     switch (mode) {
       case "local": {
@@ -133,21 +143,51 @@ export async function POST(req: NextRequest) {
       }
 
       case "cloud": {
-        // Mode 2: BYO API Key
-        if (!apiKey) {
-          response =
-            `No API key configured. Please add your API key in **Settings → Cloud AI**.\n\n` +
-            `**Relevant laws found:**\n` +
-            citedLaws
-              .map((l) => `- **${l.law_key}** ${l.norm_id} — ${l.law_title}`)
-              .join("\n");
+        // Mode 2: BYO API Key — stored encrypted server-side per user
+        if (!user) {
+          response = "Please sign in to use Cloud AI mode.";
           brokerAvailable = null;
           break;
         }
+
+        const { data: keyRow } = await supabase
+          .from("user_api_keys")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        let resolvedApiKey: string | undefined;
+        let resolvedProvider: CloudProvider | undefined;
+        let keyRotationDetected = false;
+
+        if (keyRow) {
+          try {
+            resolvedApiKey = await decryptApiKey(keyRow.encrypted_key);
+            resolvedProvider = keyRow.provider as CloudProvider;
+          } catch {
+            // Decryption failed — server encryption key was rotated
+            keyRotationDetected = true;
+          }
+        }
+
+        if (!resolvedApiKey) {
+          response = keyRotationDetected
+            ? `**Encryption Key Changed**\n\nYour stored API key was encrypted with a previous server encryption key and can no longer be decrypted. Please re-enter your API key in **Settings** to restore Cloud AI access.\n\n`
+            : `No API key configured. Please add your API key in **Settings**.\n\n` +
+              `**Relevant laws found:**\n` +
+              citedLaws
+                .map((l) => `- **${l.law_key}** ${l.norm_id} — ${l.law_title}`)
+                .join("\n");
+          brokerAvailable = null;
+          break;
+        }
+
+        providerUsed = resolvedProvider || "openai";
+
         try {
           response = await generateChatResponse({
-            provider: (provider as CloudProvider) || "openai",
-            apiKey,
+            provider: resolvedProvider || "openai",
+            apiKey: resolvedApiKey,
             model: model || "gpt-4o-mini",
             customEndpoint: customEndpoint || "",
             question: message,
@@ -160,11 +200,16 @@ export async function POST(req: NextRequest) {
           });
           brokerAvailable = null;
         } catch (err: unknown) {
-          const errMsg = err instanceof Error ? err.message : String(err);
+          const errMsg = sanitizeErrorMessage(err);
           response =
-            `Cloud AI call failed: ${errMsg}\n\n` +
-            `Check your API key and provider settings.\n\n` +
-            `**Relevant laws found:**\n` +
+            `Cloud AI call failed: ${errMsg}
+
+` +
+            `Check your API key and provider settings.
+
+` +
+            `**Relevant laws found:**
+` +
             citedLaws
               .map((l) => `- **${l.law_key}** ${l.norm_id} — ${l.law_title}`)
               .join("\n");
@@ -213,11 +258,12 @@ export async function POST(req: NextRequest) {
       citedLaws,
       brokerAvailable,
       mode,
-      provider: mode === "cloud" ? provider : undefined,
+      provider: mode === "cloud" ? providerUsed : undefined,
     });
   } catch (err: unknown) {
     console.error("Chat API Error:", err);
-    const message = err instanceof Error ? err.message : "Internal server error";
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
     return errorResponse("SERVER_ERROR", message, 500);
   }
 }

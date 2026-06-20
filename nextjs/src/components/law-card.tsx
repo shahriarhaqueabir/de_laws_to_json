@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { LawSearchResult } from "../lib/types";
 import { ChevronRight, BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { isBookmarked, addBookmark, removeBookmark } from "../lib/bookmarks";
@@ -10,10 +10,6 @@ import { useToast } from "./toast";
 export default function LawCard({ law }: { law: LawSearchResult }) {
   const [bookmarked, setBookmarked] = useState(() => isBookmarked(law.key));
   const { toast } = useToast();
-
-  useEffect(() => {
-    setBookmarked(isBookmarked(law.key));
-  }, [law.key]);
 
   const toggleBookmark = () => {
     if (bookmarked) {
@@ -32,12 +28,20 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
     }
   };
 
+  // Synchronize bookmark state with localStorage (external system)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBookmarked(isBookmarked(law.key));
+  }, [law.key]);
+
   return (
     <div className="premium-card p-10 group relative border-white/5 bg-zinc-900/20">
       <button
         onClick={toggleBookmark}
         className={`absolute top-8 right-10 p-2 transition-all duration-500 active:scale-90 ${
-          bookmarked ? "text-accent-gold-bright" : "text-zinc-700 hover:text-accent-gold"
+          bookmarked
+            ? "text-accent-gold-bright"
+            : "text-zinc-700 hover:text-accent-gold"
         }`}
         title={bookmarked ? "Remove bookmark" : "Add bookmark"}
       >
@@ -75,7 +79,10 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
 
       <div className="space-y-4">
         {law.relevantNorms.map((norm, idx) => (
-          <div key={idx} className="bg-white/[0.02] p-6 border border-white/5 relative overflow-hidden group/norm">
+          <div
+            key={idx}
+            className="bg-white/[0.02] p-6 border border-white/5 relative overflow-hidden group/norm"
+          >
             <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold/20 group-hover/norm:bg-accent-gold transition-colors duration-500" />
             <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-accent-gold/60 mb-3">
               Section {norm.normId} — {norm.title}

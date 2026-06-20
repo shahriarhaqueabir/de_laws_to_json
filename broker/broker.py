@@ -8,6 +8,7 @@ Usage:
     # Server starts on http://localhost:9000
 """
 
+import json
 import logging
 import os
 from typing import Optional
@@ -16,6 +17,7 @@ import httpx
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 logging.basicConfig(level=logging.INFO)
@@ -50,6 +52,7 @@ class ChatRequest(BaseModel):
     top_k: int = Field(default=40, ge=0)
     max_tokens: int = Field(default=1024, ge=1, le=4096)
     system_prompt: Optional[str] = None
+    stream: bool = Field(default=False)
 
 
 class ChatResponse(BaseModel):
@@ -72,9 +75,13 @@ async def list_models():
         return resp.json()
 
 
-@app.post("/api/chat", response_model=ChatResponse)
+@app.post("/api/chat")
 async def chat(req: ChatRequest):
-    """Forward a chat request to Ollama with legal context."""
+    """Forward a chat request to Ollama with legal context.
+
+    When stream=True, returns a Server-Sent Events stream of response chunks.
+    When stream=False, returns the complete response as JSON.
+    """
     user_prompt = f"""Context from German laws:
 {req.context or "(No specific laws found)"}
 
@@ -96,7 +103,7 @@ Provide guidance based on the relevant laws above. Include citations."""
     payload = {
         "model": req.model,
         "prompt": f"{system}\n\n{user_prompt}",
-        "stream": False,
+        "stream": req.stream,
         "options": {
             "temperature": req.temperature,
             "top_p": req.top_p,
@@ -106,7 +113,17 @@ Provide guidance based on the relevant laws above. Include citations."""
     }
 
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        client = httpx.AsyncClient(timeout=120.0)
+
+        if req.stream:
+            async with client:
+                return StreamingResponse(
+                    _stream_ollama_response(client, payload),
+                    media_type="text/event-stream",
+                )
+
+        # Non-streaming: get full response
+        async with client:
             resp = await client.post(
                 f"{OLLAMA_URL}/api/generate",
                 json=payload,
@@ -118,6 +135,31 @@ Provide guidance based on the relevant laws above. Include citations."""
     except Exception as e:
         logger.error("Ollama request failed: %s", e)
         raise HTTPException(status_code=503, detail=f"Ollama unavailable: {str(e)}")
+
+
+async def _stream_ollama_response(client, payload):
+    """Stream Ollama response as SSE events.
+
+    Ollama returns NDJSON lines when stream=True.
+    Each line: {"response": "text chunk", "done": false}
+    We wrap these as SSE data events for the frontend.
+
+    The caller is responsible for entering the client context.
+    """
+    async with client.stream(
+        "POST", f"{OLLAMA_URL}/api/generate", json=payload
+    ) as resp:
+        resp.raise_for_status()
+        async for line in resp.aiter_lines():
+            if line:
+                try:
+                    chunk = json.loads(line)
+                    if "response" in chunk:
+                        yield f"data: {json.dumps({'response': chunk['response']})}\n\n"
+                    if chunk.get("done"):
+                        break
+                except json.JSONDecodeError:
+                    continue
 
 
 if __name__ == "__main__":

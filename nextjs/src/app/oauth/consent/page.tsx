@@ -1,8 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
+
+const supabase = createClient();
 import {
   Shield,
   ShieldCheck,
@@ -22,6 +24,7 @@ interface ClientInfo {
   icon_url: string | null;
   client_uri: string | null;
   description: string | null;
+  scope_descriptions: string[];
 }
 
 interface OAuthRequest {
@@ -30,9 +33,6 @@ interface OAuthRequest {
   scope: string;
   state: string;
   response_type: string;
-  client_name?: string;
-  client_uri?: string;
-  scope_descriptions?: string[];
 }
 
 export default function OAuthConsentPage() {
@@ -52,13 +52,36 @@ export default function OAuthConsentPage() {
 function ConsentPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
+
+  // Derive OAuth request from search params during render
+  // (react-patterns: render is a pure function of props, avoid setState in effects)
+  const client_id = searchParams.get("client_id");
+  const redirect_uri = searchParams.get("redirect_uri");
+  const scope = searchParams.get("scope");
+  const state = searchParams.get("state");
+  const response_type = searchParams.get("response_type") ?? "code";
+
+  const hasRequiredParams = Boolean(
+    client_id && redirect_uri && scope && state,
+  );
+  const infoError = hasRequiredParams
+    ? null
+    : "Invalid OAuth request: missing required parameters.";
+
+  const oauthReq = useMemo<OAuthRequest | null>(() => {
+    if (!hasRequiredParams) return null;
+    return {
+      client_id: client_id!,
+      redirect_uri: redirect_uri!,
+      scope: scope!,
+      state: state!,
+      response_type,
+    };
+  }, [client_id, redirect_uri, scope, state, response_type, hasRequiredParams]);
 
   const [user, setUser] = useState<unknown | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [oauthReq, setOauthReq] = useState<OAuthRequest | null>(null);
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
-  const [infoError, setInfoError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,24 +93,12 @@ function ConsentPageInner() {
     });
   }, []);
 
-  // 2. Parse OAuth request from query params
+  // 2. Fetch client info when OAuth request is valid
   useEffect(() => {
-    const client_id = searchParams.get("client_id");
-    const redirect_uri = searchParams.get("redirect_uri");
-    const scope = searchParams.get("scope");
-    const state = searchParams.get("state");
-    const response_type = searchParams.get("response_type") ?? "code";
+    if (!oauthReq) return;
 
-    if (!client_id || !redirect_uri || !scope || !state) {
-      setInfoError("Invalid OAuth request: missing required parameters.");
-      return;
-    }
-
-    setOauthReq({ client_id, redirect_uri, scope, state, response_type });
-
-    // Fetch client info from Supabase Auth API
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    fetch(`${supabaseUrl}/auth/v1/oauth/apps/${client_id}`, {
+    fetch(`${supabaseUrl}/auth/v1/oauth/apps/${oauthReq.client_id}`, {
       headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
     })
       .then((r) => (r.ok ? r.json() : null))
@@ -106,26 +117,18 @@ function ConsentPageInner() {
             icon_url: data.icon_url ?? null,
             client_uri: data.client_uri ?? null,
             description: data.description ?? null,
-          } as ClientInfo);
-
-          setOauthReq((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  client_name: data.name ?? data.client_name ?? client_id,
-                  client_uri: data.client_uri ?? null,
-                  scope_descriptions: scope
-                    .split(" ")
-                    .map((s) => descriptions[s] ?? `Access scope: ${s}`),
-                }
-              : prev,
-          );
+            scope_descriptions: scope
+              ? scope
+                  .split(" ")
+                  .map((s) => descriptions[s] ?? `Access scope: ${s}`)
+              : [],
+          });
         }
       })
       .catch(() => {
         // Non-fatal — name defaults to client_id
       });
-  }, [searchParams]);
+  }, [oauthReq, client_id, scope]);
 
   // 3. Handle consent decision
   const handleDecision = useCallback(
@@ -200,7 +203,7 @@ function ConsentPageInner() {
         setSubmitting(false);
       }
     },
-    [oauthReq, supabase, router],
+    [oauthReq, router],
   );
 
   // ── Loading state ─────────────────────────────────────────────────────
@@ -263,7 +266,7 @@ function ConsentPageInner() {
   }
 
   // ── Consent UI ────────────────────────────────────────────────────────
-  const scopeList = oauthReq.scope_descriptions ?? oauthReq.scope.split(" ");
+  const scopeList = clientInfo?.scope_descriptions ?? oauthReq.scope.split(" ");
 
   return (
     <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-4 py-12">
@@ -286,6 +289,7 @@ function ConsentPageInner() {
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 bg-[#1a1a1a] flex items-center justify-center shrink-0">
               {clientInfo?.icon_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={clientInfo.icon_url}
                   alt=""
@@ -297,7 +301,7 @@ function ConsentPageInner() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-[#e8e8e8]">
-                {oauthReq.client_name ?? oauthReq.client_id}
+                {clientInfo?.name ?? oauthReq.client_id}
               </h2>
               {clientInfo?.client_uri && (
                 <a

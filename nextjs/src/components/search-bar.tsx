@@ -53,12 +53,14 @@ export default function SearchBar({
               <Search className="w-6 h-6" />
             </button>
             <button
-                type="button"
-                onClick={(e) => handleSearch(e as any, true)}
-                className="px-6 bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright transition-all duration-500 active:scale-95 flex items-center gap-3 border border-accent-gold/20 font-black uppercase tracking-widest text-[10px]"
+              type="button"
+              onClick={(e) =>
+                handleSearch(e as unknown as React.FormEvent, true)
+              }
+              className="px-6 bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright transition-all duration-500 active:scale-95 flex items-center gap-3 border border-accent-gold/20 font-black uppercase tracking-widest text-[10px]"
             >
-                <Brain className="w-4 h-4" />
-                Analyze via AI
+              <Brain className="w-4 h-4" />
+              Analyze via AI
             </button>
           </div>
         </div>
@@ -66,9 +68,9 @@ export default function SearchBar({
 
       {query.length > 5 && (
         <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.4em] text-center animate-fade-in">
-            {/how|what|why|my|landlord|rent/i.test(query)
-              ? "Inquiry detected. Neural analysis recommended."
-              : "Technical retrieval active."}
+          {/how|what|why|my|landlord|rent/i.test(query)
+            ? "Inquiry detected. Neural analysis recommended."
+            : "Technical retrieval active."}
         </p>
       )}
     </div>

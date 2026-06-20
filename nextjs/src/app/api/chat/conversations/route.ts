@@ -26,33 +26,35 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json(data);
-  } catch (err: any) {
-    return errorResponse("DB_ERROR", err.message, 500);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Database error";
+    return errorResponse("DB_ERROR", message, 500);
   }
 }
 
 export async function GET(req: NextRequest) {
-    try {
-      const cookieStore = await cookies();
-      const supabase = getServerClient(cookieStore);
+  try {
+    const cookieStore = await cookies();
+    const supabase = getServerClient(cookieStore);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (!user) {
-        return errorResponse("UNAUTHORIZED", "User must be signed in", 401);
-      }
-
-      const { data, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .order("updated_at", { ascending: false });
-
-      if (error) throw error;
-
-      return NextResponse.json(data);
-    } catch (err: any) {
-      return errorResponse("DB_ERROR", err.message, 500);
+    if (!user) {
+      return errorResponse("UNAUTHORIZED", "User must be signed in", 401);
     }
+
+    const { data, error } = await supabase
+      .from("conversations")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+
+    return NextResponse.json(data);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Database error";
+    return errorResponse("DB_ERROR", message, 500);
   }
+}

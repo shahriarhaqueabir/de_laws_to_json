@@ -19,6 +19,8 @@ import Link from "next/link";
 import {
   ChatMode,
   CitedLaw,
+  CloudProvider,
+  AppLanguage,
   MODE_LABELS,
   LANGUAGE_NAMES,
 } from "../../lib/types";
@@ -27,6 +29,16 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   citedLaws?: CitedLaw[];
+}
+
+interface ChatRequestBody {
+  message: string;
+  mode: ChatMode;
+  language: AppLanguage;
+  conversationId?: string;
+  provider?: CloudProvider;
+  model?: string;
+  customEndpoint?: string;
 }
 
 const MODE_META: Record<
@@ -42,10 +54,8 @@ const MODE_META: Record<
 const LIMITATION_BANNERS: Record<ChatMode, string | null> = {
   local:
     "Local AI — only works when broker.py + Ollama are running on your machine.",
-  cloud:
-    "Cloud AI — uses your own API key. You are billed by your provider.",
-  browser:
-    "Browser AI — downloads a ~1GB model on first use. Fully private.",
+  cloud: "Cloud AI — uses your own API key. You are billed by your provider.",
+  browser: "Browser AI — downloads a ~1GB model on first use. Fully private.",
   basic:
     "Basic Search — searches laws and shows relevant excerpts. No AI analysis.",
 };
@@ -59,23 +69,27 @@ function ChatContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [brokerAvailable, setBrokerAvailable] = useState<boolean | null>(null);
+  const [brokerOnline, setBrokerOnline] = useState<boolean | null>(null);
   const [workerStatus, setWorkerStatus] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
   const workerRef = useRef<Worker | null>(null);
   const pendingRef = useRef<{
     resolve: (v: string) => void;
-    reject: (e: any) => void;
+    reject: (e: unknown) => void;
   } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
 
-  // ── Session Storage for Guests ──
+  // ── Session Storage for Guests (external system sync) ──
   useEffect(() => {
     if (!user) {
-      const saved = sessionStorage.getItem("glv_guest_chat");
-      if (saved) setMessages(JSON.parse(saved));
+      try {
+        const saved = sessionStorage.getItem("glv_guest_chat");
+        if (saved) setMessages(JSON.parse(saved)); // eslint-disable-line react-hooks/set-state-in-effect
+      } catch {
+        // Corrupted storage — start fresh
+      }
     }
   }, [user]);
 
@@ -85,19 +99,20 @@ function ChatContent() {
     }
   }, [messages, user]);
 
+  // brokerAvailable is derived: null when not in local mode,
+  // otherwise reflects the last health-check result
+  const brokerAvailable = mode === "local" ? brokerOnline : null;
+
   const modeMeta = MODE_META[mode];
   const ModeIcon = modeMeta.icon;
 
   // Check broker health in local mode
   useEffect(() => {
-    if (mode !== "local") {
-      setBrokerAvailable(null);
-      return;
-    }
+    if (mode !== "local") return;
     const check = () => {
       fetch(`${settings.brokerUrl}/health`)
-        .then((r) => setBrokerAvailable(r.ok))
-        .catch(() => setBrokerAvailable(false));
+        .then((r) => setBrokerOnline(r.ok))
+        .catch(() => setBrokerOnline(false));
     };
     check();
     const interval = setInterval(check, 15000);
@@ -181,7 +196,7 @@ function ChatContent() {
         }
 
         // Build request body based on mode
-        const body: Record<string, any> = {
+        const body: ChatRequestBody = {
           message: userMsg,
           mode,
           language: settings.language,
@@ -190,7 +205,6 @@ function ChatContent() {
 
         if (mode === "cloud") {
           body.provider = settings.provider;
-          body.apiKey = settings.apiKey;
           body.model = settings.model;
           body.customEndpoint = settings.customEndpoint;
         }
@@ -198,6 +212,32 @@ function ChatContent() {
         if (mode === "local") {
           // Mode 1: Local Ollama via broker (CLIENT SIDE)
           const langName = LANGUAGE_NAMES[settings.language] || "English";
+
+          // Quick Win 2: Pre-flight health check before the full request
+          let healthOk = brokerOnline;
+          if (healthOk === null || healthOk === undefined) {
+            try {
+              const healthRes = await fetch(`${settings.brokerUrl}/health`, {
+                signal: AbortSignal.timeout(3000),
+              });
+              healthOk = healthRes.ok;
+            } catch {
+              healthOk = false;
+            }
+          }
+          if (!healthOk) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: "assistant",
+                content:
+                  "⚠️ **Local AI Broker is offline.**\n\nStart the broker:\n```bash\ncd broker && python broker.py\n```\n\nThen try again. Or switch to another chat mode in Settings.",
+              },
+            ]);
+            setBrokerOnline(false);
+            setLoading(false);
+            return;
+          }
 
           // Get Qdrant results from server first (no AI generation)
           const searchRes = await fetch("/api/chat", {
@@ -210,38 +250,97 @@ function ChatContent() {
             .map((l: CitedLaw) => `[${l.law_key} ${l.norm_id}] ${l.law_title}`)
             .join("\n\n");
 
-          const brokerRes = await fetch(`${settings.brokerUrl}/api/chat`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message: userMsg,
-              context: contextStr,
-              conversationId: currentConvId || undefined,
-              model: settings.ollamaModel || undefined,
-              language: langName,
-              temperature: settings.ollamaParams?.temperature ?? 0.3,
-              top_p: settings.ollamaParams?.top_p ?? 0.9,
-              top_k: settings.ollamaParams?.top_k ?? 40,
-              max_tokens: settings.ollamaParams?.max_tokens ?? 1024,
-              system_prompt: settings.ollamaParams?.system_prompt || undefined,
-            }),
-          });
+          // Quick Win 1: Timeout on broker fetch (30s)
+          const brokerController = new AbortController();
+          const brokerTimeoutId = setTimeout(
+            () => brokerController.abort(),
+            30000,
+          );
 
-          if (!brokerRes.ok) {
-            throw new Error(`Local broker error: ${brokerRes.status}`);
+          try {
+            const brokerRes = await fetch(`${settings.brokerUrl}/api/chat`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                message: userMsg,
+                context: contextStr,
+                conversationId: currentConvId || undefined,
+                model: settings.ollamaModel || undefined,
+                language: langName,
+                temperature: settings.ollamaParams?.temperature ?? 0.3,
+                top_p: settings.ollamaParams?.top_p ?? 0.9,
+                top_k: settings.ollamaParams?.top_k ?? 40,
+                max_tokens: settings.ollamaParams?.max_tokens ?? 1024,
+                system_prompt:
+                  settings.ollamaParams?.system_prompt || undefined,
+                // Quick Win 4: Request streaming response
+                stream: true,
+              }),
+              signal: brokerController.signal,
+            });
+
+            if (!brokerRes.ok) {
+              throw new Error(`Local broker error: ${brokerRes.status}`);
+            }
+
+            const citedLaws = searchData.citedLaws || [];
+            // Quick Win 4: Insert placeholder message, then stream content
+            setMessages((prev) => [
+              ...prev,
+              { role: "assistant", content: "", citedLaws },
+            ]);
+            setBrokerOnline(true);
+
+            const reader = brokerRes.body?.getReader();
+            if (!reader) throw new Error("Response body not readable");
+
+            const decoder = new TextDecoder();
+            let accumulatedContent = "";
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              const text = decoder.decode(value, { stream: true });
+
+              for (const line of text.split("\n")) {
+                if (line.startsWith("data: ")) {
+                  try {
+                    const parsed = JSON.parse(line.slice(6));
+                    if (parsed.response) {
+                      accumulatedContent += parsed.response;
+                      setMessages((prev) => {
+                        const updated = [...prev];
+                        updated[updated.length - 1] = {
+                          ...updated[updated.length - 1],
+                          content: accumulatedContent,
+                        };
+                        return updated;
+                      });
+                    }
+                  } catch {
+                    // Skip malformed SSE lines
+                  }
+                }
+              }
+            }
+
+            // Append source disclaimer
+            setMessages((prev) => {
+              const updated = [...prev];
+              const idx = updated.length - 1;
+              updated[idx] = {
+                ...updated[idx],
+                content:
+                  updated[idx].content +
+                  "\n\n---\n*Generated by Local AI (Ollama).*",
+              };
+              return updated;
+            });
+          } finally {
+            clearTimeout(brokerTimeoutId);
           }
 
-          const localData = await brokerRes.json();
-
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content: localData.response + "\n\n---\n*Generated by Local AI (Ollama).* ",
-              citedLaws: searchData.citedLaws || [],
-            },
-          ]);
-          setBrokerAvailable(true);
           setLoading(false);
           return;
         }
@@ -314,7 +413,8 @@ function ChatContent() {
             citedLaws: data.citedLaws || [],
           },
         ]);
-        if (data.brokerAvailable !== undefined) setBrokerAvailable(data.brokerAvailable);
+        if (data.brokerAvailable !== undefined)
+          setBrokerOnline(data.brokerAvailable);
       } catch (err) {
         setMessages((prev) => [
           ...prev,
@@ -385,7 +485,9 @@ function ChatContent() {
                 <div className="absolute inset-0 bg-accent-gold/5 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 <MessageSquare className="w-10 h-10 text-accent-gold/40 group-hover:text-accent-gold transition-colors duration-500" />
               </div>
-              <p className="monumental-type opacity-40 mb-4">Consult the Vault</p>
+              <p className="monumental-type opacity-40 mb-4">
+                Consult the Vault
+              </p>
               <h2 className="text-3xl font-serif font-bold text-white mb-6 tracking-tight">
                 Legal Inquiry Terminal
               </h2>
@@ -472,7 +574,10 @@ function ChatContent() {
 
       {/* ── Input Area ── */}
       <div className="glass-panel-heavy border-t border-white/5 p-8 relative z-20">
-        <form onSubmit={(e) => handleSend(e)} className="max-w-4xl mx-auto relative group">
+        <form
+          onSubmit={(e) => handleSend(e)}
+          className="max-w-4xl mx-auto relative group"
+        >
           <input
             type="text"
             value={input}
@@ -510,12 +615,14 @@ function ChatContent() {
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={
+    <Suspense
+      fallback={
         <div className="flex flex-col items-center justify-center min-h-[60vh] animate-pulse">
-            <Loader2 className="w-12 h-12 text-accent-gold animate-spin mb-4" />
-            <p className="monumental-type opacity-40">Initializing Channel...</p>
+          <Loader2 className="w-12 h-12 text-accent-gold animate-spin mb-4" />
+          <p className="monumental-type opacity-40">Initializing Channel...</p>
         </div>
-    }>
+      }
+    >
       <ChatContent />
     </Suspense>
   );

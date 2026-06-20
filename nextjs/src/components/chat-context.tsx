@@ -21,41 +21,46 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     if (!base.ollamaParams.system_prompt) {
       base.ollamaParams.system_prompt = SYSTEM_PROMPT;
     }
+    // Synchronize with localStorage on initial mount.
+    // During SSR this safely falls back to defaults; on SPA navigation
+    // it picks up saved settings immediately without an effect cycle.
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const loaded = JSON.parse(raw);
+        // Auto-migrate legacy 9090 port to new 9000 standard
+        if (loaded.brokerUrl === "http://localhost:9090") {
+          loaded.brokerUrl = "http://localhost:9000";
+        }
+        // Ensure system prompt is synced if empty in storage
+        if (!loaded.ollamaParams?.system_prompt) {
+          loaded.ollamaParams = {
+            ...(loaded.ollamaParams || DEFAULT_CHAT_SETTINGS.ollamaParams),
+            system_prompt: SYSTEM_PROMPT,
+          };
+        }
+        const merged = { ...base, ...loaded };
+        delete (merged as Partial<ChatSettings>).apiKey;
+        return merged;
+      }
+    } catch {}
     return base;
   });
   const [mounted, setHydrated] = useState(false);
 
+  // Standard hydration guard: marks the component as client-hydrated
+  // so child content becomes visible only after localStorage state is applied.
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        setSettings((prev) => {
-          const loaded = JSON.parse(raw);
-          // Auto-migrate legacy 9090 port to new 9000 standard
-          if (loaded.brokerUrl === "http://localhost:9090") {
-            loaded.brokerUrl = "http://localhost:9000";
-          }
-          // Ensure system prompt is synced if empty in storage
-          if (!loaded.ollamaParams?.system_prompt) {
-            loaded.ollamaParams = {
-              ...(loaded.ollamaParams || DEFAULT_CHAT_SETTINGS.ollamaParams),
-              system_prompt: SYSTEM_PROMPT
-            };
-          }
-          return { ...prev, ...loaded };
-        });
-      }
-    } catch {}
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true);
   }, []);
 
   const updateSettings = (patch: Partial<ChatSettings>) => {
     const next = { ...settings, ...patch };
     setSettings(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-
-    // Dispatch a custom event to notify other tabs/components if needed,
-    // but within the same context it's already updated.
+    // Persist settings to localStorage WITHOUT the apiKey
+    const { apiKey: _, ...persistable } = next;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
     window.dispatchEvent(new Event("glv_settings_updated"));
   };
 

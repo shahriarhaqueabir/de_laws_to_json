@@ -35,7 +35,7 @@ export async function searchNorms(
   topK: number = 50,
   offset: number = 0,
 ): Promise<SearchResult[]> {
-  const filter: any = { must: [] };
+  const filter: { must: Array<Record<string, unknown>> } = { must: [] };
 
   if (category) {
     filter.must.push({ key: "category", match: { value: category } });
@@ -81,8 +81,9 @@ export async function searchNorms(
         score: r.score ?? 0,
       };
     });
-  } catch (err: any) {
-    console.error(`[Qdrant lib] Search error: ${err.message}`);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[Qdrant lib] Search error: ${message}`);
     // Re-throw to be caught by the API route
     throw err;
   }

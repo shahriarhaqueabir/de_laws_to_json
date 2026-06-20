@@ -4,7 +4,13 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import NormViewer from "../../../components/norm-viewer";
 import { Law, Norm } from "../../../lib/types";
-import { Loader2, ArrowLeft, BookmarkPlus, BookmarkCheck, Scale } from "lucide-react";
+import {
+  Loader2,
+  ArrowLeft,
+  BookmarkPlus,
+  BookmarkCheck,
+  Scale,
+} from "lucide-react";
 import Link from "next/link";
 import {
   isBookmarked,
@@ -18,7 +24,6 @@ export default function LawDetailPage() {
   const [data, setData] = useState<(Law & { norms: Norm[] }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [bookmarked, setBookmarked] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,7 +35,7 @@ export default function LawDetailPage() {
         if (!res.ok) throw new Error("Failed to load law details");
         const json = await res.json();
         setData(json);
-      } catch (err) {
+      } catch {
         setError("Law not found or could not be loaded.");
       } finally {
         setLoading(false);
@@ -40,15 +45,12 @@ export default function LawDetailPage() {
     fetchLaw();
   }, [key]);
 
-  useEffect(() => {
-    if (data) setBookmarked(isBookmarked(data.key));
-  }, [data?.key]);
+  const bookmarked = data ? isBookmarked(data.key) : false;
 
   const toggleBookmark = () => {
     if (!data) return;
     if (bookmarked) {
       removeBookmark(data.key);
-      setBookmarked(false);
       toast("Archive entry removed", "info");
     } else {
       addBookmark({
@@ -57,7 +59,6 @@ export default function LawDetailPage() {
         category: data.category,
         added_at: new Date().toISOString().split("T")[0],
       });
-      setBookmarked(true);
       toast("Statute archived", "success");
     }
   };
@@ -101,9 +102,7 @@ export default function LawDetailPage() {
           <div className="px-6 py-2 border border-accent-gold/40 bg-accent-gold/10 text-accent-gold-bright font-black tracking-[0.3em] text-sm">
             {data.key}
           </div>
-          <div className="monumental-type opacity-40">
-            {data.category}
-          </div>
+          <div className="monumental-type opacity-40">{data.category}</div>
           <button
             onClick={toggleBookmark}
             className={`ml-auto flex items-center gap-3 px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] border transition-all duration-500 active:scale-95 ${
@@ -132,23 +131,33 @@ export default function LawDetailPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5 border border-white/5 overflow-hidden rounded-sm mt-16">
           <div className="bg-zinc-950/40 p-8">
-            <span className="monumental-type opacity-30 block mb-3 text-[8px]">Status</span>
-            <span className="font-bold text-zinc-300 tracking-wide">{data.status}</span>
+            <span className="monumental-type opacity-30 block mb-3 text-[8px]">
+              Status
+            </span>
+            <span className="font-bold text-zinc-300 tracking-wide">
+              {data.status}
+            </span>
           </div>
           <div className="bg-zinc-950/40 p-8">
-            <span className="monumental-type opacity-30 block mb-3 text-[8px]">Authority</span>
+            <span className="monumental-type opacity-30 block mb-3 text-[8px]">
+              Authority
+            </span>
             <span className="font-bold text-zinc-300 tracking-wide">
               {data.authority}
             </span>
           </div>
           <div className="bg-zinc-950/40 p-8">
-            <span className="monumental-type opacity-30 block mb-3 text-[8px]">Modified</span>
+            <span className="monumental-type opacity-30 block mb-3 text-[8px]">
+              Modified
+            </span>
             <span className="font-bold text-zinc-300 tracking-wide">
               {data.last_changed || "Inert"}
             </span>
           </div>
           <div className="bg-zinc-950/40 p-8">
-            <span className="monumental-type opacity-30 block mb-3 text-[8px]">Density</span>
+            <span className="monumental-type opacity-30 block mb-3 text-[8px]">
+              Density
+            </span>
             <span className="font-bold text-zinc-300 tracking-wide">
               {data.total_norms} Sections
             </span>
@@ -158,10 +167,10 @@ export default function LawDetailPage() {
 
       <section>
         <div className="flex items-center gap-6 mb-12">
-            <h2 className="monumental-type opacity-40 shrink-0">
+          <h2 className="monumental-type opacity-40 shrink-0">
             Statutory Framework
-            </h2>
-            <div className="h-px w-full bg-white/5" />
+          </h2>
+          <div className="h-px w-full bg-white/5" />
         </div>
 
         <div className="space-y-6">

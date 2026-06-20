@@ -14,8 +14,12 @@ describe("MODE_LABELS", () => {
     expect(modes).toHaveLength(4);
 
     for (const mode of ["local", "cloud", "browser", "basic"]) {
-      expect(MODE_LABELS[mode as keyof typeof MODE_LABELS]).toHaveProperty("label");
-      expect(MODE_LABELS[mode as keyof typeof MODE_LABELS]).toHaveProperty("description");
+      expect(MODE_LABELS[mode as keyof typeof MODE_LABELS]).toHaveProperty(
+        "label",
+      );
+      expect(MODE_LABELS[mode as keyof typeof MODE_LABELS]).toHaveProperty(
+        "description",
+      );
     }
   });
 
@@ -29,13 +33,25 @@ describe("MODE_LABELS", () => {
 });
 
 describe("LANGUAGE_LABELS", () => {
-  const expectedLanguages = ["de", "en", "tr", "ar", "fr", "es", "pl", "uk", "ru"];
+  const expectedLanguages = [
+    "de",
+    "en",
+    "tr",
+    "ar",
+    "fr",
+    "es",
+    "pl",
+    "uk",
+    "ru",
+  ];
 
   it("has all 9 languages", () => {
     const keys = Object.keys(LANGUAGE_LABELS);
     expect(keys).toHaveLength(9);
     for (const lang of expectedLanguages) {
-      expect(LANGUAGE_LABELS[lang as keyof typeof LANGUAGE_LABELS]).toBeDefined();
+      expect(
+        LANGUAGE_LABELS[lang as keyof typeof LANGUAGE_LABELS],
+      ).toBeDefined();
     }
   });
 
@@ -49,7 +65,17 @@ describe("LANGUAGE_LABELS", () => {
 });
 
 describe("LANGUAGE_NAMES", () => {
-  const expectedLanguages = ["de", "en", "tr", "ar", "fr", "es", "pl", "uk", "ru"];
+  const expectedLanguages = [
+    "de",
+    "en",
+    "tr",
+    "ar",
+    "fr",
+    "es",
+    "pl",
+    "uk",
+    "ru",
+  ];
 
   it("has all 9 languages", () => {
     const keys = Object.keys(LANGUAGE_NAMES);
@@ -103,8 +129,8 @@ describe("DEFAULT_OLLAMA_PARAMS", () => {
     expect(DEFAULT_OLLAMA_PARAMS.temperature).toBe(0.3);
   });
 
-  it("has system_prompt containing Rechtsexperte", () => {
-    expect(DEFAULT_OLLAMA_PARAMS.system_prompt).toContain("legal expert");
+  it("has empty system_prompt by default (populated at runtime in chat-context)", () => {
+    expect(DEFAULT_OLLAMA_PARAMS.system_prompt).toBe("");
   });
 });
 

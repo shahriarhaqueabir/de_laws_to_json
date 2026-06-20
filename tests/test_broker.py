@@ -20,11 +20,15 @@ from httpx import ASGITransport, AsyncClient
 from broker.broker import OLLAMA_URL, ChatRequest, ChatResponse, app
 
 
-class _MockHttpClient:
-    """Mock that replaces httpx.AsyncClient for testing."""
+class _MockAsyncClient:
+    """Mock that replaces httpx.AsyncClient for testing.
+
+    Supports both regular .post() and .stream() calls.
+    """
 
     def __init__(self, **kwargs):
         self.post_handler = None
+        self.stream_handler = None
 
     async def __aenter__(self):
         return self
@@ -41,6 +45,34 @@ class _MockHttpClient:
         if self.post_handler is not None:
             return await self.post_handler(url, **kwargs)
         return _FakeResponse(200, {"response": "", "model": "default"})
+
+    def stream(self, method, url, **kwargs):
+        """Return a mock streaming context manager."""
+        if self.stream_handler is not None:
+            return self.stream_handler(method, url, **kwargs)
+        # Default: return a stream that yields nothing
+        return _FakeStreamContextManager([])
+
+
+class _FakeStreamContextManager:
+    """Simulates an httpx streaming response context manager."""
+
+    def __init__(self, lines):
+        self._lines = lines
+        self.status_code = 200
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        pass
+
+    def raise_for_status(self):
+        pass
+
+    async def aiter_lines(self):
+        for line in self._lines:
+            yield line
 
 
 class _FakeResponse:
@@ -83,7 +115,7 @@ async def test_list_models_proxies_to_ollama(client):
         return _FakeResponse(200, fake_tags)
 
     def make_mock_client(**kwargs):
-        c = _MockHttpClient(**kwargs)
+        c = _MockAsyncClient(**kwargs)
         c.get = mock_get
         return c
 
@@ -102,7 +134,7 @@ async def test_chat_valid_request_returns_response(client):
         return _FakeResponse(200, fake_ollama_response)
 
     def make_mock_client(**kwargs):
-        c = _MockHttpClient(**kwargs)
+        c = _MockAsyncClient(**kwargs)
         c.post_handler = mock_post
         return c
 
@@ -127,7 +159,7 @@ async def test_chat_language_injection(client):
         return _FakeResponse(200, {"response": "Antwort auf Deutsch."})
 
     def make_mock_client(**kwargs):
-        c = _MockHttpClient(**kwargs)
+        c = _MockAsyncClient(**kwargs)
         c.post_handler = capture_post
         return c
 
@@ -151,7 +183,7 @@ async def test_chat_custom_system_prompt_merged_with_language(client):
         return _FakeResponse(200, {"response": "Custom guidance."})
 
     def make_mock_client(**kwargs):
-        c = _MockHttpClient(**kwargs)
+        c = _MockAsyncClient(**kwargs)
         c.post_handler = capture_post
         return c
 
@@ -172,7 +204,7 @@ async def test_chat_custom_system_prompt_merged_with_language(client):
 @pytest.mark.asyncio
 async def test_chat_ollama_offline_returns_503(client):
     def make_mock_client(**kwargs):
-        c = _MockHttpClient(**kwargs)
+        c = _MockAsyncClient(**kwargs)
 
         async def raise_error(url, **kwargs):
             raise Exception("Connection refused")
@@ -211,6 +243,39 @@ async def test_chat_validation_temperature_out_of_range(client):
         json={"message": "test", "temperature": 5.0},
     )
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_chat_streaming_returns_sse(client):
+    """Streaming request returns SSE events with response chunks."""
+    fake_chunks = [
+        {"response": "Legal ", "done": False},
+        {"response": "guidance ", "done": False},
+        {"response": "here.", "done": True},
+    ]
+    fake_lines = [json.dumps(c) for c in fake_chunks]
+
+    def make_mock_client(**kwargs):
+        c = _MockAsyncClient(**kwargs)
+        c.stream_handler = lambda method, url, **kwargs: _FakeStreamContextManager(
+            fake_lines
+        )
+        return c
+
+    with patch("httpx.AsyncClient", side_effect=make_mock_client):
+        resp = await client.post(
+            "/api/chat",
+            json={"message": "Test streaming", "stream": True},
+        )
+        assert resp.status_code == 200
+        assert "text/event-stream" in resp.headers.get("content-type", "")
+
+        body = await resp.aread()
+        text = body.decode()
+        assert "data: " in text
+        assert '{"response": "Legal "}' in text
+        assert '{"response": "guidance "}' in text
+        assert '{"response": "here."}' in text
 
 
 @pytest.mark.asyncio
