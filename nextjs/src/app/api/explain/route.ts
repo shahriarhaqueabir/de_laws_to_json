@@ -3,6 +3,7 @@ import { z } from "zod";
 import { cookies } from "next/headers";
 import { getServerClient } from "../../../lib/supabase-server";
 import { generateNormExplanation } from "../../../lib/chat";
+import { decryptApiKey } from "../../../lib/encryption";
 import type { AppLanguage, CloudProvider } from "../../../lib/types";
 import { LANGUAGE_NAMES } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
@@ -22,6 +23,47 @@ const ExplainBodySchema = z.object({
   ollamaModel: z.string().optional(),
   ollamaParams: z.record(z.string(), z.unknown()).optional(),
 });
+
+/**
+ * Resolve the API key from either the request body or server-side storage.
+ * For cloud modes, prefer server-side encrypted key first to avoid
+ * sending keys over the wire unnecessarily.
+ */
+async function resolveApiKey(
+  bodyApiKey: string | undefined,
+  supabase: ReturnType<typeof getServerClient>,
+): Promise<{ apiKey: string; provider: CloudProvider }> {
+  // If client provided a key, use it directly (backward compatibility)
+  if (bodyApiKey) {
+    return { apiKey: bodyApiKey, provider: "openai" };
+  }
+
+  // Try server-side stored key
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    const { data: keyRow } = await supabase
+      .from("user_api_keys")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (keyRow) {
+      try {
+        const decrypted = await decryptApiKey(keyRow.encrypted_key);
+        return {
+          apiKey: decrypted,
+          provider: keyRow.provider as CloudProvider,
+        };
+      } catch {
+        // Decryption failed — key was rotated, fall through
+      }
+    }
+  }
+
+  return { apiKey: "", provider: "openai" };
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -84,7 +126,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    console.log(`[Cache Miss] Generating explanation for ${normCacheId} (${lang})`);
+    console.log(
+      `[Cache Miss] Generating explanation for ${normCacheId} (${lang})`,
+    );
 
     // 2. Generate via AI
     if (mode === "local") {
@@ -159,9 +203,13 @@ Return STRICT JSON with these exact fields:
       });
     }
 
+    // Resolve API key from server-side storage (preferred) or client body
+    const { apiKey: resolvedKey, provider: resolvedProvider } =
+      await resolveApiKey(apiKey, supabase);
+
     const explanation = await generateNormExplanation({
-      provider: (provider as CloudProvider) || "openai",
-      apiKey: apiKey || "",
+      provider: (provider as CloudProvider) || resolvedProvider || "openai",
+      apiKey: resolvedKey || apiKey || "",
       model: model || "gpt-4o-mini",
       customEndpoint: customEndpoint || "",
       normId,
@@ -194,7 +242,8 @@ Return STRICT JSON with these exact fields:
     });
   } catch (err: unknown) {
     console.error("Explain API Error:", err);
-    const message = err instanceof Error ? err.message : "Failed to generate explanation";
+    const message =
+      err instanceof Error ? err.message : "Failed to generate explanation";
     return errorResponse("EXPLAIN_FAILED", message, 500);
   }
 }

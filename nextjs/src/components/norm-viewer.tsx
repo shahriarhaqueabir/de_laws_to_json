@@ -114,7 +114,6 @@ export default function NormViewer({
           lang: settings.language,
           mode: settings.mode === "basic" ? "cloud" : settings.mode,
           provider: settings.provider,
-          apiKey: settings.apiKey,
           model: settings.model,
           customEndpoint: settings.customEndpoint,
           brokerUrl: settings.brokerUrl,

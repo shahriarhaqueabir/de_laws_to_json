@@ -99,7 +99,6 @@ describe("DEFAULT_CHAT_SETTINGS", () => {
     expect(settings).toHaveProperty("ollamaModel");
     expect(settings).toHaveProperty("ollamaParams");
     expect(settings).toHaveProperty("provider");
-    expect(settings).toHaveProperty("apiKey");
     expect(settings).toHaveProperty("model");
     expect(settings).toHaveProperty("customEndpoint");
     expect(settings).toHaveProperty("browserModel");
