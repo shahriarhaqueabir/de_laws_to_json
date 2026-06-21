@@ -80,7 +80,12 @@ export default function NormViewer({
         try {
           parsed = JSON.parse(jsonStr);
         } catch {
-          parsed = { translation: jsonStr, summary: jsonStr, implications: jsonStr, next_steps: jsonStr };
+          parsed = {
+            translation: jsonStr,
+            summary: jsonStr,
+            implications: jsonStr,
+            next_steps: jsonStr,
+          };
         }
 
         setExplanation({
@@ -120,7 +125,8 @@ export default function NormViewer({
       if (!res.ok) throw new Error("Explanation failed");
       const data = (await res.json()) as NormExplanation;
       setExplanation(data);
-    } catch {
+    } catch (err) {
+      console.error("Norm explain failed:", err);
       toast("Inference failed. Check system config.", "error");
     } finally {
       setExplaining(false);
@@ -134,20 +140,26 @@ export default function NormViewer({
         className="w-full flex items-center justify-between p-8 text-left hover:bg-white/[0.01] transition-all duration-500 relative"
       >
         <div className="flex-1">
-          <span className="text-accent-gold font-black mr-6 text-[10px] tracking-[0.3em] uppercase opacity-60">Section {normId}</span>
-          <span className="font-serif font-bold text-white text-xl tracking-tight">{title}</span>
+          <span className="text-accent-gold font-black mr-6 text-[10px] tracking-[0.3em] uppercase opacity-60">
+            Section {normId}
+          </span>
+          <span className="font-serif font-bold text-white text-xl tracking-tight">
+            {title}
+          </span>
         </div>
         <div className="flex items-center gap-6">
           {!explanation && !expanded && (
-             <div
-               className="hidden group-hover/norm:flex items-center gap-2 monumental-type opacity-40 animate-pulse"
-               onClick={handleExplain}
-             >
-               <div className="w-1 h-1 rounded-full bg-accent-gold shadow-[0_0_8px_var(--accent-gold-bright)]" />
-               Neural Ready
-             </div>
+            <div
+              className="hidden group-hover/norm:flex items-center gap-2 monumental-type opacity-40 animate-pulse"
+              onClick={handleExplain}
+            >
+              <div className="w-1 h-1 rounded-full bg-accent-gold shadow-[0_0_8px_var(--accent-gold-bright)]" />
+              Neural Ready
+            </div>
           )}
-          <div className={`p-2 transition-transform duration-500 ${expanded ? 'rotate-180' : ''}`}>
+          <div
+            className={`p-2 transition-transform duration-500 ${expanded ? "rotate-180" : ""}`}
+          >
             <ChevronDown className="w-5 h-5 text-zinc-700 group-hover/norm:text-accent-gold transition-colors" />
           </div>
         </div>
@@ -182,10 +194,12 @@ export default function NormViewer({
               <div className="space-y-10 animate-fade-in">
                 {/* Translation */}
                 <div className="p-8 glass-panel border-white/10 relative overflow-hidden">
-                   <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold-bright opacity-30" />
+                  <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold-bright opacity-30" />
                   <div className="flex items-center gap-3 monumental-type mb-6 opacity-60">
                     <Languages className="w-3.5 h-3.5" />
-                    {explanation.is_official ? "Official Translation" : "Vernacular Translation"}
+                    {explanation.is_official
+                      ? "Official Translation"
+                      : "Vernacular Translation"}
                   </div>
                   <p className="legal-text text-white font-sans font-medium leading-relaxed">
                     {explanation.translation}
@@ -211,7 +225,7 @@ export default function NormViewer({
                     </p>
                   </div>
                   <div className="p-6 border border-accent-gold/10 bg-accent-gold/[0.02] relative group/insight">
-                     <div className="absolute top-0 left-0 w-1 h-1 bg-accent-gold opacity-40" />
+                    <div className="absolute top-0 left-0 w-1 h-1 bg-accent-gold opacity-40" />
                     <div className="monumental-type opacity-30 mb-4 flex items-center gap-2 text-accent-gold-bright group-hover/insight:opacity-100 transition-opacity">
                       Protocol
                     </div>
@@ -223,9 +237,9 @@ export default function NormViewer({
 
                 {/* Disclaimer */}
                 <div className="flex justify-center">
-                    <p className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-700 italic border-y border-white/5 py-4 px-10">
+                  <p className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-700 italic border-y border-white/5 py-4 px-10">
                     Vault Intelligence — Preliminary Non-Binding Report
-                    </p>
+                  </p>
                 </div>
               </div>
             )}

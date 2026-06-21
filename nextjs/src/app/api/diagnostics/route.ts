@@ -3,7 +3,13 @@ import { cookies } from "next/headers";
 import { getServerClient } from "../../../lib/supabase-server";
 import { searchNorms } from "../../../lib/qdrant";
 
+interface CheckResult {
+  status: string;
+  message: string;
+}
+
 export async function GET(req: NextRequest) {
+  const checks: Record<string, CheckResult> = {};
   const results: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     env: {
@@ -13,7 +19,7 @@ export async function GET(req: NextRequest) {
       QDRANT_URL: !!process.env.QDRANT_URL,
       QDRANT_API_KEY: !!process.env.QDRANT_API_KEY,
     },
-    checks: {},
+    checks,
   };
 
   // 1. Check Supabase
@@ -25,20 +31,20 @@ export async function GET(req: NextRequest) {
       .select("count")
       .limit(1);
     if (error) throw error;
-    results.checks.supabase = {
+    checks.supabase = {
       status: "ok",
       message: "Successfully queried norms table",
     };
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : "Supabase query failed";
-    results.checks.supabase = { status: "error", message };
+    checks.supabase = { status: "error", message };
   }
 
   // 2. Check Qdrant
   try {
     const qdrantResults = await searchNorms("test", undefined, 1);
-    results.checks.qdrant = {
+    checks.qdrant = {
       status: "ok",
       message: `Successfully queried Qdrant via Universal Query API. Found ${qdrantResults.length} matches for 'test'.`,
     };
@@ -46,15 +52,13 @@ export async function GET(req: NextRequest) {
     const qdrantMessage =
       err instanceof Error ? err.message : "Qdrant query failed";
     console.error("[Diagnostics] Qdrant check failed:", qdrantMessage);
-    results.checks.qdrant = {
+    checks.qdrant = {
       status: "error",
       message: `Qdrant check failed: ${qdrantMessage}. Ensure COLLECTION '${process.env.COLLECTION || "german_norms"}' exists and Managed Inference is enabled.`,
     };
   }
 
-  const allOk = Object.values(results.checks).every(
-    (c: { status: string }) => c.status === "ok",
-  );
+  const allOk = Object.values(checks).every((c) => c.status === "ok");
 
   return NextResponse.json(results, { status: allOk ? 200 : 500 });
 }

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { getServerClient } from "../../../lib/supabase-server";
+import { errorResponse, successResponse } from "../../../lib/api-utils";
 
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get("category") || "";
@@ -21,8 +22,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { data, error, count } = await query;
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return errorResponse("DB_ERROR", "Failed to fetch laws", 500);
 
-  return NextResponse.json({ results: data, total: count });
+  return successResponse({ results: data, total: count });
 }

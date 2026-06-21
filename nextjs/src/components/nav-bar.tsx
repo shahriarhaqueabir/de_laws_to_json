@@ -7,6 +7,7 @@ import {
   Search,
   MessageSquare,
   Bookmark,
+  Compass,
   Settings,
   Plug,
   Cloud,
@@ -57,6 +58,7 @@ const MODE_META: Record<
 const navItems = [
   { href: "/", label: "Vault", icon: Search },
   { href: "/chat", label: "Consult", icon: MessageSquare },
+  { href: "/guidance", label: "Guidance", icon: Compass },
   { href: "/bookmarks", label: "Archives", icon: Bookmark },
 ];
 
@@ -96,7 +98,9 @@ export default function NavBar() {
                     key={item.href}
                     href={item.href}
                     className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 active:translate-y-[1px] relative group ${
-                      isActive ? "text-accent-gold" : "text-zinc-500 hover:text-white"
+                      isActive
+                        ? "text-accent-gold"
+                        : "text-zinc-500 hover:text-white"
                     }`}
                   >
                     {item.label}
@@ -176,13 +180,11 @@ export default function NavBar() {
                                 : "text-zinc-500 hover:bg-white/5 hover:text-white"
                             }`}
                           >
-                            <MI className={`w-4 h-4 ${isActive ? "text-accent-gold" : "text-zinc-600"}`} />
-                            <span className="flex-1">
-                              {mm.label}
-                            </span>
-                            {isActive && (
-                              <Check className="w-3 h-3" />
-                            )}
+                            <MI
+                              className={`w-4 h-4 ${isActive ? "text-accent-gold" : "text-zinc-600"}`}
+                            />
+                            <span className="flex-1">{mm.label}</span>
+                            {isActive && <Check className="w-3 h-3" />}
                           </button>
                         );
                       },

@@ -1,7 +1,7 @@
-# API Reference — German Law Search
+# API Reference — German Law Vault (Next.js)
 
-**Updated:** 2026-02-24  
-**Version:** 2.0 (Unified Translation System)
+**Updated:** 2026-06-21  
+**Version:** 3.0 (Guidance + Folder System)
 
 ---
 
@@ -9,257 +9,281 @@
 
 ### GET `/api/search`
 
-Search German laws using natural language queries in English or German.
+Search German laws using natural language queries via Qdrant vector search.
 
 **Query Parameters:**
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `q` | string | Yes | Search query (English or German) |
+| `q` | string | No | Search query (English or German). Omit to browse by category. |
+| `category` | string | No | Filter by category (e.g., "housing", "labor", "civil") |
 | `limit` | integer | No | Max results (default: 10, max: 50) |
-| `category` | string | No | Filter by category (e.g., "housing", "labor") |
+| `page` | integer | No | Page number for pagination (default: 1, offset = (page-1) * limit) |
 
 **Example:**
 ```bash
-curl "http://localhost:5000/api/search?q=landlord%20refuses%20deposit&limit=10"
+curl "/api/search?q=landlord%20refuses%20deposit&limit=10"
 ```
 
 **Response:**
 ```json
 {
-  "query": "landlord refuses deposit",
-  "expanded": ["mieter", "kaution", "rückzahlung"],
-  "results": [
+  "data": [
     {
-      "key": "BGB",
-      "title": "Bürgerliches Gesetzbuch",
+      "law_key": "BGB",
+      "law_title": "Bürgerliches Gesetzbuch",
+      "norm_id": "§ 548",
+      "norm_title": "Ansprüche des Vermieters",
+      "content": "Der Vermieter kann...",
       "score": 0.85,
-      "norms": [
-        {
-          "norm_id": "§ 548",
-          "title": "Ansprüche des Vermieters",
-          "preview": "Der Vermieter kann..."
-        }
-      ]
+      "category": "consumer"
     }
   ],
-  "time_ms": 45
+  "total": 1
 }
 ```
 
 ---
 
-### GET `/api/law/<key>`
+### GET `/api/laws/[key]`
 
 Get a specific law by its key (e.g., "BGB", "StGB").
 
 **Example:**
 ```bash
-curl "http://localhost:5000/api/law/BGB"
+curl "/api/laws/BGB"
 ```
 
 **Response:**
 ```json
 {
-  "key": "BGB",
-  "title": "Bürgerliches Gesetzbuch",
-  "en_title": "Civil Code",
-  "category": "consumer",
-  "norms": [
+  "data": {
+    "key": "BGB",
+    "title": "Bürgerliches Gesetzbuch",
+    "category": "consumer",
+    "norms": [
+      {
+        "norm_id": "§ 433",
+        "title": "Vertragstypische Pflichten beim Kaufvertrag",
+        "content": "Durch den Kaufvertrag wird der Verkäufer einer Sache verpflichtet..."
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 🤖 Guidance Endpoints (NEW)
+
+### POST `/api/guidance`
+
+Generate 3-5 legal outcome paths for a user's situation. The AI engine cross-references 6,000+ German federal laws via Qdrant, user's bookmarked laws, and folder context.
+
+**Request:**
+```json
+{
+  "situation": "I was fired without notice after 5 years of employment",
+  "language": "en",
+  "folder_id": "uuid-optional",
+  "folder_context": {
+    "id": "uuid",
+    "name": "Wrongful Dismissal",
+    "category": "labor",
+    "incident_date": "2026-05-15",
+    "dispute_value": 15000,
+    "status": "pre_action",
+    "opposing_party": "Employer GmbH",
+    "deadline_date": "2026-06-05",
+    "court_name": "Arbeitsgericht Berlin",
+    "case_number": "",
+    "notes": "Was told verbally on May 15"
+  },
+  "provider": "openai",
+  "model": "gpt-4o-mini"
+}
+```
+
+**Response:**
+```json
+{
+  "data": {
+    "session_id": "uuid-or-null",
+    "paths": [
+      {
+        "path_number": 1,
+        "title": "Außergerichtliche Einigung (Out-of-Court Settlement)",
+        "summary": "Negotiate directly...",
+        "detailed_analysis": "Under German law...",
+        "laws_cited": [
+          { "law_key": "BGB", "norm_id": "§ 779", "law_title": "Bürgerliches Gesetzbuch" }
+        ],
+        "risk_level": "low",
+        "risk_reason": "Low risk - no court exposure.",
+        "cost_estimate": 1200,
+        "cost_breakdown": { "court_fees": 0, "lawyer_fees": 1200, "total_risk": 2400 },
+        "recommended_actions": ["Document facts", "Send demand letter"],
+        "estimated_timeline": "2-6 weeks",
+        "success_probability": 0.65
+      }
+    ],
+    "folder_context": { "...": "..." },
+    "generated_at": "2026-06-21T12:00:00.000Z",
+    "language": "en"
+  }
+}
+```
+
+**Features:**
+- **AI-powered**: Uses user's API key from `user_api_keys` table (OpenAI/Anthropic/Ollama).
+- **AI-less fallback**: Returns Qdrant search results when no API key is configured.
+- **Folder context**: 8 uniform properties enrich the AI prompt.
+- **Bookmarked laws**: Auto-included when a folder is selected.
+- **Cost estimation**: RVG/GKG calculator attached server-side.
+
+---
+
+### GET `/api/guidance/sessions/[id]`
+
+Retrieve a saved guidance session with its paths.
+
+**Response:**
+```json
+{
+  "data": {
+    "session": { "id": "uuid", "title": "...", "status": "active" },
+    "paths": [ { "path_number": 1, "title": "...", "risk_level": "low" } ]
+  }
+}
+```
+
+---
+
+### DELETE `/api/guidance/sessions/[id]`
+
+Delete a guidance session.
+
+**Response:**
+```json
+{ "data": { "deleted": true } }
+```
+
+---
+
+### POST `/api/guidance/generate-doc`
+
+Generate a legal document from a template + folder context.
+
+**Request:**
+```json
+{
+  "template_slug": "demand-letter",
+  "folder_context": { "name": "Test Case", "opposing_party": "Employer GmbH" },
+  "situation": "I was fired without notice"
+}
+```
+
+**Response:**
+```json
+{
+  "data": {
+    "title": "Demand Letter - Test Case",
+    "content": "Sehr geehrte Damen und Herren...",
+    "template_slug": "demand-letter",
+    "placeholders_filled": {
+      "incident_date": "...",
+      "dispute_value": "...",
+      "opposing_party": "Employer GmbH"
+    }
+  }
+}
+```
+
+---
+
+## 📁 Bookmark Folder Endpoints (NEW)
+
+### GET `/api/bookmarks/folders`
+
+List the authenticated user's bookmark folders.
+
+**Auth required:** Yes (cookie-based Supabase session).
+
+**Response:**
+```json
+{
+  "data": [
     {
-      "norm_id": "§ 1",
-      "title": "Rechtsfähigkeit",
-      "text": "Die Rechtsfähigkeit..."
+      "id": "uuid",
+      "user_id": "uuid",
+      "name": "Wrongful Dismissal",
+      "description": "Case regarding my termination",
+      "category": "labor",
+      "incident_date": "2026-05-15",
+      "dispute_value": 15000.00,
+      "status": "pre_action",
+      "opposing_party": "Employer GmbH",
+      "deadline_date": "2026-06-05",
+      "court_name": "",
+      "case_number": "",
+      "notes": "Was told verbally",
+      "created_at": "2026-06-21T12:00:00Z",
+      "updated_at": "2026-06-21T12:00:00Z"
     }
   ]
 }
 ```
 
----
+### POST `/api/bookmarks/folders`
 
-### GET `/api/law-insights/<key>`
+Create a new bookmark folder.
 
-Generate AI-powered insights for a specific law.
-
-**Example:**
-```bash
-curl "http://localhost:5000/api/law-insights/BGB"
-```
-
-**Response:**
-```json
-{
-  "summary": "The Civil Code governs private law relationships...",
-  "risk": "Note that specific provisions may vary by state.",
-  "exclusions": "Does not cover public law matters.",
-  "scenarios": "Used when drafting rental agreements."
-}
-```
-
----
-
-## 🤖 Translation Endpoints
-
-### POST `/api/translate`
-
-**Unified AI-powered translation endpoint.** All translation requests flow through here.
+**Auth required:** Yes.
 
 **Request:**
-```bash
-curl -X POST "http://localhost:5000/api/translate" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Kündigung", "is_title": false}'
-```
-
-**Request Fields:**
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `text` | string | Yes | German text to translate |
-| `is_title` | boolean | No | True if text is a law title |
-
-**Response:**
 ```json
 {
-  "translation": "termination",
-  "from_cache": true
+  "name": "Wrongful Dismissal",
+  "description": "Case regarding my termination",
+  "category": "labor",
+  "incident_date": "2026-05-15",
+  "dispute_value": 15000,
+  "status": "pre_action",
+  "opposing_party": "Employer GmbH",
+  "deadline_date": "2026-06-05",
+  "court_name": "Arbeitsgericht Berlin",
+  "case_number": "",
+  "notes": "Some notes"
 }
 ```
 
-**Response Fields:**
-| Field | Type | Description |
-|-------|------|-------------|
-| `translation` | string | English translation |
-| `from_cache` | boolean | True if served from cache |
+**Response:** (201 Created) — The created folder object.
 
-**Translation Flow:**
-1. Check cache (instant if hit)
-2. Extract dictionary hints
-3. Call Ollama AI with context
-4. Cache and return result
+### PATCH `/api/bookmarks/folders?id=X`
 
-**Status Codes:**
-- `200 OK` - Translation successful
-- `429 Too Many Requests` - Rate limited (60/min)
-- `500 Internal Server Error` - AI service unavailable
+Update an existing folder.
+
+**Auth required:** Yes. Only the folder's owner can update.
+
+### DELETE `/api/bookmarks/folders?id=X`
+
+Delete a folder.
+
+**Auth required:** Yes. Bookmarks in the folder get `folder_id` set to NULL.
 
 ---
 
-### POST `/api/translate/batch`
+## 💬 Chat Endpoints
 
-Translate multiple texts in one request.
+### POST `/api/chat`
+
+AI chat with context from laws and norms. Supports streaming and non-streaming.
 
 **Request:**
-```bash
-curl -X POST "http://localhost:5000/api/translate/batch" \
-  -H "Content-Type: application/json" \
-  -d '{"texts": ["Kündigung", "Miete", "BGB"], "is_title": false}'
-```
-
-**Response:**
 ```json
 {
-  "translations": [
-    {
-      "original": "Kündigung",
-      "translation": "termination",
-      "from_cache": true
-    },
-    {
-      "original": "Miete",
-      "translation": "rent",
-      "from_cache": false
-    }
-  ]
-}
-```
-
-**Limits:**
-- Maximum 50 texts per batch
-- Rate limited: 10 requests/minute
-
----
-
-### GET `/api/translate/cache/stats`
-
-Get translation cache statistics.
-
-**Response:**
-```json
-{
-  "cache_size": 1247,
-  "file": "./ai_translations.json",
-  "dirty": false
-}
-```
-
----
-
-### POST `/api/translate/cache/clear`
-
-Clear the translation cache (admin only).
-
-**Headers:**
-| Header | Value | Description |
-|--------|-------|-------------|
-| `X-Admin-Token` | string | Admin authentication token |
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "message": "Translation cache cleared"
-}
-```
-
----
-
-## 💬 AI Chat Endpoints
-
-### POST `/api/ai_chat`
-
-Stream AI responses for legal questions.
-
-**Request:**
-```bash
-curl -X POST "http://localhost:5000/api/ai_chat" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "Can my landlord increase rent?", "context": "BGB § 558"}'
-```
-
-**Response:** (streamed)
-```
-1. **Summary**: Rent increases are regulated under...
-2. **Detailed Analysis**: According to BGB § 558...
-3. **Practical Guidance**: You should...
-```
-
-**Rate Limit:** 5 requests/minute
-
----
-
-## 📊 Dictionary Endpoints
-
-### POST `/api/dictionary_lookup`
-
-Fast dictionary lookup for a German word.
-
-**Request:**
-```bash
-curl -X POST "http://localhost:5000/api/dictionary_lookup" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Kündigung"}'
-```
-
-**Response:**
-```json
-{
-  "results": [
-    {
-      "english": "termination",
-      "frequency": 90,
-      "pos": "n",
-      "source": "legal_priority"
-    }
-  ]
+  "message": "What does BGB § 433 say?",
+  "conversation_id": "optional-uuid",
+  "language": "en"
 }
 ```
 
@@ -267,72 +291,26 @@ curl -X POST "http://localhost:5000/api/dictionary_lookup" \
 
 ## 🔧 Admin Endpoints
 
-### GET `/api/admin/info`
+### GET `/api/diagnostics`
 
-Get server status and index information.
-
-**Headers:**
-| Header | Value | Description |
-|--------|-------|-------------|
-| `X-Admin-Token` | string | Admin authentication token |
-
-**Response:**
-```json
-{
-  "indexing": true,
-  "total_files": 6000,
-  "indexed_files": 5842,
-  "laws": 5842,
-  "log_level": "INFO"
-}
-```
+System diagnostics and health check.
 
 ---
 
-### POST `/api/admin/rebuild_index`
+## Folder Properties Reference
 
-Rebuild the search index (admin only).
+The 8 uniform folder properties that feed the AI guidance engine:
 
-**Response:**
-```json
-{
-  "status": "rebuild_started"
-}
-```
-
----
-
-## 📈 Status Endpoints
-
-### GET `/api/status`
-
-Get server health status.
-
-**Response:**
-```json
-{
-  "ready": true,
-  "laws": 5842,
-  "total_norms": 125000,
-  "uptime_seconds": 3600
-}
-```
-
----
-
-### GET `/api/dev/health`
-
-Get detailed development health information.
-
-**Response:**
-```json
-{
-  "ollama": "running",
-  "dictionary": "loaded",
-  "uptime_seconds": 3600,
-  "memory_mb": 256
-}
-```
+| Field | Type | AI Use |
+|-------|------|--------|
+| `incident_date` | DATE | Calculate statutory deadlines via `calculateDeadline()` |
+| `dispute_value` | NUMERIC(12,2) | Cost estimation (RVG/GKG) via `calculateTotalLegalRisk()` |
+| `status` | ENUM(pre_action, consulting, filed, in_progress, resolved) | Determine urgency tier |
+| `opposing_party` | TEXT(500) | Check specific legal protections (KSchG, BDSG) |
+| `deadline_date` | DATE | Generate urgency warnings with days-remaining count |
+| `court_name` | TEXT(200) | Jurisdiction-specific procedures |
+| `case_number` | TEXT(200) | Link to existing court proceedings (Aktenzeichen) |
+| `notes` | TEXT(5000) | Free-text injected into AI prompt |
 
 ---
 
@@ -340,10 +318,10 @@ Get detailed development health information.
 
 | Endpoint | Limit | Period |
 |----------|-------|--------|
-| `/api/translate` | 60 | 60 seconds |
-| `/api/translate/batch` | 10 | 60 seconds |
-| `/api/ai_chat` | 5 | 60 seconds |
+| `/api/guidance` | 10 | 60 seconds |
+| `/api/bookmarks/folders` | 30 | 60 seconds |
 | `/api/search` | 100 | 60 seconds |
+| `/api/chat` | 20 | 60 seconds |
 
 ---
 
@@ -353,19 +331,99 @@ All endpoints return errors in this format:
 
 ```json
 {
-  "error": "error_code",
-  "message": "Human-readable message"
+  "error": "ERROR_CODE",
+  "message": "Human-readable message",
+  "details": []
 }
 ```
 
 **Common Error Codes:**
 | Code | HTTP Status | Description |
 |------|-------------|-------------|
-| `rate_limited` | 429 | Too many requests |
-| `unauthorized` | 403 | Admin token required |
-| `not_found` | 404 | Resource not found |
-| `translation_failed` | 500 | AI translation error |
+| `VALIDATION_ERROR` | 422 | Invalid request body (Zod validation) |
+| `UNAUTHORIZED` | 401 | User not signed in |
+| `NOT_FOUND` | 404 | Resource not found |
+| `SERVER_ERROR` | 500 | Internal server error |
 
 ---
 
-*Last updated: 2026-02-24*
+## Database Schema
+
+### `bookmark_folders`
+```sql
+CREATE TABLE public.bookmark_folders (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  description     TEXT NOT NULL DEFAULT '',
+  category        TEXT NOT NULL DEFAULT 'other',
+  incident_date   DATE,
+  dispute_value   NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+  status          TEXT NOT NULL DEFAULT 'pre_action'
+                  CHECK (status IN ('pre_action','consulting','filed','in_progress','resolved')),
+  opposing_party  TEXT NOT NULL DEFAULT '',
+  deadline_date   DATE,
+  court_name      TEXT NOT NULL DEFAULT '',
+  case_number     TEXT NOT NULL DEFAULT '',
+  notes           TEXT NOT NULL DEFAULT '',
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+### `guidance_paths`
+```sql
+CREATE TABLE public.guidance_paths (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  case_file_id        UUID NOT NULL REFERENCES public.case_files(id) ON DELETE CASCADE,
+  path_number         SMALLINT NOT NULL CHECK (path_number BETWEEN 1 AND 5),
+  title               TEXT NOT NULL,
+  summary             TEXT NOT NULL,
+  detailed_analysis   TEXT NOT NULL,
+  laws_cited          JSONB NOT NULL DEFAULT '[]'::jsonb,
+  risk_level          TEXT NOT NULL CHECK (risk_level IN ('low','medium','high')),
+  cost_estimate       NUMERIC(12,2),
+  recommended_actions TEXT NOT NULL,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+### `remediation_playbooks`
+```sql
+CREATE TABLE public.remediation_playbooks (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category    TEXT NOT NULL,
+  issue_type  TEXT NOT NULL UNIQUE,
+  steps       JSONB NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+### `document_templates`
+```sql
+CREATE TABLE public.document_templates (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug        TEXT NOT NULL UNIQUE,
+  name        TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  category    TEXT NOT NULL DEFAULT 'other',
+  template    TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+---
+
+## Key Libraries
+
+| Library | Path | Purpose |
+|---------|------|---------|
+| `guidance.ts` | `src/lib/guidance.ts` | Core engine: `generateGuidancePaths()`, `parseGuidanceResponse()`, `attachCostEstimates()`, `calculateDeadlineWarnings()`, `generateDocument()`, `getLanguagePrompt()` |
+| `bookmarks-v2.ts` | `src/lib/bookmarks-v2.ts` | Dual-storage (localStorage + Supabase): `BookmarkV2`, `BookmarkFolder`, `getFolders()`, `createFolder()`, `updateFolder()`, `deleteFolder()`, `syncBookmarksToSupabase()` |
+| `fees.ts` | `src/lib/fees.ts` | RVG/GKG cost calculator: `calculateTotalLegalRisk()` |
+| `diagnosis.ts` | `src/lib/diagnosis.ts` | Deadline calculator: `calculateDeadline()` |
+| `qdrant.ts` | `src/lib/qdrant.ts` | Vector search: `searchNorms(query, category?, topK?)` |
+
+---
+
+*Last updated: 2026-06-21*

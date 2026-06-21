@@ -1,7 +1,10 @@
+// @vitest-environment node
+
 import { describe, it, expect, beforeEach } from "vitest";
 import { encryptApiKey, decryptApiKey } from "../encryption";
 
-const VALID_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+const VALID_KEY =
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
 beforeEach(() => {
   process.env.SERVER_ENCRYPTION_KEY = VALID_KEY;
@@ -16,7 +19,8 @@ describe("encryptApiKey / decryptApiKey", () => {
   });
 
   it("encrypts and decrypts a long API key", async () => {
-    const original = "sk-proj-ABCDEF0123456789abcdefghijklmnopqrstuvwxyz0123456789";
+    const original =
+      "sk-proj-ABCDEF0123456789abcdefghijklmnopqrstuvwxyz0123456789";
     const encrypted = await encryptApiKey(original);
     const decrypted = await decryptApiKey(encrypted);
     expect(decrypted).toBe(original);

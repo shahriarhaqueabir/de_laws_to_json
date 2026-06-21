@@ -27,11 +27,7 @@ const API_KEY_PATTERNS: RegExp[] = [
  * (if patterns were stripped).
  */
 export function sanitizeErrorMessage(error: unknown): string {
-  const rawMessage =
-    error instanceof Error ? error.message : String(error);
-
-  // Always log full details server-side
-  console.error("[Sanitized] Original error:", rawMessage);
+  const rawMessage = error instanceof Error ? error.message : String(error);
 
   // Check if any API key pattern is present
   const hasSensitiveContent = API_KEY_PATTERNS.some((pattern) =>

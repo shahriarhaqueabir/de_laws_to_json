@@ -540,12 +540,14 @@ export default function SettingsPage() {
                   </button>
                   <button
                     onClick={async () => {
-                      await fetch("/api/settings/api-key", {
+                      const res = await fetch("/api/settings/api-key", {
                         method: "DELETE",
                       });
-                      setHasStoredKey(false);
-                      setKeyDecryptable(false);
-                      setStoredProvider(null);
+                      if (res.ok) {
+                        setHasStoredKey(false);
+                        setKeyDecryptable(false);
+                        setStoredProvider(null);
+                      }
                     }}
                     className="px-4 py-3 border border-red-500/30 text-red-400 text-xs font-bold hover:bg-red-500/10 transition-all"
                   >

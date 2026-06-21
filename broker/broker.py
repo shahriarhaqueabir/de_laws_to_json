@@ -8,6 +8,7 @@ Usage:
     # Server starts on http://localhost:9000
 """
 
+import asyncio
 import json
 import logging
 import os
@@ -35,7 +36,7 @@ app.add_middleware(
     ],
     allow_origin_regex=r"https://.*\.vercel\.app",
     allow_methods=["POST", "GET"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
@@ -145,21 +146,29 @@ async def _stream_ollama_response(client, payload):
     We wrap these as SSE data events for the frontend.
 
     The caller is responsible for entering the client context.
+    Detects client disconnects by checking for CancelledError.
     """
-    async with client.stream(
-        "POST", f"{OLLAMA_URL}/api/generate", json=payload
-    ) as resp:
-        resp.raise_for_status()
-        async for line in resp.aiter_lines():
-            if line:
-                try:
-                    chunk = json.loads(line)
-                    if "response" in chunk:
-                        yield f"data: {json.dumps({'response': chunk['response']})}\n\n"
-                    if chunk.get("done"):
-                        break
-                except json.JSONDecodeError:
-                    continue
+    try:
+        async with client.stream(
+            "POST", f"{OLLAMA_URL}/api/generate", json=payload
+        ) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if line:
+                    try:
+                        chunk = json.loads(line)
+                        if "response" in chunk:
+                            yield f"data: {json.dumps({'response': chunk['response']})}\n\n"
+                        if chunk.get("done"):
+                            break
+                    except json.JSONDecodeError:
+                        continue
+    except asyncio.CancelledError:
+        logger.info("Streaming client disconnected, cleaning up")
+        return
+    except Exception:
+        logger.exception("Streaming error")
+        yield f"data: {json.dumps({'error': 'Streaming error'})}\n\n"
 
 
 if __name__ == "__main__":

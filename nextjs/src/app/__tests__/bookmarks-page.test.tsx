@@ -7,7 +7,6 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/bookmarks",
 }));
 
-// Mock both contexts to simplify
 vi.mock("../../components/chat-context", () => ({
   useChat: () => ({
     settings: { language: "en" },
@@ -28,8 +27,16 @@ vi.mock("../../components/toast", () => ({
 }));
 
 vi.mock("../../lib/bookmarks", () => ({
-    getBookmarks: vi.fn(),
-    removeBookmark: vi.fn(),
+  getBookmarks: vi.fn().mockReturnValue([]),
+  removeBookmark: vi.fn(),
+}));
+
+vi.mock("../../lib/bookmarks-v2", () => ({
+  getFolders: vi.fn().mockReturnValue([]),
+  createFolder: vi.fn(),
+  updateFolder: vi.fn(),
+  deleteFolder: vi.fn(),
+  syncBookmarksToSupabase: vi.fn(),
 }));
 
 import { getBookmarks, removeBookmark } from "../../lib/bookmarks";
@@ -44,60 +51,75 @@ const mockBookmarks = [
     norm_id: "§ 823",
     norm_title: "Schadensersatzpflicht",
     snippet: "Wer vorsätzlich oder fahrlässig...",
+    synced: true,
   },
   {
     law_key: "StGB",
     law_title: "Strafgesetzbuch",
     category: "criminal",
     added_at: "2025-01-16",
+    synced: true,
   },
 ];
 
 beforeEach(() => {
-  vi.restoreAllMocks();
+  vi.clearAllMocks();
 });
 
 describe("BookmarksPage", () => {
-  it("empty state shows 'Archives Empty' message", () => {
+  it("empty state shows 'Archives Empty' message", async () => {
     (getBookmarks as any).mockReturnValue([]);
     render(<BookmarksPage />);
-    expect(screen.getByText(/Archives Empty/)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Archives Empty/)).toBeInTheDocument();
+    });
   });
 
-  it("populated list shows bookmarks with law key, title, category", async () => {
+  it("populated list shows bookmarks with law key and title", async () => {
+    (getBookmarks as any).mockReturnValue(mockBookmarks);
+    render(<BookmarksPage />);
+
+    // Wait for the Ungrouped section heading
+    await waitFor(() => {
+      expect(screen.getByText("Ungrouped")).toBeInTheDocument();
+    });
+
+    // Ungrouped is auto-expanded — law titles should be visible
+    expect(screen.getAllByText(/BGB/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Bürgerliches Gesetzbuch/)).toBeInTheDocument();
+    expect(screen.getByText(/Strafgesetzbuch/)).toBeInTheDocument();
+  });
+
+  it("displays bookmarks grouped under Ungrouped section", async () => {
     (getBookmarks as any).mockReturnValue(mockBookmarks);
     render(<BookmarksPage />);
 
     await waitFor(() => {
-        expect(screen.getAllByText(/BGB/).length).toBeGreaterThan(0);
+      expect(screen.getByText("Ungrouped")).toBeInTheDocument();
+      expect(screen.getByText(/2 entries/)).toBeInTheDocument();
     });
-
-    expect(screen.getByText(/Bürgerliches Gesetzbuch/)).toBeInTheDocument();
-    expect(screen.getByText("housing")).toBeInTheDocument();
   });
 
-  it("remove button updates the list", async () => {
+  it("remove button removes a bookmark from the list", async () => {
     const user = userEvent.setup();
     (getBookmarks as any).mockReturnValue(mockBookmarks);
 
-    const { rerender } = render(<BookmarksPage />);
+    render(<BookmarksPage />);
 
+    // Wait for bookmarks to load and expand
     await waitFor(() => {
-        expect(screen.getAllByText(/BGB/).length).toBeGreaterThan(0);
+      expect(screen.getByText(/Bürgerliches Gesetzbuch/)).toBeInTheDocument();
     });
 
-    const removeButtons = screen.getAllByTitle("Remove from Archives");
+    // Find the first remove button (aria-label based)
+    const removeButtons = screen.getAllByLabelText("Remove from Archives");
+    expect(removeButtons.length).toBe(2);
 
-    // Simulate list update on next call
-    (getBookmarks as any).mockReturnValue(mockBookmarks.slice(1));
-
+    // Click first one
     await user.click(removeButtons[0]);
 
-    rerender(<BookmarksPage />);
-
-    await waitFor(() => {
-        expect(screen.queryAllByText(/BGB/).filter(el => el.closest('.premium-card')).length).toBe(0);
-    });
+    expect(removeBookmark).toHaveBeenCalledWith("BGB", "§ 823");
   });
 
   it("law links navigate to /laws/{law_key}", async () => {
@@ -105,18 +127,27 @@ describe("BookmarksPage", () => {
     render(<BookmarksPage />);
 
     await waitFor(() => {
-        const link = screen.getByText(/Bürgerliches Gesetzbuch/).closest("a");
-        expect(link).toHaveAttribute("href", "/laws/BGB");
+      const link = screen.getByText(/Bürgerliches Gesetzbuch/).closest("a");
+      expect(link).toHaveAttribute("href", "/laws/BGB");
     });
   });
 
-  it("displays registration date for each bookmark", async () => {
+  it("shows New Folder button when empty", async () => {
+    (getBookmarks as any).mockReturnValue([]);
+    render(<BookmarksPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Create Your First Folder/)).toBeInTheDocument();
+    });
+  });
+
+  it("shows entries and folders count", async () => {
     (getBookmarks as any).mockReturnValue(mockBookmarks);
     render(<BookmarksPage />);
 
     await waitFor(() => {
-        expect(screen.getByText(/2025-01-15/)).toBeInTheDocument();
+      expect(screen.getByText(/2 Entries/)).toBeInTheDocument();
+      expect(screen.getByText(/0 Folders/)).toBeInTheDocument();
     });
-    expect(screen.getByText(/2025-01-16/)).toBeInTheDocument();
   });
 });

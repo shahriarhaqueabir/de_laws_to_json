@@ -6,7 +6,7 @@ interface EncryptedPayload {
   ciphertext: string;
 }
 
-function getRawKey(): Uint8Array {
+function getRawKey(): Uint8Array<ArrayBuffer> {
   const hex = process.env.SERVER_ENCRYPTION_KEY;
   if (!hex) {
     throw new Error(
@@ -18,25 +18,29 @@ function getRawKey(): Uint8Array {
       `SERVER_ENCRYPTION_KEY must be exactly 64 hexadecimal characters (32 bytes). Got "${hex.length}" characters.`,
     );
   }
-  return Buffer.from(hex, "hex");
+  return new Uint8Array(Buffer.from(hex, "hex"));
 }
 
-async function importKey(raw: Uint8Array): Promise<CryptoKey> {
+async function importKey(raw: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   return crypto.subtle.importKey("raw", raw, { name: ALGORITHM }, false, [
     "encrypt",
     "decrypt",
   ]);
 }
 
-function toBase64(bytes: Uint8Array): string {
+function toBase64(bytes: Uint8Array<ArrayBuffer>): string {
   return Buffer.from(bytes).toString("base64");
 }
 
-function fromBase64(encoded: string): Uint8Array {
-  return Buffer.from(encoded, "base64");
+function fromBase64(encoded: string): Uint8Array<ArrayBuffer> {
+  const buf = Buffer.from(encoded, "base64");
+  // Reconstruct to ensure a concrete ArrayBuffer (TS 5.7+ strictness)
+  const result = new Uint8Array(buf.byteLength);
+  result.set(buf);
+  return result;
 }
 
-function generateIv(): Uint8Array {
+function generateIv(): Uint8Array<ArrayBuffer> {
   const iv = new Uint8Array(IV_LENGTH);
   crypto.getRandomValues(iv);
   return iv;
@@ -51,7 +55,9 @@ export async function encryptApiKey(plaintext: string): Promise<string> {
   const raw = getRawKey();
   const key = await importKey(raw);
   const iv = generateIv();
-  const encoded = new TextEncoder().encode(plaintext);
+  const encoded = new TextEncoder().encode(
+    plaintext,
+  ) as Uint8Array<ArrayBuffer>;
 
   const encrypted = await crypto.subtle.encrypt(
     { name: ALGORITHM, iv },

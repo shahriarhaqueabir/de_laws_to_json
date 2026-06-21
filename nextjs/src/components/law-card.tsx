@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LawSearchResult } from "../lib/types";
 import { ChevronRight, BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { isBookmarked, addBookmark, removeBookmark } from "../lib/bookmarks";
@@ -27,12 +27,6 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
       toast("Bookmark added", "success");
     }
   };
-
-  // Synchronize bookmark state with localStorage (external system)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBookmarked(isBookmarked(law.key));
-  }, [law.key]);
 
   return (
     <div className="premium-card p-10 group relative border-white/5 bg-zinc-900/20">

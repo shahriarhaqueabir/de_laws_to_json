@@ -251,95 +251,84 @@ function ChatContent() {
             .join("\n\n");
 
           // Quick Win 1: Timeout on broker fetch (30s)
-          const brokerController = new AbortController();
-          const brokerTimeoutId = setTimeout(
-            () => brokerController.abort(),
-            30000,
-          );
+          const brokerRes = await fetch(`${settings.brokerUrl}/api/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: userMsg,
+              context: contextStr,
+              conversationId: currentConvId || undefined,
+              model: settings.ollamaModel || undefined,
+              language: langName,
+              temperature: settings.ollamaParams?.temperature ?? 0.3,
+              top_p: settings.ollamaParams?.top_p ?? 0.9,
+              top_k: settings.ollamaParams?.top_k ?? 40,
+              max_tokens: settings.ollamaParams?.max_tokens ?? 1024,
+              system_prompt: settings.ollamaParams?.system_prompt || undefined,
+              // Quick Win 4: Request streaming response
+              stream: true,
+            }),
+            signal: AbortSignal.timeout(30000),
+          });
 
-          try {
-            const brokerRes = await fetch(`${settings.brokerUrl}/api/chat`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                message: userMsg,
-                context: contextStr,
-                conversationId: currentConvId || undefined,
-                model: settings.ollamaModel || undefined,
-                language: langName,
-                temperature: settings.ollamaParams?.temperature ?? 0.3,
-                top_p: settings.ollamaParams?.top_p ?? 0.9,
-                top_k: settings.ollamaParams?.top_k ?? 40,
-                max_tokens: settings.ollamaParams?.max_tokens ?? 1024,
-                system_prompt:
-                  settings.ollamaParams?.system_prompt || undefined,
-                // Quick Win 4: Request streaming response
-                stream: true,
-              }),
-              signal: brokerController.signal,
-            });
+          if (!brokerRes.ok) {
+            throw new Error(`Local broker error: ${brokerRes.status}`);
+          }
 
-            if (!brokerRes.ok) {
-              throw new Error(`Local broker error: ${brokerRes.status}`);
-            }
+          const citedLaws = searchData.citedLaws || [];
+          // Quick Win 4: Insert placeholder message, then stream content
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: "", citedLaws },
+          ]);
+          setBrokerOnline(true);
 
-            const citedLaws = searchData.citedLaws || [];
-            // Quick Win 4: Insert placeholder message, then stream content
-            setMessages((prev) => [
-              ...prev,
-              { role: "assistant", content: "", citedLaws },
-            ]);
-            setBrokerOnline(true);
+          const reader = brokerRes.body?.getReader();
+          if (!reader) throw new Error("Response body not readable");
 
-            const reader = brokerRes.body?.getReader();
-            if (!reader) throw new Error("Response body not readable");
+          const decoder = new TextDecoder();
+          let accumulatedContent = "";
 
-            const decoder = new TextDecoder();
-            let accumulatedContent = "";
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
+            const text = decoder.decode(value, { stream: true });
 
-              const text = decoder.decode(value, { stream: true });
-
-              for (const line of text.split("\n")) {
-                if (line.startsWith("data: ")) {
-                  try {
-                    const parsed = JSON.parse(line.slice(6));
-                    if (parsed.response) {
-                      accumulatedContent += parsed.response;
-                      setMessages((prev) => {
-                        const updated = [...prev];
-                        updated[updated.length - 1] = {
-                          ...updated[updated.length - 1],
-                          content: accumulatedContent,
-                        };
-                        return updated;
-                      });
-                    }
-                  } catch {
-                    // Skip malformed SSE lines
+            for (const line of text.split("\n")) {
+              if (line.startsWith("data: ")) {
+                try {
+                  const parsed = JSON.parse(line.slice(6));
+                  if (parsed.response) {
+                    accumulatedContent += parsed.response;
+                    setMessages((prev) => {
+                      const updated = [...prev];
+                      updated[updated.length - 1] = {
+                        ...updated[updated.length - 1],
+                        content: accumulatedContent,
+                      };
+                      return updated;
+                    });
                   }
+                } catch {
+                  // Skip malformed SSE lines
                 }
               }
             }
-
-            // Append source disclaimer
-            setMessages((prev) => {
-              const updated = [...prev];
-              const idx = updated.length - 1;
-              updated[idx] = {
-                ...updated[idx],
-                content:
-                  updated[idx].content +
-                  "\n\n---\n*Generated by Local AI (Ollama).*",
-              };
-              return updated;
-            });
-          } finally {
-            clearTimeout(brokerTimeoutId);
           }
+
+          // Append source disclaimer
+          setMessages((prev) => {
+            const updated = [...prev];
+            const idx = updated.length - 1;
+            updated[idx] = {
+              ...updated[idx],
+              content:
+                updated[idx].content +
+                "\n\n---\n*Generated by Local AI (Ollama).*",
+            };
+            return updated;
+          });
 
           setLoading(false);
           return;

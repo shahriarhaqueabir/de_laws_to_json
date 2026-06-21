@@ -5,6 +5,8 @@ import {
   useContext,
   useState,
   useCallback,
+  useRef,
+  useEffect,
   type ReactNode,
 } from "react";
 
@@ -28,19 +30,35 @@ export function useToast() {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      timers.forEach(clearTimeout);
+      timers.clear();
+    };
+  }, []);
 
   const toast = useCallback((message: string, type: Toast["type"] = "info") => {
     const id = crypto.randomUUID();
     setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      timersRef.current.delete(timer);
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
+    timersRef.current.add(timer);
   }, []);
 
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 max-w-sm">
+      <div
+        className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 max-w-sm"
+        role="alert"
+        aria-live="polite"
+        aria-label="Notifications"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}

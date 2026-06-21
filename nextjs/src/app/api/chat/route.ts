@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { getServerClient } from "../../../lib/supabase-server";
-import { searchNorms } from "../../../lib/qdrant";
+import { searchNorms, type SearchResult } from "../../../lib/qdrant";
 import { generateChatResponse } from "../../../lib/chat";
 import type {
   ChatMode,
@@ -82,7 +82,12 @@ export async function POST(req: NextRequest) {
     // (Only if not English/German and we have a way to detect/translate)
     // For now, we use the message directly as the multilingual-e5 model handles many languages.
 
-    const norms = await searchNorms(message, undefined, 10);
+    let norms: SearchResult[] = [];
+    try {
+      norms = await searchNorms(message, undefined, 10);
+    } catch {
+      console.warn("Qdrant search failed, continuing with empty context");
+    }
     const contextStr = norms
       .map((n) => `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 1200)}`)
       .join("\n\n");

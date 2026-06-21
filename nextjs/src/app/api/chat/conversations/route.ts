@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("conversations")
       .select("*")
+      .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;

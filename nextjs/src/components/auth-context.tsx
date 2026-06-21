@@ -9,6 +9,7 @@ import {
 } from "react";
 import { createClient } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import { syncBookmarksToSupabase } from "../lib/bookmarks-v2";
 
 const supabase = createClient();
 
@@ -33,18 +34,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-    });
+    let cancelled = false;
+
+    supabase.auth.getUser().then(
+      ({ data }) => {
+        if (!cancelled) {
+          setUser(data.user);
+          setLoading(false);
+        }
+      },
+      () => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      },
+    );
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!cancelled) {
+        setUser(session?.user ?? null);
+        if (event === "SIGNED_IN") {
+          syncBookmarksToSupabase();
+        }
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (

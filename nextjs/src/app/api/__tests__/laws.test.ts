@@ -45,8 +45,18 @@ beforeEach(() => {
 describe("GET /api/laws", () => {
   it("lists all laws without category filter", async () => {
     mockSupabaseResult.data = [
-      { key: "BGB", title: "Bürgerliches Gesetzbuch", category: "civil", authority: "BMJ" },
-      { key: "StGB", title: "Strafgesetzbuch", category: "criminal", authority: "BMJ" },
+      {
+        key: "BGB",
+        title: "Bürgerliches Gesetzbuch",
+        category: "civil",
+        authority: "BMJ",
+      },
+      {
+        key: "StGB",
+        title: "Strafgesetzbuch",
+        category: "criminal",
+        authority: "BMJ",
+      },
     ];
     mockSupabaseResult.count = 2;
 
@@ -56,8 +66,8 @@ describe("GET /api/laws", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.results).toHaveLength(2);
-    expect(body.total).toBe(2);
+    expect(body.data.results).toHaveLength(2);
+    expect(body.data.total).toBe(2);
   });
 
   it("filters laws by category", async () => {
@@ -72,8 +82,8 @@ describe("GET /api/laws", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.results).toHaveLength(1);
-    expect(body.results[0].key).toBe("StGB");
+    expect(body.data.results).toHaveLength(1);
+    expect(body.data.results[0].key).toBe("StGB");
   });
 
   it("returns pagination with total count", async () => {
@@ -85,8 +95,8 @@ describe("GET /api/laws", () => {
     const res = await GET(req);
     const body = await res.json();
 
-    expect(body.total).toBe(100);
-    expect(body.results).toHaveLength(1);
+    expect(body.data.total).toBe(100);
+    expect(body.data.results).toHaveLength(1);
   });
 
   it("returns 500 on Supabase error", async () => {
@@ -99,7 +109,8 @@ describe("GET /api/laws", () => {
     const body = await res.json();
 
     expect(res.status).toBe(500);
-    expect(body.error).toBe("Database connection failed");
+    expect(body.error.code).toBe("DB_ERROR");
+    expect(body.error.message).toBe("Failed to fetch laws");
   });
 
   it("handles page parameter for custom offset", async () => {
@@ -112,6 +123,6 @@ describe("GET /api/laws", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.results).toEqual([]);
+    expect(body.data.results).toEqual([]);
   });
 });
