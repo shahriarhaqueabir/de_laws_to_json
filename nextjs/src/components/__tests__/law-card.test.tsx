@@ -132,7 +132,7 @@ describe("LawCard", () => {
     // Now should show BookmarkCheck (remove)
     expect(screen.getByTitle("Remove bookmark")).toBeInTheDocument();
     expect(mockToast).toHaveBeenCalledWith(
-      "Bookmark saved locally. Sign in to sync across devices.",
+      "Saved locally. Sign in to sync bookmarks.",
       "info",
     );
   });

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { searchNorms } from "../../../lib/qdrant";
 import { getServerClient } from "../../../lib/supabase-server";
 import { errorResponse } from "../../../lib/api-utils";
+import { translateQueryToGerman } from "../../../lib/translate-server";
 
 interface SearchResult {
   law_key: string;
@@ -60,10 +61,14 @@ export async function GET(req: NextRequest) {
     let allResults: SearchResult[] = [];
 
     if (safeQuery) {
-      console.log(`[API Search] Executing Qdrant query: "${safeQuery}" (category: ${category || 'none'})`);
+      // Translate non-German queries to German for E5-small compatibility
+      const searchQuery = await translateQueryToGerman(safeQuery);
+      console.log(
+        `[API Search] Executing Qdrant query: "${searchQuery}" (original: "${safeQuery}", category: ${category || "none"})`,
+      );
       // 1. Semantic Search via Qdrant
       const offset = (page - 1) * PAGE_SIZE;
-      allResults = await searchNorms(safeQuery, category, 50, offset);
+      allResults = await searchNorms(searchQuery, category, 50, offset);
       console.log(`[API Search] Qdrant returned ${allResults.length} points.`);
     } else if (category) {
       // 2. Browse Category via Supabase
@@ -124,7 +129,9 @@ export async function GET(req: NextRequest) {
       }))
       .sort((a, b) => b.relevance - a.relevance);
 
-    console.log(`[API Search] Success: Returning ${lawResults.length} unique laws.`);
+    console.log(
+      `[API Search] Success: Returning ${lawResults.length} unique laws.`,
+    );
 
     return NextResponse.json({
       results: lawResults,
@@ -133,10 +140,6 @@ export async function GET(req: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[API Search] Fatal error:", message);
-    return errorResponse(
-      "SEARCH_FAILED",
-      `Search failed: ${message}`,
-      500,
-    );
+    return errorResponse("SEARCH_FAILED", `Search failed: ${message}`, 500);
   }
 }

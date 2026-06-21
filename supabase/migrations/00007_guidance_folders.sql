@@ -95,11 +95,21 @@ DROP FUNCTION IF EXISTS public.set_updated_at;
 -- ═══════════════════════════════════════════════════════════════
 
 DELETE FROM public.norm_explanations
-WHERE law_key NOT IN (SELECT key FROM public.laws);
+WHERE law_key IS NOT NULL
+  AND law_key NOT IN (SELECT key FROM public.laws);
 
-ALTER TABLE public.norm_explanations
-  ADD CONSTRAINT IF NOT EXISTS fk_norm_explanations_law_key
-  FOREIGN KEY (law_key) REFERENCES public.laws(key) ON DELETE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_norm_explanations_law_key'
+  ) THEN
+    ALTER TABLE public.norm_explanations
+      ADD CONSTRAINT fk_norm_explanations_law_key
+      FOREIGN KEY (law_key) REFERENCES public.laws(key) ON DELETE CASCADE;
+  END IF;
+END
+$$;
 
 -- ═══════════════════════════════════════════════════════════════
 -- 7. Missing hot-path indexes

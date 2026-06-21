@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getServerClient } from "@/lib/supabase-server";
 import { errorResponse, successResponse } from "@/lib/api-utils";
 import { searchNorms } from "@/lib/qdrant";
+import { translateQueryToGerman } from "@/lib/translate-server";
 import {
   generateGuidancePaths,
   type GenerateGuidanceParams,
@@ -15,7 +16,13 @@ import { LANGUAGE_NAMES, type AppLanguage } from "@/lib/types";
 // ── Validation ─────────────────────────────────────────────────────────────
 
 const GuidanceRequestSchema = z.object({
-  situation: z.string().min(10, "Please describe your situation in more detail (at least 10 characters)").max(10000),
+  situation: z
+    .string()
+    .min(
+      10,
+      "Please describe your situation in more detail (at least 10 characters)",
+    )
+    .max(10000),
   language: z.string().default("en"),
   folder_id: z.string().uuid().nullable().optional(),
   folder_context: z
@@ -114,7 +121,8 @@ export async function POST(req: NextRequest) {
       if (keyRow) {
         try {
           apiKey = await decryptApiKey(keyRow.encrypted_key);
-          resolvedProvider = keyRow.provider as GenerateGuidanceParams["provider"];
+          resolvedProvider =
+            keyRow.provider as GenerateGuidanceParams["provider"];
         } catch {
           // Decryption failed — key rotation
         }
@@ -123,7 +131,8 @@ export async function POST(req: NextRequest) {
 
     // If no API key, use basic mode (just search results)
     if (!apiKey) {
-      const norms = await searchNorms(situation, undefined, 10);
+      const translatedSituation = await translateQueryToGerman(situation);
+      const norms = await searchNorms(translatedSituation, undefined, 10);
       return successResponse({
         session_id: null,
         paths: norms.map((n, i) => ({
@@ -157,8 +166,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Search Qdrant for relevant norms
-    const norms = await searchNorms(situation, folder_context?.category, 15);
+    // 2. Search Qdrant for relevant norms (translate non-German queries)
+    const translatedSituation = await translateQueryToGerman(situation);
+    const norms = await searchNorms(
+      translatedSituation,
+      folder_context?.category,
+      15,
+    );
 
     const qdrantResults = norms.map((n) => ({
       law_key: n.law_key,
@@ -167,10 +181,7 @@ export async function POST(req: NextRequest) {
     }));
 
     const qdrantContext = norms
-      .map(
-        (n) =>
-          `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 1500)}`,
-      )
+      .map((n) => `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 1500)}`)
       .join("\n\n");
 
     // 3. Build folder context
@@ -268,7 +279,8 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     console.error("Guidance API Error:", err);
-    const message = err instanceof Error ? err.message : "Internal server error";
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
     return errorResponse("SERVER_ERROR", message, 500);
   }
 }

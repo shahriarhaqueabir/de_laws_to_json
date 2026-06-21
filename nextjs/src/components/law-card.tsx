@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { LawSearchResult } from "../lib/types";
-import { ChevronRight, BookmarkPlus, BookmarkCheck } from "lucide-react";
+import { ChevronRight, BookmarkPlus, BookmarkCheck, LogIn } from "lucide-react";
 import { isBookmarked, addBookmark, removeBookmark } from "../lib/bookmarks-v2";
 import { useToast } from "./toast";
 import { useAuth } from "./auth-context";
@@ -12,6 +12,8 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
   const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(() => isBookmarked(law.key));
   const { toast } = useToast();
+
+  const [showSignInTip, setShowSignInTip] = useState(false);
 
   const toggleBookmark = async () => {
     if (bookmarked) {
@@ -27,10 +29,10 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
       });
       setBookmarked(true);
       if (!user) {
-        toast(
-          "Bookmark saved locally. Sign in to sync across devices.",
-          "info",
-        );
+        setShowSignInTip(true);
+        toast("Saved locally. Sign in to sync bookmarks.", "info");
+        // Auto-dismiss after 8 seconds
+        setTimeout(() => setShowSignInTip(false), 8000);
       } else {
         toast("Bookmark added", "success");
       }
@@ -108,6 +110,30 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
           Source: Bundesamt für Justiz
         </div>
       </div>
+
+      {/* Sign-in prompt for anonymous users who just bookmarked */}
+      {showSignInTip && !user && (
+        <div className="mt-6 p-4 border border-accent-gold/20 bg-accent-gold/5 animate-fade-in">
+          <Link
+            href="/auth"
+            className="flex items-center justify-between group"
+          >
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent-gold mb-1">
+                Saved to Local Vault
+              </p>
+              <p className="text-xs text-zinc-400">
+                Sign in to sync bookmarks across devices and access folder
+                organization.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-accent-gold-bright group-hover:underline">
+              <LogIn className="w-4 h-4" />
+              Sign In
+            </div>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
