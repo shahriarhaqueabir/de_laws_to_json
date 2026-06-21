@@ -212,4 +212,4 @@ The `searchNorms()` function in `qdrant.ts` MUST prepend `query: ` to the user's
 
 - **Deployed app**: https://ai-assisted-german-law-shahriarhaqueabir.vercel.app
 - **Supabase project**: zuhhimmdlnsjuwksitpb
-- **Qdrant collection**: `german_norms` (E5-small, 384d, managed inference)
+- **Qdrant collection**: `german_norms` (E5-small, 384d, managed inference, 103,586 points)
