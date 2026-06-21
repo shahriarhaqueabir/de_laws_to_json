@@ -20,7 +20,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import type { GuidancePath, FolderContext } from "../lib/guidance";
+import type { GuidancePath, FolderContext } from "../lib/guidance-types";
 import type { AppLanguage } from "../lib/types";
 
 // ── Helpers: explain legal concepts in plain language ──────────────────────

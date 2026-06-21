@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { X, FolderPlus, Save, AlertCircle } from "lucide-react";
-import type { FolderStatus } from "../lib/guidance";
-import { FOLDER_STATUS_LABELS } from "../lib/guidance";
+import type { FolderStatus } from "../lib/guidance-types";
+import { FOLDER_STATUS_LABELS } from "../lib/guidance-types";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -122,9 +122,7 @@ export default function FolderModal({
         <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-white/5 bg-[#0d0d0d]/95 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <FolderPlus className="w-5 h-5 text-accent-cobalt" />
-            <h2 className="font-serif font-bold text-xl text-white">
-              {title}
-            </h2>
+            <h2 className="font-serif font-bold text-xl text-white">{title}</h2>
           </div>
           <button
             onClick={onClose}
@@ -229,9 +227,7 @@ export default function FolderModal({
                 <input
                   type="date"
                   value={form.incident_date}
-                  onChange={(e) =>
-                    updateField("incident_date", e.target.value)
-                  }
+                  onChange={(e) => updateField("incident_date", e.target.value)}
                   className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus:border-accent-cobalt/50 transition-colors"
                 />
                 <p className="text-[9px] text-zinc-700 mt-1">
@@ -246,9 +242,7 @@ export default function FolderModal({
                 <input
                   type="date"
                   value={form.deadline_date}
-                  onChange={(e) =>
-                    updateField("deadline_date", e.target.value)
-                  }
+                  onChange={(e) => updateField("deadline_date", e.target.value)}
                   className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus:border-accent-cobalt/50 transition-colors"
                 />
                 <p className="text-[9px] text-zinc-700 mt-1">
@@ -266,7 +260,10 @@ export default function FolderModal({
                   step="0.01"
                   value={form.dispute_value || ""}
                   onChange={(e) =>
-                    updateField("dispute_value", parseFloat(e.target.value) || 0)
+                    updateField(
+                      "dispute_value",
+                      parseFloat(e.target.value) || 0,
+                    )
                   }
                   placeholder="0.00"
                   className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus:border-accent-cobalt/50 transition-colors"
