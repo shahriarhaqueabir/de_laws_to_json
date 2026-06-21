@@ -18,9 +18,9 @@ import {
 import GuidancePathsDisplay from "../../components/guidance-paths-display";
 import FolderModal from "../../components/folder-modal";
 import type { FolderFormData } from "../../components/folder-modal";
-import type { GuidancePath, FolderContext } from "../../lib/guidance";
+import type { GuidancePath, FolderContext } from "../../lib/guidance-types";
+import { FOLDER_STATUS_LABELS } from "../../lib/guidance-types";
 import type { AppLanguage } from "../../lib/types";
-import { FOLDER_STATUS_LABELS } from "../../lib/guidance";
 import { getFolders, createFolder } from "../../lib/bookmarks-v2";
 
 // ── Language Options ───────────────────────────────────────────────────────

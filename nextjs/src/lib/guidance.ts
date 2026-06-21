@@ -10,7 +10,15 @@
  * 6. Engine parses, enriches with fee calculations, returns to UI
  */
 
-import type { AppLanguage, CloudProvider, CitedLaw } from "./types";
+import type { AppLanguage, CloudProvider } from "./types";
+import type { CitedLaw } from "./types";
+import type {
+  FolderContext,
+  FolderStatus,
+  GuidancePath,
+  GuidanceResult,
+  FOLDER_STATUS_LABELS,
+} from "./guidance-types";
 import { calculateTotalLegalRisk } from "./fees";
 import { calculateDeadline } from "./diagnosis";
 
@@ -41,63 +49,13 @@ export const CATEGORY_PLAYBOOK_MAP: Record<string, string[]> = {
   other: [],
 };
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
-export interface FolderContext {
-  id: string;
-  name: string;
-  category: string;
-  incident_date: string | null;
-  dispute_value: number;
-  status: FolderStatus;
-  opposing_party: string;
-  deadline_date: string | null;
-  court_name: string;
-  case_number: string;
-  notes: string;
-}
-
-export type FolderStatus =
-  | "pre_action"
-  | "consulting"
-  | "filed"
-  | "in_progress"
-  | "resolved";
-
-export const FOLDER_STATUS_LABELS: Record<FolderStatus, string> = {
-  pre_action: "Pre-Action",
-  consulting: "Consulting",
-  filed: "Filed",
-  in_progress: "In Progress",
-  resolved: "Resolved",
-};
-
-export interface GuidancePath {
-  path_number: number; // 1-5
-  title: string;
-  summary: string;
-  detailed_analysis: string;
-  laws_cited: CitedLaw[];
-  risk_level: "low" | "medium" | "high";
-  risk_reason: string;
-  cost_estimate: number | null;
-  cost_breakdown: {
-    court_fees: number;
-    lawyer_fees: number;
-    total_risk: number;
-  } | null;
-  recommended_actions: string[];
-  estimated_timeline: string;
-  success_probability: number; // 0-1
-}
-
-export interface GuidanceResult {
-  session_id: string;
-  paths: GuidancePath[];
-  folder_context: FolderContext | null;
-  generated_at: string;
-  language: AppLanguage;
-}
+export type {
+  FolderContext,
+  FolderStatus,
+  GuidancePath,
+  GuidanceResult,
+} from "./guidance-types";
+export { FOLDER_STATUS_LABELS } from "./guidance-types";
 
 export interface GenerateGuidanceParams {
   situation: string;
