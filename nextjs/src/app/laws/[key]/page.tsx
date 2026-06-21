@@ -16,12 +16,15 @@ import {
   isBookmarked,
   addBookmark,
   removeBookmark,
-} from "../../../lib/bookmarks";
+} from "../../../lib/bookmarks-v2";
 import { useToast } from "../../../components/toast";
+import { useAuth } from "../../../components/auth-context";
 
 export default function LawDetailPage() {
   const { key } = useParams();
+  const { user } = useAuth();
   const [data, setData] = useState<(Law & { norms: Norm[] }) | null>(null);
+  const [qdrantError, setQdrantError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -34,6 +37,9 @@ export default function LawDetailPage() {
         const res = await fetch(`/api/laws/${key}`);
         if (!res.ok) throw new Error("Failed to load law details");
         const json = await res.json();
+        if (json.qdrant_error) {
+          setQdrantError(json.qdrant_error);
+        }
         setData(json);
       } catch {
         setError("Law not found or could not be loaded.");
@@ -47,19 +53,26 @@ export default function LawDetailPage() {
 
   const bookmarked = data ? isBookmarked(data.key) : false;
 
-  const toggleBookmark = () => {
+  const toggleBookmark = async () => {
     if (!data) return;
     if (bookmarked) {
-      removeBookmark(data.key);
+      await removeBookmark(data.key);
       toast("Archive entry removed", "info");
     } else {
-      addBookmark({
+      await addBookmark({
         law_key: data.key,
         law_title: data.title,
         category: data.category,
         added_at: new Date().toISOString().split("T")[0],
       });
-      toast("Statute archived", "success");
+      if (!user) {
+        toast(
+          "Bookmark saved locally. Sign in to sync across devices.",
+          "info",
+        );
+      } else {
+        toast("Statute archived", "success");
+      }
     }
   };
 

@@ -47,7 +47,10 @@ describe("searchNorms", () => {
     const results = await searchNorms("Kaufvertrag");
 
     expect(mockQuery).toHaveBeenCalledWith("german_norms", {
-      query: { text: "Kaufvertrag", model: "intfloat/multilingual-e5-small" },
+      query: {
+        text: "query: Kaufvertrag",
+        model: "intfloat/multilingual-e5-small",
+      },
       limit: 50,
       offset: 0,
       filter: undefined,
@@ -66,7 +69,7 @@ describe("searchNorms", () => {
     await searchNorms("Miete", "housing");
 
     expect(mockQuery).toHaveBeenCalledWith("german_norms", {
-      query: { text: "Miete", model: "intfloat/multilingual-e5-small" },
+      query: { text: "query: Miete", model: "intfloat/multilingual-e5-small" },
       limit: 50,
       offset: 0,
       filter: { must: [{ key: "category", match: { value: "housing" } }] },
@@ -128,7 +131,7 @@ describe("searchNorms", () => {
     await searchNorms("test", undefined, 5, 20);
 
     expect(mockQuery).toHaveBeenCalledWith("german_norms", {
-      query: { text: "test", model: "intfloat/multilingual-e5-small" },
+      query: { text: "query: test", model: "intfloat/multilingual-e5-small" },
       limit: 5,
       offset: 20,
       filter: undefined,

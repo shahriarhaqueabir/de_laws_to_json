@@ -126,7 +126,7 @@ describe("GET /api/laws/[key]", () => {
     expect(body.error.message).toBe("Invalid law key");
   });
 
-  it("Qdrant scroll failure returns 502 with partial metadata", async () => {
+  it("Qdrant scroll failure gracefully degrades with empty norms", async () => {
     mockSupabaseResult.data = {
       key: "BGB",
       title: "Bürgerliches Gesetzbuch",
@@ -139,9 +139,11 @@ describe("GET /api/laws/[key]", () => {
     const res = await GET(req, { params: Promise.resolve({ key: "BGB" }) });
     const body = await res.json();
 
-    expect(res.status).toBe(502);
-    expect(body.error).toBe("Could not fetch norms from vector store");
-    expect(body.law).toBeDefined();
-    expect(body.law.key).toBe("BGB");
+    expect(res.status).toBe(200);
+    expect(body.norms).toEqual([]);
+    expect(body.qdrant_error).toBe(
+      "Norms temporarily unavailable. Law metadata is shown.",
+    );
+    expect(body.key).toBe("BGB");
   });
 });

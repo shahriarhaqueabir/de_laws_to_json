@@ -52,9 +52,14 @@ export async function searchNorms(
 
     // Qdrant Universal Query API with Managed Inference
     // We use the direct inference object structure (text + model) as required by Qdrant Cloud
+    // E5-small requires "query: " prefix on search queries
+    // The indexed documents use "passage: " prefix
+    // Without this prefix, embeddings don't match — results are random
+    const prefixedQuery = `query: ${query}`;
+
     const results = await client.query(COLLECTION, {
       query: {
-        text: query,
+        text: prefixedQuery,
         model: INFERENCE_MODEL,
       },
       limit: topK,

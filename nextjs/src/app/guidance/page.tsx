@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   Compass,
   AlertTriangle,
@@ -196,6 +197,13 @@ export default function GuidancePage() {
               Navigate Your Situation
             </h1>
           </div>
+          <Link
+            href="/guidance/history"
+            className="flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 hover:text-accent-gold transition-colors border border-white/5 hover:border-accent-gold/20"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            History
+          </Link>
         </div>
       </div>
 

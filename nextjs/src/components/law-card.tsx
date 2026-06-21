@@ -4,27 +4,36 @@ import Link from "next/link";
 import { useState } from "react";
 import { LawSearchResult } from "../lib/types";
 import { ChevronRight, BookmarkPlus, BookmarkCheck } from "lucide-react";
-import { isBookmarked, addBookmark, removeBookmark } from "../lib/bookmarks";
+import { isBookmarked, addBookmark, removeBookmark } from "../lib/bookmarks-v2";
 import { useToast } from "./toast";
+import { useAuth } from "./auth-context";
 
 export default function LawCard({ law }: { law: LawSearchResult }) {
+  const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(() => isBookmarked(law.key));
   const { toast } = useToast();
 
-  const toggleBookmark = () => {
+  const toggleBookmark = async () => {
     if (bookmarked) {
-      removeBookmark(law.key);
+      await removeBookmark(law.key);
       setBookmarked(false);
       toast("Bookmark removed", "info");
     } else {
-      addBookmark({
+      await addBookmark({
         law_key: law.key,
         law_title: law.title,
         category: law.category,
         added_at: new Date().toISOString().split("T")[0],
       });
       setBookmarked(true);
-      toast("Bookmark added", "success");
+      if (!user) {
+        toast(
+          "Bookmark saved locally. Sign in to sync across devices.",
+          "info",
+        );
+      } else {
+        toast("Bookmark added", "success");
+      }
     }
   };
 

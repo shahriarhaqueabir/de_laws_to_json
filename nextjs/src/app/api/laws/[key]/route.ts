@@ -68,9 +68,11 @@ export async function GET(
     });
   } catch (err) {
     console.error("Qdrant scroll error:", err);
-    return NextResponse.json(
-      { error: "Could not fetch norms from vector store", law: law },
-      { status: 502 },
-    );
+    // Graceful degradation: return law metadata with empty norms
+    return NextResponse.json({
+      ...law,
+      norms: [],
+      qdrant_error: "Norms temporarily unavailable. Law metadata is shown.",
+    });
   }
 }

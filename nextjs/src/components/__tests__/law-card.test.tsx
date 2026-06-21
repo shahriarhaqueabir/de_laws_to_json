@@ -6,14 +6,17 @@ import type { LawSearchResult } from "../../lib/types";
 const mockToast = vi.fn();
 let mockStore: Record<string, boolean> = {};
 
-vi.mock("../../lib/bookmarks", () => ({
+// Mock the auth context to return no user (anonymous)
+vi.mock("../auth-context", () => ({
+  useAuth: () => ({ user: null, loading: false }),
+}));
+
+vi.mock("../../lib/bookmarks-v2", () => ({
   isBookmarked: vi.fn((lawKey: string) => mockStore[lawKey] ?? false),
-  addBookmark: vi.fn(
-    ({ law_key }: { law_key: string }) => {
-      mockStore[law_key] = true;
-    },
-  ),
-  removeBookmark: vi.fn((lawKey: string) => {
+  addBookmark: vi.fn(async ({ law_key }: { law_key: string }) => {
+    mockStore[law_key] = true;
+  }),
+  removeBookmark: vi.fn(async (lawKey: string) => {
     delete mockStore[lawKey];
   }),
 }));
@@ -64,14 +67,14 @@ beforeEach(() => {
   mockStore = {};
   mockToast.mockClear();
   // Provide a mock for localStorage
-  Object.defineProperty(window, 'localStorage', {
+  Object.defineProperty(window, "localStorage", {
     value: {
       getItem: vi.fn(),
       setItem: vi.fn(),
       removeItem: vi.fn(),
       clear: vi.fn(),
     },
-    writable: true
+    writable: true,
   });
 });
 
@@ -128,7 +131,10 @@ describe("LawCard", () => {
 
     // Now should show BookmarkCheck (remove)
     expect(screen.getByTitle("Remove bookmark")).toBeInTheDocument();
-    expect(mockToast).toHaveBeenCalledWith("Bookmark added", "success");
+    expect(mockToast).toHaveBeenCalledWith(
+      "Bookmark saved locally. Sign in to sync across devices.",
+      "info",
+    );
   });
 
   it("bookmark toggle calls removeBookmark and shows info toast", async () => {

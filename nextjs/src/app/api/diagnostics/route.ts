@@ -27,13 +27,13 @@ export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
     const { data, error } = await supabase
-      .from("norms")
+      .from("laws")
       .select("count")
       .limit(1);
     if (error) throw error;
     checks.supabase = {
       status: "ok",
-      message: "Successfully queried norms table",
+      message: "Successfully queried laws table",
     };
   } catch (err: unknown) {
     const message =

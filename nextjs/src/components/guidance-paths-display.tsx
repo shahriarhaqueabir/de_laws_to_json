@@ -97,9 +97,12 @@ function getProbabilityLabel(p: number): string {
 // ── Plain-language Timeline Hints ──────────────────────────────────────────
 
 const TIMELINE_HINTS: Record<string, string> = {
-  "2-6 weeks": "This is fairly quick. In German law, out-of-court steps usually move at this pace.",
-  "3-12 months": "Court cases take time in Germany. Don't worry — most cases settle before trial.",
-  "1-4 weeks": "This is very fast. Courts move quickly only for urgent matters (Eilverfahren).",
+  "2-6 weeks":
+    "This is fairly quick. In German law, out-of-court steps usually move at this pace.",
+  "3-12 months":
+    "Court cases take time in Germany. Don't worry — most cases settle before trial.",
+  "1-4 weeks":
+    "This is very fast. Courts move quickly only for urgent matters (Eilverfahren).",
 };
 
 function getTimelineHint(timeline: string): string {
@@ -175,7 +178,7 @@ export default function GuidancePathsDisplay({
           <span className="text-accent-cobalt">
             Click on a path to expand it and see step-by-step instructions.
           </span>{" "}
-          You're not locked into any choice — this is just to help you
+          You&apos;re not locked into any choice — this is just to help you
           understand your options.
         </p>
       </div>
@@ -216,17 +219,18 @@ export default function GuidancePathsDisplay({
                       </h3>
 
                       {/* Cost Badge */}
-                      {path.cost_estimate !== null && path.cost_estimate > 0 && (
-                        <div className="flex-shrink-0 text-right">
-                          <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
-                            Est. Cost
+                      {path.cost_estimate !== null &&
+                        path.cost_estimate > 0 && (
+                          <div className="flex-shrink-0 text-right">
+                            <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
+                              Est. Cost
+                            </div>
+                            <div className="text-sm font-bold text-white flex items-center gap-1">
+                              <Euro className="w-3 h-3 text-accent-amber" />€
+                              {path.cost_estimate.toLocaleString()}
+                            </div>
                           </div>
-                          <div className="text-sm font-bold text-white flex items-center gap-1">
-                            <Euro className="w-3 h-3 text-accent-amber" />
-                            €{path.cost_estimate.toLocaleString()}
-                          </div>
-                        </div>
-                      )}
+                        )}
                     </div>
 
                     <p className="text-sm text-zinc-400 leading-relaxed mb-4">
@@ -327,7 +331,9 @@ export default function GuidancePathsDisplay({
                         <Lightbulb className="w-4 h-4 text-accent-cobalt flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs text-zinc-400">
-                            <span className="text-white font-bold">Quick Tip:</span>{" "}
+                            <span className="text-white font-bold">
+                              Quick Tip:
+                            </span>{" "}
                             {getTimelineHint(path.estimated_timeline)}
                           </p>
                         </div>
@@ -348,7 +354,8 @@ export default function GuidancePathsDisplay({
                                 Court Fees (GKG)
                               </span>
                               <span className="text-white font-bold">
-                                €{path.cost_breakdown.court_fees.toLocaleString()}
+                                €
+                                {path.cost_breakdown.court_fees.toLocaleString()}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm">
@@ -356,7 +363,8 @@ export default function GuidancePathsDisplay({
                                 Lawyer Fees (RVG)
                               </span>
                               <span className="text-white font-bold">
-                                €{path.cost_breakdown.lawyer_fees.toLocaleString()}
+                                €
+                                {path.cost_breakdown.lawyer_fees.toLocaleString()}
                               </span>
                             </div>
                             <div className="border-t border-white/5 pt-3 flex justify-between text-sm">
@@ -364,13 +372,15 @@ export default function GuidancePathsDisplay({
                                 Total Risk (if you lose)
                               </span>
                               <span className="text-accent-amber font-bold">
-                                €{path.cost_breakdown.total_risk.toLocaleString()}
+                                €
+                                {path.cost_breakdown.total_risk.toLocaleString()}
                               </span>
                             </div>
                           </div>
                           <p className="text-[9px] text-zinc-700 mt-3">
                             Based on Streitwert of €
-                            {folderContext?.dispute_value?.toLocaleString() || "?"}{" "}
+                            {folderContext?.dispute_value?.toLocaleString() ||
+                              "?"}{" "}
                             (RVG/GKG simplified calculation). Actual costs may
                             vary.
                           </p>
@@ -453,7 +463,10 @@ export default function GuidancePathsDisplay({
           <span className="text-white font-bold">Remember:</span> This guidance
           is for informational purposes only. For specific legal advice, consult
           a licensed German attorney (Rechtsanwalt).{" "}
-          <a href="/bookmarks" className="text-accent-cobalt hover:text-white transition-colors">
+          <a
+            href="/bookmarks"
+            className="text-accent-cobalt hover:text-white transition-colors"
+          >
             Save relevant laws to your Archives
           </a>{" "}
           to build your case folder.

@@ -11,9 +11,14 @@ vi.mock("next/navigation", () => ({
 
 import SearchPage from "../search/page";
 import { ToastProvider } from "../../components/toast";
+import { AuthProvider } from "../../components/auth-context";
 
 const renderWithProviders = (ui: React.ReactElement) => {
-  return render(<ToastProvider>{ui}</ToastProvider>);
+  return render(
+    <AuthProvider>
+      <ToastProvider>{ui}</ToastProvider>
+    </AuthProvider>,
+  );
 };
 
 const mockResults: LawSearchResult[] = [
@@ -97,15 +102,15 @@ describe("SearchPage", () => {
     mockGet.mockReturnValue("test");
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
-      json: async () => ({ error: { message: "Failed to fetch search results" } })
+      json: async () => ({
+        error: { message: "Failed to fetch search results" },
+      }),
     });
 
     renderWithProviders(<SearchPage />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Operational Error/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Operational Error/)).toBeInTheDocument();
     });
 
     expect(
@@ -124,9 +129,7 @@ describe("SearchPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          /No statutes found matching the inquiry parameters/,
-        ),
+        screen.getByText(/No statutes found matching the inquiry parameters/),
       ).toBeInTheDocument();
     });
   });
@@ -155,8 +158,8 @@ describe("SearchPage", () => {
   });
 
   it("fetches from correct API URL with category param", async () => {
-    mockGet.mockImplementation(
-      (key: string) => (key === "category" ? "housing" : null),
+    mockGet.mockImplementation((key: string) =>
+      key === "category" ? "housing" : null,
     );
 
     const fetchSpy = vi.fn().mockResolvedValue({

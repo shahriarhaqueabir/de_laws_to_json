@@ -14,6 +14,33 @@ import type { AppLanguage, CloudProvider, CitedLaw } from "./types";
 import { calculateTotalLegalRisk } from "./fees";
 import { calculateDeadline } from "./diagnosis";
 
+// ── Remediation Playbook Types ──────────────────────────────────────────────
+
+interface PlaybookStep {
+  step: number;
+  title: string;
+  description: string;
+  deadline_days: number | null;
+  type: string;
+  statute?: string;
+}
+
+interface RemediationPlaybook {
+  category: string;
+  issue_type: string;
+  steps: PlaybookStep[];
+}
+
+export const CATEGORY_PLAYBOOK_MAP: Record<string, string[]> = {
+  labor: ["wrongful_dismissal"],
+  housing: ["rent_reduction"],
+  consumer: ["deposit_retention", "withdrawal", "warranty"],
+  traffic: ["fine_contest"],
+  family: ["custody"],
+  public: ["defense_strategy"],
+  other: [],
+};
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface FolderContext {
@@ -138,9 +165,63 @@ Return ONLY valid JSON with this exact structure — no markdown, no code fences
 7. Include at least one pre-litigation path (e.g., negotiation, mediation) where applicable.
 8. Never fabricate section numbers. Only reference what is provided or well-known German law.
 9. The user's language preference MUST be respected. Respond in the user's language.
-10. Include a disclaimer about RDG (Rechtsdienstleistungsgesetz) compliance.`;
+10. Include a disclaimer about RDG (Rechtsdienstleistungsgesetz) compliance.
+11. If a Remediation Playbook is provided, use its structured steps as a template for your recommended actions in each path. Align your strategies with the playbook's approach where applicable.
+12. Reference any deadlines or statutes mentioned in the playbook steps (e.g., "§ 4 KSchG: 3 weeks to file") to give precise guidance.`;
 
-function buildGuidancePrompt(params: GenerateGuidanceParams): string {
+/**
+ * Build a structured remediation playbook section for the AI prompt.
+ * Matches the folder's category to available playbooks and formats their steps.
+ */
+function buildPlaybookContext(
+  category: string,
+  playbookCache: RemediationPlaybook[],
+): string {
+  const issueTypes = CATEGORY_PLAYBOOK_MAP[category] || [];
+  const matched = playbookCache.filter((p) =>
+    issueTypes.includes(p.issue_type),
+  );
+
+  if (matched.length === 0) return "";
+
+  const parts: string[] = ["## Remediation Playbooks"];
+  for (const playbook of matched) {
+    parts.push(
+      `\n### ${playbook.issue_type.replace(/_/g, " ").replace(/\\b\\w/g, (c) => c.toUpperCase())}`,
+    );
+    for (const step of playbook.steps) {
+      parts.push(
+        `${step.step}. **${step.title}** — ${step.description}` +
+          (step.deadline_days
+            ? ` (Deadline: ${step.deadline_days} days)`
+            : "") +
+          (step.statute ? ` [${step.statute}]` : ""),
+      );
+    }
+  }
+  parts.push("");
+  return parts.join("\n");
+}
+
+async function loadPlaybooks(): Promise<RemediationPlaybook[]> {
+  try {
+    const { getServerClient } = await import("./supabase-server");
+    const { cookies } = await import("next/headers");
+    const supabase = getServerClient(await cookies());
+    const { data } = await supabase
+      .from("remediation_playbooks")
+      .select("*")
+      .limit(20);
+    return (data || []) as RemediationPlaybook[];
+  } catch {
+    return [];
+  }
+}
+
+function buildGuidancePrompt(
+  params: GenerateGuidanceParams,
+  playbookCache: RemediationPlaybook[],
+): string {
   const { situation, language, folderContext, bookmarkedLaws, qdrantContext } =
     params;
 
@@ -166,8 +247,7 @@ function buildGuidancePrompt(params: GenerateGuidanceParams): string {
       parts.push(`Court: ${folderContext.court_name}`);
     if (folderContext.case_number)
       parts.push(`Case Number: ${folderContext.case_number}`);
-    if (folderContext.notes)
-      parts.push(`Notes: ${folderContext.notes}`);
+    if (folderContext.notes) parts.push(`Notes: ${folderContext.notes}`);
     parts.push("");
   }
 
@@ -185,6 +265,15 @@ function buildGuidancePrompt(params: GenerateGuidanceParams): string {
     parts.push("## Relevant German Laws (from search)");
     parts.push(qdrantContext);
     parts.push("");
+  }
+
+  // Remediation playbook context (if folder category matches)
+  const playbookCtx = buildPlaybookContext(
+    folderContext?.category || "other",
+    playbookCache,
+  );
+  if (playbookCtx) {
+    parts.push(playbookCtx);
   }
 
   parts.push(
@@ -268,9 +357,7 @@ export function parseGuidanceResponse(raw: string): GuidancePath[] {
   });
 }
 
-function validateRiskLevel(
-  level: string,
-): "low" | "medium" | "high" {
+function validateRiskLevel(level: string): "low" | "medium" | "high" {
   if (level === "low" || level === "medium" || level === "high") return level;
   return "medium";
 }
@@ -462,7 +549,14 @@ const LEGAL_DISCLAIMER = `\n\n---\n*Disclaimer: This guidance is provided for in
 export async function generateGuidancePaths(
   params: GenerateGuidanceParams,
 ): Promise<GuidancePath[]> {
-  const userPrompt = buildGuidancePrompt(params);
+  // Load remediation playbooks (for matching folder category to playbook steps)
+  const playbookCache = await loadPlaybooks();
+  const userPrompt = buildGuidancePrompt(params, playbookCache);
+
+  // Update system prompt to include playbook reference
+  const systemPrompt = params.folderContext?.category
+    ? `${GUIDANCE_SYSTEM_PROMPT}\n\n## Playbook Reference\nThe user is in the "${params.folderContext.category}" category. If a remediation playbook is available above, use its steps to inform your recommended actions. Align your path strategies with the playbook's structured approach where applicable.`
+    : GUIDANCE_SYSTEM_PROMPT;
 
   const raw = await callAI(
     params.provider,

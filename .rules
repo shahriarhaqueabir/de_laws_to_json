@@ -1,0 +1,215 @@
+# German Law Vault — Zed Agent Rules
+
+## Project Overview
+
+**German Law Vault** provides a comprehensive search engine and AI-guided legal assistant for all German federal laws (>6,000 laws) from [gesetze-im-internet.de](https://www.gesetze-im-internet.de/).
+
+**Architecture**: Next.js 16 (App Router) + Supabase (PostgreSQL) + Qdrant Cloud (vector search)
+
+## Tech Stack
+
+| Layer | Technology | Version |
+|-------|-----------|---------|
+| Framework | Next.js | 16.2.9 |
+| UI Library | React | 19.2.4 |
+| Language | TypeScript | 5.x (strict mode) |
+| Database | PostgreSQL (Supabase) | 17 |
+| Vector Search | Qdrant Cloud | E5-small managed inference |
+| Animation | motion | 12.40+ |
+| Icons | lucide-react | latest |
+| Validation | Zod | 4.4+ |
+| Testing | Vitest | 4.1+ |
+| Styling | Tailwind CSS | 4.x |
+
+## Directory Structure
+
+```
+nextjs/
+├── src/
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── api/                # API route handlers
+│   │   │   ├── bookmarks/      # Bookmark CRUD
+│   │   │   ├── chat/           # Chat endpoints
+│   │   │   ├── diagnostics/    # Diagnostic endpoints
+│   │   │   ├── explain/        # Norm explanation
+│   │   │   ├── guidance/       # Legal guidance engine
+│   │   │   ├── laws/           # Law metadata
+│   │   │   ├── search/         # Qdrant semantic search
+│   │   │   └── settings/       # User settings
+│   │   ├── auth/               # Authentication page
+│   │   ├── bookmarks/          # Bookmarks page
+│   │   ├── chat/               # Chat page
+│   │   ├── guidance/           # Guidance page
+│   │   ├── laws/               # Law detail pages
+│   │   ├── search/             # Search results page
+│   │   ├── settings/           # Settings page
+│   │   ├── layout.tsx          # Root layout
+│   │   ├── page.tsx            # Home page
+│   │   └── globals.css         # Global styles + design tokens
+│   ├── components/             # React components
+│   │   ├── auth-context.tsx     # Auth context provider
+│   │   ├── chat-context.tsx     # Chat mode context
+│   │   ├── search-bar.tsx       # Search input
+│   │   ├── law-card.tsx         # Law result card
+│   │   ├── category-grid.tsx    # Category browsing
+│   │   ├── norm-viewer.tsx      # Norm explanation viewer
+│   │   ├── nav-bar.tsx          # Navigation bar
+│   │   ├── folder-modal.tsx     # Folder creation/edit modal
+│   │   ├── guidance-paths-display.tsx  # Guidance paths display
+│   │   ├── remediation-roadmap.tsx     # Remediation roadmap
+│   │   ├── cost-risk-calculator.tsx    # Cost/risk calculator
+│   │   └── toast.tsx            # Toast notifications
+│   ├── lib/                    # Shared utilities
+│   │   ├── supabase.ts         # Browser Supabase client
+│   │   ├── supabase-server.ts  # Server Supabase client
+│   │   ├── qdrant.ts           # Qdrant vector search
+│   │   ├── guidance.ts         # Guidance engine
+│   │   ├── chat.ts             # AI chat (OpenAI/Anthropic/Ollama)
+│   │   ├── bookmarks.ts        # Bookmarks v1 (legacy)
+│   │   ├── bookmarks-v2.ts     # Bookmarks v2 (dual-storage)
+│   │   ├── encryption.ts       # AES-256-GCM encryption
+│   │   ├── fees.ts             # RVG/GKG cost calculator
+│   │   ├── diagnosis.ts        # Legal diagnosis engine
+│   │   ├── translate.ts        # Translation utilities
+│   │   ├── sanitize.ts         # Input sanitization
+│   │   ├── api-utils.ts        # API response utilities
+│   │   └── types.ts            # TypeScript types
+│   └── workers/                # Web workers (Transformers.js)
+supabase/
+├── migrations/                 # Database migrations (00001-00007)
+└── seed_*.sql                  # Seed data files
+plans/
+├── 2026-06-15-serverless-overhaul.md
+└── 2026-06-21-review-sprint-kanban.md
+docs/adr/                       # Architecture Decision Records
+```
+
+## Commands
+
+```bash
+# Development
+cd nextjs && npm run dev        # Start dev server (localhost:3000)
+
+# Testing
+cd nextjs && npm test           # Run all tests (vitest)
+cd nextjs && npx vitest --watch  # Watch mode
+cd nextjs && npm run test:coverage  # Coverage report
+
+# TypeScript
+cd nextjs && npx tsc --noEmit   # Type check
+
+# Lint
+cd nextjs && npm run lint        # ESLint
+
+# Database (Supabase local)
+supabase start                  # Start local Supabase
+supabase db reset               # Reset DB with migrations
+supabase migration up           # Apply pending migrations
+```
+
+## Key Conventions
+
+- **Strict TypeScript**: No `any` or `@ts-ignore`. Strict mode enforced.
+- **Zod validation**: All API routes validate input with Zod schemas.
+- **Error handling**: API routes use `errorResponse()` / `successResponse()` from `api-utils.ts`.
+- **Dual-storage bookmarks**: `bookmarks-v2.ts` handles localStorage + Supabase sync.
+- **8 language support**: UI text supports DE/EN/TR/AR/FR/ES/PL/UK/RU.
+- **4 chat modes**: basic (search only), browser (Transformers.js), cloud (BYO API key), local (Ollama).
+- **CSS naming**: Tailwind utility classes. Premium card style via `premium-card`, `glass-panel`, `glass-panel-heavy`.
+- **Color tokens**: `accent-gold`, `accent-gold-bright` for the gold accent system.
+
+## Database Schema (Key Tables)
+
+| Table | Purpose | RLS |
+|-------|---------|-----|
+| `laws` | 6,000+ German federal laws | Public read |
+| `bookmarks` | User bookmarks with folder FK | User-owned |
+| `bookmark_folders` | Folders with 8 uniform AI-guidance properties | User-owned |
+| `conversations` | Chat conversations | User-owned |
+| `messages` | Chat messages per conversation | User-owned |
+| `case_files` | User legal situation records | User-owned |
+| `guidance_paths` | AI-generated outcome paths (3-5 per case) | User-owned |
+| `norm_explanations` | Cached AI explanations (per norm+lang) | Public read/insert |
+| `user_api_keys` | Encrypted AI provider keys | User-owned |
+| `remediation_playbooks` | 8 seed legal playbooks | Public read |
+| `document_templates` | 5 seed German legal templates | Public read |
+
+## Folder Properties (Uniform — 8 Fields)
+
+Each `bookmark_folder` has these AI-guidance properties:
+- `incident_date` — When did the situation occur?
+- `dispute_value` — Streitwert (EUR)
+- `status` — pre_action → consulting → filed → in_progress → resolved
+- `opposing_party` — Other side (employer, landlord, etc.)
+- `deadline_date` — Critical statutory deadline
+- `court_name` — Court if proceedings started
+- `case_number` — Aktenzeichen
+- `notes` — Free-text context for AI prompt
+
+## Guidance Engine Flow
+
+1. User describes situation (any of 9 languages, via `/guidance`)
+2. Select folder for context (optional)
+3. API searches Qdrant for relevant norms (E5-small with `query: ` prefix)
+4. Loads remediation playbooks matching folder category
+5. Cross-references with folder's bookmarked laws
+6. AI generates 3-5 structured outcome paths (risk + cost analysis, with playbook-informed steps)
+7. Paths and case_file saved to DB if user is signed in
+8. User can generate legal docs from templates via `/api/guidance/generate-doc`
+
+### Critical: E5-small Query Prefix
+
+The `searchNorms()` function in `qdrant.ts` MUST prepend `query: ` to the user's search text before passing it to Qdrant managed inference. The indexed documents use `passage: ` prefix. Without this, search results are effectively random. See GLV-040.
+
+## API Endpoints
+
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/api/search?q=&category=&page=` | Semantic search via Qdrant | Public |
+| GET | `/api/laws/[key]` | Law metadata + norms from Qdrant scroll | Public |
+| POST | `/api/guidance` | Generate 3-5 outcome paths | Public (AI features require API key) |
+| POST | `/api/guidance/generate-doc` | Generate legal document from template | Auth required |
+| GET | `/api/guidance/sessions/[id]` | Get saved guidance session | Auth required |
+| GET | `/api/bookmarks/folders` | List user's bookmark folders | Auth required |
+| POST | `/api/bookmarks/folders` | Create bookmark folder | Auth required |
+| PUT | `/api/bookmarks/folders/[id]` | Update folder properties | Auth required |
+| DELETE | `/api/bookmarks/folders/[id]` | Delete folder | Auth required |
+| GET | `/api/settings/api-key/status` | Check stored API key status | Auth required |
+| POST | `/api/settings/api-key` | Save encrypted API key | Auth required |
+| DELETE | `/api/settings/api-key` | Remove stored API key | Auth required |
+| GET | `/api/chat` | Chat with AI (basic/browser/cloud/local) | Varies |
+| GET | `/api/guidance/sessions?page=&limit=` | List sessions with pagination | Auth required |
+| GET | `/api/guidance/sessions/[id]` | Get saved guidance session | Auth required |
+| DELETE | `/api/guidance/sessions/[id]` | Delete guidance session | Auth required |
+| GET | `/api/search?q=&category=&page=` | Semantic search via Qdrant | Public |
+| GET | `/api/laws/[key]` | Law metadata + norms from Qdrant scroll | Public |
+| POST | `/api/guidance` | Generate 3-5 outcome paths | Public (AI features require API key) |
+| POST | `/api/guidance/generate-doc` | Generate legal document from template | Auth required |
+| GET | `/api/guidance/sessions` | List user's guidance history | Auth required |
+| GET | `/api/bookmarks/folders` | List user's bookmark folders | Auth required |
+| POST | `/api/bookmarks/folders` | Create bookmark folder | Auth required |
+| PATCH | `/api/bookmarks/folders?id=` | Update folder properties | Auth required |
+| DELETE | `/api/bookmarks/folders?id=` | Delete folder | Auth required |
+| GET | `/api/settings/api-key/status` | Check stored API key status | Auth required |
+| POST | `/api/settings/api-key` | Save encrypted API key | Auth required |
+| DELETE | `/api/settings/api-key` | Remove stored API key | Auth required |
+| POST | `/api/explain` | Explain a norm | Public |
+| GET | `/api/diagnostics` | System diagnostics | Public |
+
+## Remediation Playbook Categories
+
+| Category | Issue Types | Folder Mapping |
+|----------|-------------|----------------|
+| labor | wrongful_dismissal | KSchG termination defense |
+| housing | rent_reduction | § 536 BGB rent reduction |
+| consumer | deposit_retention, withdrawal, warranty | Consumer rights |
+| traffic | fine_contest | § 67 OWiG fine objection |
+| family | custody | § 1626 BGB custody |
+| public | defense_strategy | § 147 StPO criminal defense |
+| other | — | No playbook matching |
+
+## Production URLs
+
+- **Deployed app**: https://ai-assisted-german-law-shahriarhaqueabir.vercel.app
+- **Supabase project**: zuhhimmdlnsjuwksitpb
+- **Qdrant collection**: `german_norms` (E5-small, 384d, managed inference)

@@ -5,7 +5,8 @@ import { getServerClient } from "@/lib/supabase-server";
 import { errorResponse, successResponse } from "@/lib/api-utils";
 import { generateDocument } from "@/lib/guidance";
 import { decryptApiKey } from "@/lib/encryption";
-import type { CloudProvider, FolderContext } from "@/lib/guidance";
+import type { CloudProvider } from "@/lib/types";
+import type { FolderContext } from "@/lib/guidance";
 
 // ── Validation ─────────────────────────────────────────────────────────────
 
