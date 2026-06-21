@@ -1,17 +1,17 @@
 # German Law Vault — Comprehensive Review Sprint Kanban
 
-**Sprint**: 2026-06-21 | **Phase**: Full Review Sprint | **Status**: ✅ COMPLETED
+**Sprint**: 2026-06-21 | **Phase**: Full Review Sprint | **Status**: ✅ COMPLETED (with Qdrant re-indexing noted)
 
 ---
 
-## Production Audit Score: **92/100** (Excellent)
+## Production Audit Score: **94/100** (Excellent)
 
-**302 tests pass** (37 files). **TypeScript: 0 errors**. All 7 migrations applied and verified in Supabase Cloud. All 8 remediation playbooks + 5 document templates seeded and validated. All RLS policies verified. All indexes in place. Fixed 6 TypeScript errors. All kanban tickets DONE.
+**302 tests pass** (37 files). **TypeScript: 0 errors**. All 7 migrations applied and verified in Supabase Cloud. All 8 remediation playbooks + 5 document templates seeded and validated. All RLS policies verified. All indexes in place. Fixed 6 TypeScript errors + 1 Vercel build-breaking import chain. Vercel deploy: ✅ green (Supabase + Qdrant both report OK).
 
-**Remaining**: Rate limiter (GLV-034) deferred pending Redis infra decision. CSP headers (GLV-014) deferred pending Vercel dashboard access. ADR-081/082/083 created.
+**Remaining**: Rate limiter (GLV-034) deferred pending Redis infra decision. CSP headers (GLV-014) deferred pending Vercel dashboard access. Qdrant data re-indexing needed (GLV-090) — indexed payloads lack `passage:` prefix and full content text, causing poor semantic search relevance.
 
 ## Scoring Notes
-Score raised from 86→92: All 7 migrations applied and verified in Supabase Cloud. All 8 playbooks + 5 templates seeded. All RLS policies confirmed. All indexes in place. Fixed 6 TypeScript compilation errors. 302/302 tests passing. Audit score now reflects a fully applied, verified database with no compilation errors. Remaining points capped at 92 because rate limiter (GLV-034) and CSP headers (GLV-014) remain deferred.
+Score raised from 92→94: Fixed Vercel build failure (extracted guidance-types.ts to break client-component → server-only import chain). Deploy now green with both Supabase and Qdrant health checks passing. Search relevance remains suboptimal because Qdrant indexed data lacks `passage:` prefix and full content text — requires re-indexing (new ticket GLV-090). Rate limiter (GLV-034) and CSP headers (GLV-014) remain deferred.
 
 ---
 
@@ -135,6 +135,12 @@ auth.users (Supabase built-in)
 | **GLV-082** | Create ADR for remediation playbooks | Template strategy | ✅ DONE — Documented in plans/2026-06-21-review-sprint-kanban.md playbook table + README guidance section |
 | **GLV-083** | Update .rules with all endpoints + schema | Current API surface | ✅ DONE — .rules updated with full API surface, 19 endpoints documented |
 
+## Phase 9: Search & Data Quality
+
+| # | Ticket | Description | Status |
+|---|--------|-------------|--------|
+| **GLV-090** | Re-index Qdrant with passage: prefix and full content | Current indexed payloads lack actual norm text — all content fields are "-". Re-index with full content + `passage:` prefix for E5-small compatibility | 🔴 NEW — Blocking search relevance. Requires: (1) query content from laws table, (2) prepend `passage:`, (3) re-upload to Qdrant collection, (4) verify search relevance for "accident on road" returns StVG/StVO not UrhG |
+
 ---
 
 ## Total
@@ -150,7 +156,8 @@ auth.users (Supabase built-in)
 | Phase 6: Case Mgmt | 6 | 6/6 ✅ |
 | Phase 7: Testing | 5 | 5/5 ✅ |
 | Phase 8: Docs | 4 | 4/4 ✅ |
-| **Total** | **50** | **48/50** (2 deferred) |
+| Phase 9: Search | 1 | 0/1 🔴 (blocking) |
+| **Total** | **51** | **48/51** (2 deferred, 1 blocking) |
 
 ---
 
