@@ -41,7 +41,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             };
           }
           const merged = { ...base, ...loaded };
-          delete (merged as Partial<ChatSettings>).apiKey;
           return merged;
         }
       } catch {}
@@ -60,9 +59,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const updateSettings = (patch: Partial<ChatSettings>) => {
     const next = { ...settings, ...patch };
     setSettings(next);
-    // Persist settings to localStorage WITHOUT the apiKey
-    const { apiKey: _, ...persistable } = next;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
+    // Persist settings to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     window.dispatchEvent(new Event("glv_settings_updated"));
   };
 

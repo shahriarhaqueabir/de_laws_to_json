@@ -17,11 +17,16 @@
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
     "@tailwindcss/typography": "^0.5.20",
+    "@tanstack/react-query": "^5.101.0",
+    "date-fns": "^4.4.0",
+    "geist": "^1.7.2",
+    "ky": "^2.0.2",
     "lucide-react": "^1.21.0",
     "motion": "^12.40.0",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "sonner": "^2.0.7",
     "zod": "^4.4.3"
   },
   "overrides": {

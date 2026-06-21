@@ -48,7 +48,7 @@
 | **GLV-208** | Add Qdrant re-indexing setup script | Postponed — needs Supabase service_role key access | 30min | ⏳ DEFERRED |
 | **GLV-209** | Add E2E tests for search + guidance APIs | Postponed — needs Qdrant configured in test env | 30min | ⏳ DEFERRED |
 | **GLV-210** | Create centralized production documentation | Created `docs/production.md` with architecture, env vars, deployment, rollback, known limitations. | 20min | ✅ DONE |
-| **GLV-211** | Commit and push all changes | Stage all changes, commit with structured message, push to origin | 10min | ⏳ IN PROGRESS |
+| **GLV-211** | Commit and push all changes | All changes staged, committed, pushed to origin/main. 15 files, 1,110 insertions. | 10min | ✅ DONE |
 
 ---
 
@@ -63,6 +63,45 @@
 - [x] Qdrant fallback works when credentials are missing (Supabase ILIKE)
 - [x] Documentation updated (kanban, docs/production.md)
 - [x] All changes committed and pushed
+
+---
+
+## Changes Made This Sprint
+
+### Files Changed
+
+| File | Change | Ticket |
+|------|--------|--------|
+| `nextjs/src/lib/qdrant.ts` | Graceful fallback — returns `[]` instead of throwing when Qdrant not configured | GLV-203 |
+| `nextjs/src/lib/__tests__/qdrant.test.ts` | Updated test for graceful fallback (no longer expects throw) | GLV-203 |
+| `nextjs/src/app/api/search/route.ts` | Added `lang` param, result translation via `translateFromGerman()`, Supabase fallback | GLV-200, GLV-203 |
+| `nextjs/src/app/api/laws/[key]/route.ts` | Graceful Qdrant degradation — returns metadata when Qdrant unavailable | GLV-203 |
+| `nextjs/src/hooks/useLanguage.ts` | **New** — Global language hook with `t()` for UI strings across 9 languages | GLV-204 |
+| `nextjs/src/hooks/__tests__/useLanguage.test.ts` | **New** — 9 tests for useLanguage hook | GLV-204 |
+| `nextjs/src/app/search/page.tsx` | Added `&lang=` to API call, language-aware UI strings via `t()` | GLV-200, GLV-205 |
+| `nextjs/src/app/laws/[key]/page.tsx` | Language-aware loading/error/empty states via `useLanguage()` | GLV-205 |
+| `nextjs/src/app/guidance/page.tsx` | Sync local language state with global ChatContext | GLV-202 |
+| `nextjs/src/app/__tests__/search-page.test.tsx` | Updated tests for ChatProvider wrapper, `lang` param, translated strings | GLV-201 |
+| `.rules` | Added `hooks/` directory to directory structure | GLV-210 |
+| `docs/production.md` | **New** — Production runbook with architecture, env vars, deployment, rollback | GLV-210 |
+| `plans/2026-06-21-review-sprint-phase6.md` | **New** — This kanban board | GLV-210 |
+
+### Database Verification (Cloud — `zuhhimmdlnsjuwksitpb`)
+
+- ✅ 8 remediation playbooks (labor, housing, consumer×3, traffic, family, public)
+- ✅ 5 document templates (widerspruch, mahnung, kuendigung, einspruch, klage)
+- ✅ 6,145 laws in `public.laws`
+- ✅ FK `fk_norm_explanations_law_key` validated
+- ✅ All 7 migrations applied
+- ✅ RLS verified on all 11 tables
+
+### Remaining Known Issues
+
+1. **Qdrant credentials only in Vercel Production**: Preview deployments and local dev lack QDRANT_URL/QDRANT_API_KEY. Graceful fallback now handles this.
+2. **LibreTranslate rate limits**: Public API ~30 req/min. Self-host via Docker for production.
+3. **English search for complex queries**: Term map covers ~120 common legal terms. Complex queries fall to LibreTranslate or original query.
+4. **Guidance free tier**: Without API key, returns raw search results instead of AI-generated paths.
+5. **No E2E tests for guidance flow**: Unit tests pass guidance logic but no full API integration test against real Qdrant.
 
 ---
 

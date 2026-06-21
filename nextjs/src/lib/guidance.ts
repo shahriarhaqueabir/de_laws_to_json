@@ -521,7 +521,7 @@ export async function generateGuidancePaths(
     params.apiKey,
     params.model,
     params.customEndpoint,
-    GUIDANCE_SYSTEM_PROMPT,
+    systemPrompt,
     userPrompt,
   );
 

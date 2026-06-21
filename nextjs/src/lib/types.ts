@@ -128,7 +128,6 @@ export interface ChatSettings {
   ollamaParams: OllamaParams;
   // Cloud AI
   provider: CloudProvider;
-  apiKey?: string;
   model: string;
   customEndpoint: string;
   // Browser AI
@@ -157,7 +156,6 @@ export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
   ollamaModel: "",
   ollamaParams: DEFAULT_OLLAMA_PARAMS,
   provider: "openai",
-  apiKey: "",
   model: "gpt-4o-mini",
   customEndpoint: "",
   browserModel: "Xenova/Qwen1.5-0.5B-Chat",

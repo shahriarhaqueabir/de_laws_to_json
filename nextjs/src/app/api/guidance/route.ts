@@ -11,6 +11,7 @@ import {
   type FolderContext,
 } from "@/lib/guidance";
 import { decryptApiKey } from "@/lib/encryption";
+import { translateFromGerman } from "@/lib/translate-server";
 import { LANGUAGE_NAMES, type AppLanguage } from "@/lib/types";
 
 // ── Validation ─────────────────────────────────────────────────────────────
@@ -129,37 +130,55 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // If no API key, use basic mode (just search results)
+    // If no API key, use basic mode (just search results translated to user's language)
     if (!apiKey) {
       const translatedSituation = await translateQueryToGerman(situation);
       const norms = await searchNorms(translatedSituation, undefined, 10);
+      const appLang = (language || "en") as AppLanguage;
+
+      // Translate norms from German to user's language
+      const translatedPaths = await Promise.all(
+        norms.map(async (n, i) => {
+          const [translatedTitle, translatedSummary, translatedAnalysis] =
+            appLang !== "de"
+              ? await Promise.all([
+                  translateFromGerman(n.law_title || n.law_key, appLang),
+                  translateFromGerman(n.content.slice(0, 300), appLang),
+                  translateFromGerman(n.content, appLang),
+                ])
+              : [n.law_title || n.law_key, n.content.slice(0, 300), n.content];
+
+          return {
+            path_number: i + 1,
+            title: `${n.law_key} ${n.norm_id} — ${translatedTitle}`,
+            summary: translatedSummary,
+            detailed_analysis: translatedAnalysis,
+            laws_cited: [
+              {
+                law_key: n.law_key,
+                norm_id: n.norm_id,
+                law_title: translatedTitle,
+              },
+            ],
+            risk_level: "medium" as const,
+            risk_reason:
+              "Sign in and configure an AI provider to get risk assessment.",
+            cost_estimate: null,
+            cost_breakdown: null,
+            recommended_actions: [
+              "Sign in and add an API key in Settings to enable AI-powered guidance",
+              "Review the relevant laws above",
+              "Consult a licensed German attorney (Rechtsanwalt)",
+            ],
+            estimated_timeline: "Varies",
+            success_probability: 0.5,
+          };
+        }),
+      );
+
       return successResponse({
         session_id: null,
-        paths: norms.map((n, i) => ({
-          path_number: i + 1,
-          title: `${n.law_key} ${n.norm_id} — ${n.law_title}`,
-          summary: n.content.slice(0, 300),
-          detailed_analysis: n.content,
-          laws_cited: [
-            {
-              law_key: n.law_key,
-              norm_id: n.norm_id,
-              law_title: n.law_title,
-            },
-          ],
-          risk_level: "medium" as const,
-          risk_reason:
-            "Sign in and configure an AI provider to get risk assessment.",
-          cost_estimate: null,
-          cost_breakdown: null,
-          recommended_actions: [
-            "Sign in and add an API key in Settings to enable AI-powered guidance",
-            "Review the relevant laws above",
-            "Consult a licensed German attorney (Rechtsanwalt)",
-          ],
-          estimated_timeline: "Varies",
-          success_probability: 0.5,
-        })),
+        paths: translatedPaths,
         folder_context,
         generated_at: new Date().toISOString(),
         language,
