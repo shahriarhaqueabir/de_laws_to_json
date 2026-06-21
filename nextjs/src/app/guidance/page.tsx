@@ -22,6 +22,7 @@ import type { GuidancePath, FolderContext } from "../../lib/guidance-types";
 import { FOLDER_STATUS_LABELS } from "../../lib/guidance-types";
 import type { AppLanguage } from "../../lib/types";
 import { getFolders, createFolder } from "../../lib/bookmarks-v2";
+import { useLanguage } from "../../hooks/useLanguage";
 
 // ── Language Options ───────────────────────────────────────────────────────
 
@@ -41,7 +42,12 @@ const LANGUAGES: { value: AppLanguage; label: string }[] = [
 
 export default function GuidancePage() {
   const [situation, setSituation] = useState("");
-  const [language, setLanguage] = useState<AppLanguage>("en");
+  const {
+    language: globalLanguage,
+    setLanguage: setGlobalLanguage,
+    t,
+  } = useLanguage();
+  const [language, setLanguage] = useState<AppLanguage>(globalLanguage);
   const [selectedFolder, setSelectedFolder] = useState<string>("");
   const [paths, setPaths] = useState<GuidancePath[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -82,6 +88,18 @@ export default function GuidancePage() {
 
   const selectedFolderData =
     folders.find((f) => f.id === selectedFolder) || null;
+
+  // Sync local language when global language changes
+  useEffect(() => {
+    if (globalLanguage !== language) {
+      setLanguage(globalLanguage);
+    }
+  }, [globalLanguage]);
+
+  const handleLanguageChange = (lang: AppLanguage) => {
+    setLanguage(lang);
+    setGlobalLanguage(lang);
+  };
 
   const handleGetGuidance = async () => {
     if (!situation.trim()) return;
@@ -218,7 +236,9 @@ export default function GuidancePage() {
             </label>
             <select
               value={language}
-              onChange={(e) => setLanguage(e.target.value as AppLanguage)}
+              onChange={(e) =>
+                handleLanguageChange(e.target.value as AppLanguage)
+              }
               className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus:border-accent-cobalt/50 transition-colors appearance-none"
             >
               {LANGUAGES.map((l) => (

@@ -48,7 +48,7 @@ nextjs/
 │   │   └── globals.css         # Global styles + design tokens
 │   ├── components/             # React components
 │   │   ├── auth-context.tsx     # Auth context provider
-│   │   ├── chat-context.tsx     # Chat mode context
+│   │   ├── chat-context.tsx     # Chat mode context + language persistence
 │   │   ├── search-bar.tsx       # Search input
 │   │   ├── law-card.tsx         # Law result card
 │   │   ├── category-grid.tsx    # Category browsing
@@ -59,6 +59,8 @@ nextjs/
 │   │   ├── remediation-roadmap.tsx     # Remediation roadmap
 │   │   ├── cost-risk-calculator.tsx    # Cost/risk calculator
 │   │   └── toast.tsx            # Toast notifications
+│   ├── hooks/                  # React hooks
+│   │   └── useLanguage.ts      # Global language hook with t() for UI strings
 │   ├── lib/                    # Shared utilities
 │   │   ├── supabase.ts         # Browser Supabase client
 │   │   ├── supabase-server.ts  # Server Supabase client

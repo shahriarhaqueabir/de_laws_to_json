@@ -6,11 +6,13 @@ import SearchBar from "../../components/search-bar";
 import LawCard from "../../components/law-card";
 import { LawSearchResult } from "../../lib/types";
 import { Loader2, Scale } from "lucide-react";
+import { useLanguage } from "../../hooks/useLanguage";
 
 function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const category = searchParams.get("category") || "";
+  const { language, t } = useLanguage();
 
   const [results, setResults] = useState<LawSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -23,20 +25,20 @@ function SearchResults() {
       setLoading(true);
       setError(null);
       try {
-        const url = `/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}`;
+        const url = `/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&lang=${language}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
         setResults(data.results || []);
       } catch (err) {
-        setError("Failed to fetch search results.");
+        setError(t("search.error"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchResults();
-  }, [query, category]);
+  }, [query, category, language]);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-20">
@@ -50,7 +52,7 @@ function SearchResults() {
             <Loader2 className="absolute inset-0 w-12 h-12 text-accent-gold animate-spin" />
             <Loader2 className="absolute inset-0 w-12 h-12 text-accent-gold animate-ping opacity-20" />
           </div>
-          <p className="monumental-type opacity-60">Scanning Archives...</p>
+          <p className="monumental-type opacity-60">{t("search.loading")}</p>
         </div>
       ) : error ? (
         <div className="p-8 bg-red-950/20 border border-red-900/30 text-red-400 font-bold uppercase tracking-widest text-[10px] text-center">
@@ -60,7 +62,7 @@ function SearchResults() {
         <div className="space-y-12">
           <div className="flex items-center gap-4 mb-8">
             <h2 className="monumental-type opacity-50 shrink-0">
-              {results.length} Statutes Retrieved
+              {t("search.results_count", { n: results.length })}
             </h2>
             <div className="h-px w-full bg-zinc-800/50" />
           </div>
@@ -71,13 +73,13 @@ function SearchResults() {
       ) : query || category ? (
         <div className="text-center py-32">
           <p className="text-zinc-500 font-serif italic text-xl">
-            No statutes found matching the inquiry parameters.
+            {t("search.empty")}
           </p>
         </div>
       ) : (
         <div className="text-center py-32 opacity-20">
           <Scale className="w-16 h-16 mx-auto mb-6 text-accent-gold" />
-          <p className="monumental-type">Awaiting Inquiry</p>
+          <p className="monumental-type">{t("search.awaiting")}</p>
         </div>
       )}
     </div>

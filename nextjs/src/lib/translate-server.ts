@@ -1,13 +1,39 @@
 /**
- * Server-side query translation for Qdrant search.
+ * Server-side translation service for the German Law Vault.
  *
- * E5-small is multilingual but optimized for German passages.
- * English queries produce embeddings that don't match German documents well.
- * This utility detects non-German queries and translates them to German.
+ * Provides bidirectional translation across all 9 supported languages using:
+ * 1. Legal term mapping (fast path — no API call)
+ * 2. LibreTranslate API (free, ~30 req/min on public instance)
+ * 3. Graceful fallback when translation is unavailable
+ *
+ * Language codes: de, en, tr, ar, fr, es, pl, uk, ru
  */
 
-// Common English→German legal term mapping (fast path, no API call)
-const LEGAL_TERM_MAP: Record<string, string> = {
+import type { AppLanguage } from "./types";
+
+// ── LibreTranslate Language Code Mapping ──────────────────────────────────
+// LibreTranslate uses ISO 639-1 codes which match our AppLanguage type
+// except for some edge cases.
+
+const LIBRE_LANG_CODES: Record<string, string> = {
+  de: "de",
+  en: "en",
+  tr: "tr",
+  ar: "ar",
+  fr: "fr",
+  es: "es",
+  pl: "pl",
+  uk: "uk",
+  ru: "ru",
+};
+
+const LIBRE_API_URL = "https://libretranslate.com/translate";
+const LIBRE_TIMEOUT_MS = 5000;
+
+// ── English→German Legal Term Map ─────────────────────────────────────────
+// Used for fast-path search query translation (no API call needed)
+
+const EN_DE_TERM_MAP: Record<string, string> = {
   accident: "Unfall",
   "accident on road": "Verkehrsunfall",
   "car accident": "Autounfall",
@@ -86,7 +112,24 @@ const LEGAL_TERM_MAP: Record<string, string> = {
   foreclosure: "Zwangsversteigerung",
 };
 
-// Simple German word detection heuristic
+// ── German→English Legal Term Map (reverse lookup) ────────────────────────
+// Built by reversing the EN→DE map so we can translate German results back
+
+function buildDeEnTermMap(): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const [en, de] of Object.entries(EN_DE_TERM_MAP)) {
+    // If multiple English terms map to the same German term, keep first
+    if (!map[de]) {
+      map[de] = en;
+    }
+  }
+  return map;
+}
+
+const DE_EN_TERM_MAP = buildDeEnTermMap();
+
+// ── German Word Detection ─────────────────────────────────────────────────
+
 const GERMAN_WORDS = new Set([
   "der",
   "die",
@@ -166,54 +209,49 @@ const GERMAN_WORDS = new Set([
 
 function isLikelyGerman(query: string): boolean {
   const words = query.toLowerCase().split(/\s+/);
+  if (words.length === 0) return false;
   const germanWordCount = words.filter((w) => GERMAN_WORDS.has(w)).length;
-  // If more than 30% of words are German-specific, treat as German
   return germanWordCount / words.length > 0.3;
 }
 
-function findTermMatch(query: string): string | null {
+// ── Term Match Helpers ────────────────────────────────────────────────────
+
+function findEnDeTermMatch(query: string): string | null {
   const lower = query.toLowerCase().trim();
-  // Check full phrase match first
-  if (LEGAL_TERM_MAP[lower]) return LEGAL_TERM_MAP[lower];
-  // Check partial match
-  for (const [en, de] of Object.entries(LEGAL_TERM_MAP)) {
+  if (EN_DE_TERM_MAP[lower]) return EN_DE_TERM_MAP[lower];
+  for (const [en, de] of Object.entries(EN_DE_TERM_MAP)) {
     if (lower.includes(en)) return de;
   }
   return null;
 }
 
-/**
- * Translates a query to German for better E5-small matching.
- * Uses term mapping for common legal terms (fast, no API call).
- * Falls back to original query if translation is not possible.
- */
-export async function translateQueryToGerman(query: string): Promise<string> {
-  if (!query.trim()) return query;
-
-  // If already German, return as-is
-  if (isLikelyGerman(query)) {
-    return query;
+function findDeEnTermMatch(query: string): string | null {
+  const lower = query.toLowerCase().trim();
+  if (DE_EN_TERM_MAP[lower]) return DE_EN_TERM_MAP[lower];
+  for (const [de, en] of Object.entries(DE_EN_TERM_MAP)) {
+    if (lower.includes(de)) return en;
   }
+  return null;
+}
 
-  // Try term mapping first (fast path)
-  const termMatch = findTermMatch(query);
-  if (termMatch) {
-    console.log(`[Translate] Term-mapped "${query}" → "${termMatch}"`);
-    return termMatch;
-  }
+// ── LibreTranslate API Call ───────────────────────────────────────────────
 
-  // Try LibreTranslate public API (free, no auth needed for small usage)
+async function callLibreTranslate(
+  text: string,
+  source: string,
+  target: string,
+): Promise<string | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
+    const timeout = setTimeout(() => controller.abort(), LIBRE_TIMEOUT_MS);
 
-    const res = await fetch("https://libretranslate.com/translate", {
+    const res = await fetch(LIBRE_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        q: query,
-        source: "en",
-        target: "de",
+        q: text,
+        source,
+        target,
         format: "text",
       }),
       signal: controller.signal,
@@ -222,19 +260,120 @@ export async function translateQueryToGerman(query: string): Promise<string> {
 
     if (res.ok) {
       const data = (await res.json()) as { translatedText: string };
-      if (data.translatedText && data.translatedText !== query) {
-        console.log(
-          `[Translate] API translated "${query}" → "${data.translatedText}"`,
-        );
+      if (data.translatedText && data.translatedText !== text) {
         return data.translatedText;
       }
     }
+    return null;
   } catch {
-    console.log(
-      `[Translate] API unavailable, using original query: "${query}"`,
-    );
+    return null;
+  }
+}
+
+// ── Public API ────────────────────────────────────────────────────────────
+
+/**
+ * Translate any non-German query to German for Qdrant E5-small search.
+ * Uses term mapping first (fast), then LibreTranslate as fallback.
+ */
+export async function translateQueryToGerman(query: string): Promise<string> {
+  if (!query.trim()) return query;
+
+  // Already German — return as-is
+  if (isLikelyGerman(query)) {
+    console.log(`[Translate] Query is already German: "${query}"`);
+    return query;
   }
 
-  // Fallback: return original query
+  // Fast path: term mapping
+  const termMatch = findEnDeTermMatch(query);
+  if (termMatch) {
+    console.log(`[Translate] Term-mapped EN→DE: "${query}" → "${termMatch}"`);
+    return termMatch;
+  }
+
+  // LibreTranslate fallback
+  const apiResult = await callLibreTranslate(query, "en", "de");
+  if (apiResult) {
+    console.log(
+      `[Translate] LibreTranslate EN→DE: "${query}" → "${apiResult}"`,
+    );
+    return apiResult;
+  }
+
+  console.log(
+    `[Translate] No translation available, using original: "${query}"`,
+  );
   return query;
+}
+
+/**
+ * Translate German text to any supported language.
+ * Used for displaying German search results/norms in the user's language.
+ */
+export async function translateFromGerman(
+  text: string,
+  targetLanguage: AppLanguage,
+): Promise<string> {
+  if (!text.trim() || targetLanguage === "de") return text;
+
+  // Fast path: German→English term mapping
+  if (targetLanguage === "en") {
+    const termMatch = findDeEnTermMatch(text);
+    if (termMatch) {
+      console.log(
+        `[Translate] Term-mapped DE→EN: "${text.slice(0, 40)}..." → "${termMatch}"`,
+      );
+      return termMatch;
+    }
+  }
+
+  // LibreTranslate: German → target language
+  const targetCode = LIBRE_LANG_CODES[targetLanguage];
+  if (targetCode) {
+    const apiResult = await callLibreTranslate(text, "de", targetCode);
+    if (apiResult) {
+      console.log(
+        `[Translate] LibreTranslate DE→${targetLanguage}: "${text.slice(0, 40)}..."`,
+      );
+      return apiResult;
+    }
+  }
+
+  console.log(
+    `[Translate] DE→${targetLanguage} unavailable for: "${text.slice(0, 40)}..."`,
+  );
+  return text;
+}
+
+/**
+ * Generic bidirectional translation between any two supported languages.
+ * Falls back gracefully if the API is unavailable.
+ */
+export async function translateText(
+  text: string,
+  sourceLanguage: AppLanguage | "auto",
+  targetLanguage: AppLanguage,
+): Promise<string> {
+  if (!text.trim() || sourceLanguage === targetLanguage) return text;
+
+  // Direct paths optimized for our primary use case
+  if (sourceLanguage === "en" && targetLanguage === "de") {
+    return translateQueryToGerman(text);
+  }
+  if (sourceLanguage === "de") {
+    return translateFromGerman(text, targetLanguage);
+  }
+
+  // Generic path via LibreTranslate
+  const sourceCode =
+    sourceLanguage === "auto" ? "auto" : LIBRE_LANG_CODES[sourceLanguage];
+  const targetCode = LIBRE_LANG_CODES[targetLanguage];
+
+  if (sourceCode && targetCode) {
+    const apiResult = await callLibreTranslate(text, sourceCode, targetCode);
+    if (apiResult) return apiResult;
+  }
+
+  return text;
 }

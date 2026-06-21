@@ -160,15 +160,14 @@ describe("getQdrant singleton", () => {
   });
 });
 
-describe("searchNorms — missing env vars", () => {
-  it("throws when env vars are missing", async () => {
+describe("searchNorms — graceful fallback", () => {
+  it("returns empty array when env vars are missing (graceful degradation)", async () => {
     vi.resetModules();
     delete process.env.QDRANT_URL;
     delete process.env.QDRANT_API_KEY;
 
     const { searchNorms } = await import("../qdrant");
-    await expect(searchNorms("test")).rejects.toThrow(
-      "Qdrant environment variables not configured",
-    );
+    const results = await searchNorms("test");
+    expect(results).toEqual([]);
   });
 });

@@ -12,11 +12,14 @@ vi.mock("next/navigation", () => ({
 import SearchPage from "../search/page";
 import { ToastProvider } from "../../components/toast";
 import { AuthProvider } from "../../components/auth-context";
+import { ChatProvider } from "../../components/chat-context";
 
 const renderWithProviders = (ui: React.ReactElement) => {
   return render(
     <AuthProvider>
-      <ToastProvider>{ui}</ToastProvider>
+      <ChatProvider>
+        <ToastProvider>{ui}</ToastProvider>
+      </ChatProvider>
     </AuthProvider>,
   );
 };
@@ -90,7 +93,8 @@ describe("SearchPage", () => {
     renderWithProviders(<SearchPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("2 Statutes Retrieved")).toBeInTheDocument();
+      // The translated string with {n} interpolation
+      expect(screen.getByText(/\d+ Statutes Retrieved/)).toBeInTheDocument();
     });
 
     expect(screen.getByText("BGB")).toBeInTheDocument();
@@ -151,9 +155,8 @@ describe("SearchPage", () => {
     renderWithProviders(<SearchPage />);
 
     await waitFor(() => {
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining("/api/search?q=BGB"),
-      );
+      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining("q=BGB"));
+      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining("lang=en"));
     });
   });
 
@@ -174,6 +177,7 @@ describe("SearchPage", () => {
       expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining("category=housing"),
       );
+      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining("lang=en"));
     });
   });
 

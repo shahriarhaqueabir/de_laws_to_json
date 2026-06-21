@@ -19,10 +19,12 @@ import {
 } from "../../../lib/bookmarks-v2";
 import { useToast } from "../../../components/toast";
 import { useAuth } from "../../../components/auth-context";
+import { useLanguage } from "../../../hooks/useLanguage";
 
 export default function LawDetailPage() {
   const { key } = useParams();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [data, setData] = useState<(Law & { norms: Norm[] }) | null>(null);
   const [qdrantError, setQdrantError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,7 @@ export default function LawDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] animate-pulse">
         <Loader2 className="w-16 h-16 text-accent-gold animate-spin mb-6" />
-        <p className="monumental-type opacity-40">Decrypting Statute...</p>
+        <p className="monumental-type opacity-40">{t("laws.loading")}</p>
       </div>
     );
   }
@@ -89,7 +91,7 @@ export default function LawDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-6 py-40 text-center">
         <h2 className="text-3xl font-serif font-bold text-white mb-6">
-          {error || "Statute Registry Empty"}
+          {error || t("laws.not_found")}
         </h2>
         <Link
           href="/"
@@ -200,7 +202,7 @@ export default function LawDetailPage() {
           ) : (
             <div className="text-center py-20 glass-panel border-white/5">
               <p className="text-zinc-600 font-serif italic text-lg opacity-40">
-                Statutory fragments not currently indexed in neural memory.
+                {t("laws.norms_empty")}
               </p>
             </div>
           )}

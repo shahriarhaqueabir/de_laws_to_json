@@ -5,15 +5,19 @@ export const INFERENCE_MODEL = "intfloat/multilingual-e5-small";
 
 let qdrantClient: QdrantClient | null = null;
 
-function getQdrant(): QdrantClient {
+/**
+ * Get the Qdrant client, or return null if not configured.
+ * This allows callers to gracefully degrade instead of crashing.
+ */
+function getQdrant(): QdrantClient | null {
   if (qdrantClient) return qdrantClient;
   const url = process.env.QDRANT_URL;
   const apiKey = process.env.QDRANT_API_KEY;
   if (!url || !apiKey) {
-    throw new Error(
-      "Qdrant environment variables not configured. " +
-        "Set QDRANT_URL and QDRANT_API_KEY in Vercel project settings.",
+    console.warn(
+      "[Qdrant] QDRANT_URL/QDRANT_API_KEY not configured. Qdrant search unavailable.",
     );
+    return null;
   }
   qdrantClient = new QdrantClient({ url, apiKey });
   return qdrantClient;
@@ -47,16 +51,25 @@ export async function searchNorms(
     `[Qdrant lib] Searching for: "${query}" in collection: ${COLLECTION}`,
   );
 
+  const client = getQdrant();
+
+  // Graceful fallback: if Qdrant is not configured, return empty results
+  // The API route will handle the fallback to Supabase text search
+  if (!client) {
+    console.warn(
+      "[Qdrant lib] Qdrant not configured — returning empty results for fallback.",
+    );
+    return [];
+  }
+
+  // Qdrant Universal Query API with Managed Inference
+  // We use the direct inference object structure (text + model) as required by Qdrant Cloud
+  // E5-small requires "query: " prefix on search queries
+  // The indexed documents use "passage: " prefix
+  // Without this prefix, embeddings don't match — results are random
+  const prefixedQuery = `query: ${query}`;
+
   try {
-    const client = getQdrant();
-
-    // Qdrant Universal Query API with Managed Inference
-    // We use the direct inference object structure (text + model) as required by Qdrant Cloud
-    // E5-small requires "query: " prefix on search queries
-    // The indexed documents use "passage: " prefix
-    // Without this prefix, embeddings don't match — results are random
-    const prefixedQuery = `query: ${query}`;
-
     const results = await client.query(COLLECTION, {
       query: {
         text: prefixedQuery,
@@ -89,7 +102,7 @@ export async function searchNorms(
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[Qdrant lib] Search error: ${message}`);
-    // Re-throw to be caught by the API route
-    throw err;
+    // Return empty instead of throwing — API route will degrade gracefully
+    return [];
   }
 }

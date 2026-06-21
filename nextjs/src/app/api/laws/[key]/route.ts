@@ -6,11 +6,15 @@ import { errorResponse } from "../../../../lib/api-utils";
 import { COLLECTION } from "../../../../lib/qdrant";
 import { QdrantClient } from "@qdrant/js-client-rest";
 
-function getQdrant(): QdrantClient {
+/**
+ * Get the Qdrant client, or null if not configured.
+ * Allows graceful degradation when Qdrant is unavailable.
+ */
+function getQdrant(): QdrantClient | null {
   const url = process.env.QDRANT_URL;
   const apiKey = process.env.QDRANT_API_KEY;
   if (!url || !apiKey) {
-    throw new Error("Qdrant not configured");
+    return null;
   }
   return new QdrantClient({ url, apiKey });
 }
@@ -49,8 +53,22 @@ export async function GET(
     return NextResponse.json({ error: "Law not found" }, { status: 404 });
 
   // Get norms from Qdrant by law_key filter (using scroll to get up to 1000)
+  const qdrant = getQdrant();
+
+  if (!qdrant) {
+    console.warn(
+      `[Law Detail] Qdrant not configured — returning law metadata only.`,
+    );
+    return NextResponse.json({
+      ...law,
+      norms: [],
+      qdrant_error:
+        "Norms unavailable — Qdrant not configured in this environment.",
+    });
+  }
+
   try {
-    const norms = await getQdrant().scroll(COLLECTION, {
+    const norms = await qdrant.scroll(COLLECTION, {
       filter: {
         must: [{ key: "law_key", match: { value: key } }],
       },
