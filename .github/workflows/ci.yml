@@ -4,23 +4,36 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'plans/**'
-      - 'Documentation and AI Instructions/**'
-      - 'assets/**'
-      - '**.md'
+      - "plans/**"
+      - "Documentation and AI Instructions/**"
+      - "assets/**"
+      - "**.md"
   pull_request:
     branches: [main]
     paths-ignore:
-      - 'plans/**'
-      - 'Documentation and AI Instructions/**'
-      - 'assets/**'
-      - '**.md'
+      - "plans/**"
+      - "Documentation and AI Instructions/**"
+      - "assets/**"
+      - "**.md"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  secrets-scan:
+    name: Secret Scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks detect
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   nextjs:
     name: Next.js — Lint & Build
     runs-on: ubuntu-latest

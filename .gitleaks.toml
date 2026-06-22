@@ -1,0 +1,62 @@
+# Gitleaks configuration for German Law Vault
+# https://github.com/gitleaks/gitleaks
+
+title = "German Law Vault secret scanning rules"
+
+# Extend the default ruleset
+[extend]
+useDefault = true
+
+# Custom rules specific to this project
+[[rules]]
+id = "supabase-service-role-key"
+description = "Supabase service_role key (JWT — full database admin access)"
+regex = '''(?i)(?:service_role|SERVICE_ROLE)[^']*['\"](eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,})['\"]'''
+tags = ["supabase", "jwt", "critical"]
+
+[[rules]]
+id = "supabase-anon-key"
+description = "Supabase anon/publishable key"
+regex = '''(?i)(?:supabase_anon_key|SUPABASE_ANON_KEY|supabase_key|NEXT_PUBLIC_SUPABASE_ANON_KEY)[^']*['\"]([a-zA-Z0-9._-]{20,})['\"]'''
+tags = ["supabase", "api-key"]
+
+[[rules]]
+id = "qdrant-api-key"
+description = "Qdrant Cloud API key"
+regex = '''(?i)(?:qdrant_api_key|QDRANT_API_KEY)[^']*['\"]([a-zA-Z0-9_-]{20,})['\"]'''
+tags = ["qdrant", "api-key"]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API key"
+regex = '''(?i)(?:openai|OPENAI)[^']*['\"](sk-[a-zA-Z0-9]{20,})['\"]'''
+tags = ["openai", "api-key"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API key"
+regex = '''(?i)(?:anthropic|ANTHROPIC)[^']*['\"](sk-ant-[a-zA-Z0-9]{20,})['\"]'''
+tags = ["anthropic", "api-key"]
+
+[[rules]]
+id = "encryption-key-hardcoded"
+description = "SERVER_ENCRYPTION_KEY hardcoded (AES-256-GCM)"
+regex = '''(?i)(?:SERVER_ENCRYPTION_KEY|server_encryption_key)[^']*['\"]([a-fA-F0-9]{32,})['\"]'''
+tags = ["encryption", "critical"]
+
+# Allowlist — known false positives
+[allowlist]
+description = "Known safe patterns for this project"
+paths = [
+    # Dependencies
+    ".*node_modules/.*",
+    # Test files use fake keys
+    ".*__tests__/.*",
+    ".*vitest\\.setup\\.ts",
+    # Config files
+    ".*\\.gitleaks\\.toml",
+    # Documentation showing env var patterns
+    ".*\\.md$",
+    # Git directory
+    ".*\\.git/.*",
+]

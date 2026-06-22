@@ -86,6 +86,25 @@ plans/
 docs/adr/                       # Architecture Decision Records
 ```
 
+## Security — Secret Scanning
+
+### Pre-commit Hook (Local)
+- Hook script: `.githooks/pre-commit` — scans staged changes with gitleaks
+- Config: `.gitleaks.toml` — project-specific rules for Supabase, Qdrant, OpenAI, Anthropic keys
+- Install on Windows: `powershell -ExecutionPolicy Bypass -File .githooks\install.ps1`
+- Install on macOS/Linux: `git config core.hooksPath .githooks && chmod +x .githooks/pre-commit`
+- To bypass (emergencies only): `git commit --no-verify`
+
+### CI Secret Scanning
+- Runs on every push and PR via `gitleaks/gitleaks-action@v2` in CI workflow
+- Catches hardcoded secrets even if local hook is bypassed
+
+### GitHub Secret Scanning (Remote)
+Enable in GitHub UI:
+1. Go to repo → Settings → Code security & analysis
+2. Enable "Secret scanning" and "Push protection"
+3. GitHub will auto-detect and block known credential patterns (Supabase, OpenAI, AWS, etc.)
+
 ## Commands
 
 ```bash

@@ -209,6 +209,10 @@ worktrees/
 .vercel
 .env*
 
+# Local-only agent config (not pushed to GitHub)
+.githooks/
+.memory/
+
 # Root-level junk (deployment artifacts, one-off scripts, legacy launchers)
 _check_content.py
 dedupe_processed_data.py
@@ -219,3 +223,4 @@ run_dashboard.bat
 search_result.json
 view_logs.ps1
 docker-compose.yml
+nul
