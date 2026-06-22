@@ -1,0 +1,12 @@
+TEI Dictionary Parse Statistics
+==================================================
+
+Source File: ./templates/eng-deu.tei
+Total Entries: 70,561
+Parsed Entries: 70,540
+Skipped Entries: 21
+Errors: 0
+Unique English Words: 64,876
+Unique German Words: 98,548
+
+Average translations per English word: 1.09
