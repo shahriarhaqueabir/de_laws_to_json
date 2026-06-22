@@ -1,4 +1,0 @@
-2026-02-24 00:39:04,834 [INFO] Dictionary loaded: ./dictionary/dictionary.db
-'Bürgerliches Gesetzbuch' -> [{'english': 'Bürgerliches Gesetzbuch', 'frequency': 1, 'pos': 'n', 'source': 'dictionary'}]
-'Strafgesetzbuch' -> [{'english': 'Strafgesetzbuch', 'frequency': 1, 'pos': 'n', 'source': 'dictionary'}]
-'Grundgesetz' -> [{'english': 'Grundgesetz', 'frequency': 1, 'pos': 'n', 'source': 'dictionary'}]
