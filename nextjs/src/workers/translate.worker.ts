@@ -15,7 +15,8 @@ import { pipeline, env } from "@huggingface/transformers";
 // Skip local model check — always download from HuggingFace Hub
 env.allowLocalModels = false;
 
-/* eslint-disable @typescript-eslint/no-explicit-any — Transformers.js pipeline API is dynamic */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* Transformers.js pipeline API is dynamic */
 
 // ── Model Definitions ─────────────────────────────────────────────────────
 
