@@ -103,6 +103,7 @@
 - **Fix**: Pick one (sonner is more feature-rich) and remove the other.
 
 ### H-03: Missing Escape key handling on all dropdowns
+- **Status**: ✅ Fixed — `onKeyDown={(e) => e.key === 'Escape' && setLangOpen(false)}` on language toggle (L262), same on mode toggle (L341)
 - **Sources**: A11Y-F-006
 - **Files**: `nav-bar.tsx` (language selector, mode selector)
 - **Issue**: Dropdowns open on click but don't close on Escape. Users must click the button again or click the backdrop overlay.
@@ -125,12 +126,14 @@
 - **Fix**: Add a hamburger / mobile nav drawer for screens below `sm`.
 
 ### H-06: Missing `aria-expanded` and `aria-haspopup` on all dropdown toggles
+- **Status**: ✅ Fixed — `aria-haspopup="true"` + `aria-expanded={langOpen}` on language toggle (L263-264), same on mode toggle (L342-343)
 - **Sources**: A11Y-F-011
 - **Files**: `nav-bar.tsx` (language selector, mode selector)
 - **Issue**: Screen readers get no signal that a dropdown is present or open.
 - **Fix**: Add `aria-haspopup="true"` and `aria-expanded={open}` to both toggle buttons.
 
 ### H-07: Auth page and OAuth consent page use entirely hardcoded colors
+- **Status**: ✅ Fixed — uses `bg-background`, `bg-tertiary`, `bg-elevated`, `text-foreground`, `text-secondary`, `bg-accent-gold`. No `bg-black`/`text-white`/`bg-zinc-900` remaining.
 - **Sources**: DS-F-005, DS-F-006
 - **Files**: `auth/page.tsx`, OAuth consent page
 - **Issue**: Hardcoded `bg-black`, `text-white`, `bg-zinc-900`, etc. None of these use the theme's CSS variables.
@@ -160,24 +163,28 @@
 - **Fix**: Add `submitting` state, disable button during navigation, show loading indicator.
 
 ### H-11: Root layout uses hardcoded `bg-[#0d0d0d]` instead of `bg-background`
+- **Status**: ✅ Fixed — `layout.tsx` L29 uses `bg-background`
 - **Sources**: DS-F-004
 - **File**: `layout.tsx` (L22)
 - **Issue**: Bypasses the theme system. If the background token changes, the layout won't follow.
 - **Fix**: Replace with `bg-background` Tailwind class.
 
 ### H-12: No skip-to-content link
+- **Status**: ✅ Fixed — skip link present as first focusable element in `layout.tsx` L30-35
 - **Sources**: A11Y-F-012
 - **Files**: `layout.tsx`, no skip link present anywhere
 - **Issue**: Keyboard and screen reader users must tab through the full nav bar before reaching main content on every page.
 - **Fix**: Add a skip link as the first focusable element: `<a href="#main-content" className="sr-only focus:not-sr-only ...">Skip to content</a>`.
 
 ### H-13: `@theme inline` only exposes 4 of 15+ CSS variables as Tailwind utilities
+- **Status**: ✅ Fixed — now exposes 14 color tokens + 2 font tokens in `@theme inline` (background, foreground, secondary, tertiary, elevated, accent-gold, accent-gold-bright, accent-cobalt, accent-amber, text-secondary, text-muted, border-glass, border-metal, border-gold, font-sans, font-serif)
 - **Sources**: DS-F-007
 - **File**: `globals.css`
 - **Issue**: Only `--color-background`, `--color-foreground`, `--color-accent-gold`, `--color-accent-gold-bright`, `--font-sans`, `--font-serif` are in `@theme inline`. The rest (`--bg-secondary`, `--bg-tertiary`, `--bg-glass`, `--text-secondary`, `--text-muted`, `--border-glass`, `--shadow-premium`, etc.) must be accessed via `var()`, creating inconsistency.
 - **Fix**: Add all semantic tokens to `@theme inline`, or commit fully to `var()` approach.
 
 ### H-14: Language selector uses flag emojis — inconsistent rendering
+- **Status**: ✅ Fixed — `LANGUAGE_LABELS` uses plain text (`Deutsch`, `English`, `العربية`, etc.), no flag emojis. Dropdown items show 2-letter code + language name.
 - **Sources**: TASTE-F-007
 - **File**: `nav-bar.tsx` (L195-214)
 - **Issue**: Flag emojis render differently across OS (Windows shows text-only boxes on some flags, macOS has inconsistent skin tones, Linux lacks many flags). The Saudi flag 🇸🇦 specifically renders as "SA" on some systems.
