@@ -37,30 +37,30 @@ export interface DiagnosisResult {
  */
 export const LABOR_DIAGNOSIS_FLOW: Record<string, Question> = {
   start: {
-    id: 'notice_received',
-    text: 'Did you receive a written notice of termination?',
-    type: 'choice',
+    id: "notice_received",
+    text: "Did you receive a written notice of termination?",
+    type: "choice",
     options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
+      { label: "Yes", value: "yes" },
+      { label: "No", value: "no" },
     ],
-    nextId: (ans) => (ans === 'yes' ? 'date_received' : 'not_dismissed'),
+    nextId: (ans) => (ans === "yes" ? "date_received" : "not_dismissed"),
   },
   date_received: {
-    id: 'date_received',
-    text: 'When did you receive the notice?',
-    type: 'date',
-    nextId: 'employee_count',
+    id: "date_received",
+    text: "When did you receive the notice?",
+    type: "date",
+    nextId: "employee_count",
   },
   employee_count: {
-    id: 'employee_count',
-    text: 'How many employees (excluding trainees) work at the company?',
-    type: 'choice',
+    id: "employee_count",
+    text: "How many employees (excluding trainees) work at the company?",
+    type: "choice",
     options: [
-      { label: '10 or fewer', value: 'small' },
-      { label: 'More than 10', value: 'large' },
+      { label: "10 or fewer", value: "small" },
+      { label: "More than 10", value: "large" },
     ],
-    nextId: 'end',
+    nextId: "end",
   },
 };
 
@@ -79,30 +79,32 @@ export function diagnoseCase(
 ): DiagnosisResult {
   const result: DiagnosisResult = {
     category,
-    issueType: 'general',
+    issueType: "general",
     deadlines: [],
-    potentialOutcome: { label: 'Inconclusive', confidence: 0, reasoning: '' },
+    potentialOutcome: { label: "Inconclusive", confidence: 0, reasoning: "" },
   };
 
-  if (category === 'labor' && data.notice_received === 'yes') {
-    result.issueType = 'wrongful_dismissal';
+  if (category === "labor" && data.notice_received === "yes") {
+    result.issueType = "wrongful_dismissal";
     result.deadlines.push({
-      label: 'File suit with Labor Court (Kündigungsschutzklage)',
+      label: "File suit with Labor Court (Kündigungsschutzklage)",
       days: 21,
-      statute: '§ 4 KSchG',
+      statute: "§ 4 KSchG",
     });
 
-    if (data.employee_count === 'large') {
+    if (data.employee_count === "large") {
       result.potentialOutcome = {
-        label: 'High Protection',
+        label: "High Protection",
         confidence: 0.8,
-        reasoning: 'KSchG (Dismissal Protection Act) applies because the company has > 10 employees.',
+        reasoning:
+          "KSchG (Dismissal Protection Act) applies because the company has > 10 employees.",
       };
     } else {
       result.potentialOutcome = {
-        label: 'Limited Protection',
+        label: "Limited Protection",
         confidence: 0.6,
-        reasoning: 'Company is classified as a "Kleinbetrieb". General protection applies, but not the specific KSchG requirements.',
+        reasoning:
+          'Company is classified as a "Kleinbetrieb". General protection applies, but not the specific KSchG requirements.',
       };
     }
   }

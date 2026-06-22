@@ -173,7 +173,13 @@ examples/
 *.ipynb_checkpoints
 
 # -----------------------------------------------------------------------------
-# Archive & Backup (keep _archive but ignore additional backup folders)
+# Archived legacy code (not part of the app)
+# -----------------------------------------------------------------------------
+_archive/
+assets/
+Documentation and AI Instructions/
+
+# Additional backup folders
 # -----------------------------------------------------------------------------
 *_backup/
 *.backup
@@ -202,3 +208,14 @@ LibreTranslate-main/
 worktrees/
 .vercel
 .env*
+
+# Root-level junk (deployment artifacts, one-off scripts, legacy launchers)
+_check_content.py
+dedupe_processed_data.py
+deploy2.json
+deploy_status.json
+deploys.json
+run_dashboard.bat
+search_result.json
+view_logs.ps1
+docker-compose.yml

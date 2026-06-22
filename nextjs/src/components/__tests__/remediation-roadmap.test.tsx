@@ -41,13 +41,9 @@ describe("RemediationRoadmap", () => {
   it("shows timeline steps from diagnosis.deadlines", () => {
     render(<RemediationRoadmap diagnosis={mockDiagnosis} />);
     expect(
-      screen.getByText(
-        "File suit with Labor Court (Kündigungsschutzklage)",
-      ),
+      screen.getByText("File suit with Labor Court (Kündigungsschutzklage)"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("Submit evidence to court"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Submit evidence to court")).toBeInTheDocument();
   });
 
   it("displays deadline statute references", () => {
@@ -77,14 +73,9 @@ describe("RemediationRoadmap", () => {
       />,
     );
 
-    const expectedDeadline = calculateDeadline(
-      new Date(incidentDate),
-      21,
-    );
+    const expectedDeadline = calculateDeadline(new Date(incidentDate), 21);
     expect(
-      screen.getByText(
-        `Deadline: ${expectedDeadline.toLocaleDateString()}`,
-      ),
+      screen.getByText(`Deadline: ${expectedDeadline.toLocaleDateString()}`),
     ).toBeInTheDocument();
   });
 
@@ -100,8 +91,7 @@ describe("RemediationRoadmap", () => {
 
   it("outcome simulator shows reasoning quote", () => {
     render(<RemediationRoadmap diagnosis={mockDiagnosis} />);
-    const expectedReasoning =
-      /KSchG \(Dismissal Protection Act\) applies/;
+    const expectedReasoning = /KSchG \(Dismissal Protection Act\) applies/;
     expect(screen.getByText(expectedReasoning)).toBeInTheDocument();
   });
 
@@ -118,14 +108,10 @@ describe("RemediationRoadmap", () => {
     const deadline2 = calculateDeadline(new Date(incidentDate), 30);
 
     expect(
-      screen.getByText(
-        `Deadline: ${deadline1.toLocaleDateString()}`,
-      ),
+      screen.getByText(`Deadline: ${deadline1.toLocaleDateString()}`),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        `Deadline: ${deadline2.toLocaleDateString()}`,
-      ),
+      screen.getByText(`Deadline: ${deadline2.toLocaleDateString()}`),
     ).toBeInTheDocument();
   });
 
@@ -134,9 +120,7 @@ describe("RemediationRoadmap", () => {
     expect(
       screen.getByText("Strategic Outcome Simulation"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("Confidence Score"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Confidence Score")).toBeInTheDocument();
   });
 
   it("renders start step button for current step", () => {

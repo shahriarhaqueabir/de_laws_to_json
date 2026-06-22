@@ -4,7 +4,7 @@
 
 let worker: Worker | null = null;
 type TranslationProgress = {
-  status: 'progress';
+  status: "progress";
   progress: number;
   file?: string;
 };
@@ -18,23 +18,29 @@ type PendingRequest = {
 const pending = new Map<string, PendingRequest>();
 
 function getWorker(): Worker {
-  if (!worker && typeof window !== 'undefined') {
-    worker = new Worker(new URL('../workers/translate.worker.ts', import.meta.url), {
-      type: 'module',
-    });
+  if (!worker && typeof window !== "undefined") {
+    worker = new Worker(
+      new URL("../workers/translate.worker.ts", import.meta.url),
+      {
+        type: "module",
+      },
+    );
     worker.onmessage = (event) => {
       const { status, id, output, error, ...rest } = event.data;
       const entry = pending.get(id);
       if (!entry) return;
 
-      if (status === 'complete') {
+      if (status === "complete") {
         entry.resolve(output);
         pending.delete(id);
-      } else if (status === 'error') {
+      } else if (status === "error") {
         entry.reject(new Error(error));
         pending.delete(id);
-      } else if (status === 'progress' && entry.onProgress) {
-        entry.onProgress({ status: 'progress', ...rest } as TranslationProgress);
+      } else if (status === "progress" && entry.onProgress) {
+        entry.onProgress({
+          status: "progress",
+          ...rest,
+        } as TranslationProgress);
       }
     };
   }

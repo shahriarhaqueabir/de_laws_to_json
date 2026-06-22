@@ -26,9 +26,7 @@ describe("CostRiskCalculator", () => {
 
   it("renders Financial Risk Modeling heading", () => {
     render(<CostRiskCalculator />);
-    expect(
-      screen.getByText("Financial Risk Modeling"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Financial Risk Modeling")).toBeInTheDocument();
   });
 
   it("displays court fees, lawyer fees, total risk", () => {
@@ -43,9 +41,15 @@ describe("CostRiskCalculator", () => {
     render(<CostRiskCalculator />);
 
     // Use regex to be flexible about formatting (commas vs dots)
-    const courtFeesRegex = new RegExp(`€${fees.courtFees.toLocaleString().replace(',', '[,.]')}`);
-    const lawyerFeesRegex = new RegExp(`€${fees.lawyerFees.toLocaleString().replace(',', '[,.]')}`);
-    const totalRiskRegex = new RegExp(`€${fees.totalRisk.toLocaleString().replace(',', '[,.]')}`);
+    const courtFeesRegex = new RegExp(
+      `€${fees.courtFees.toLocaleString().replace(",", "[,.]")}`,
+    );
+    const lawyerFeesRegex = new RegExp(
+      `€${fees.lawyerFees.toLocaleString().replace(",", "[,.]")}`,
+    );
+    const totalRiskRegex = new RegExp(
+      `€${fees.totalRisk.toLocaleString().replace(",", "[,.]")}`,
+    );
 
     expect(screen.getByText(courtFeesRegex)).toBeInTheDocument();
     expect(screen.getByText(lawyerFeesRegex)).toBeInTheDocument();
@@ -59,22 +63,20 @@ describe("CostRiskCalculator", () => {
     expect(slider).toHaveValue("5000");
 
     // Simulate slider change using fireEvent for better reliability with range inputs in JSDOM
-    fireEvent.change(slider, { target: { value: '5500' } });
+    fireEvent.change(slider, { target: { value: "5500" } });
 
     // Value should now be different from 5000
     const fees = calculateTotalLegalRisk(5500);
-    const courtFeesRegex = new RegExp(`€${fees.courtFees.toLocaleString().replace(',', '[,.]')}`);
-    expect(
-      screen.getByText(courtFeesRegex),
-    ).toBeInTheDocument();
+    const courtFeesRegex = new RegExp(
+      `€${fees.courtFees.toLocaleString().replace(",", "[,.]")}`,
+    );
+    expect(screen.getByText(courtFeesRegex)).toBeInTheDocument();
   });
 
   it("fine print/disclaimer section renders", () => {
     render(<CostRiskCalculator />);
     expect(screen.getByText(/Calculation Basis/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/German Legal Fee Framework/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/German Legal Fee Framework/)).toBeInTheDocument();
   });
 
   it("displays Dispute Value label", () => {

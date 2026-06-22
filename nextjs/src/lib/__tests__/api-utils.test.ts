@@ -16,7 +16,12 @@ describe("errorResponse", () => {
       { field: "email", message: "Email is required" },
       { field: "name", message: "Name must be at least 2 characters" },
     ];
-    const res = errorResponse("VALIDATION_ERROR", "Invalid input", 422, details);
+    const res = errorResponse(
+      "VALIDATION_ERROR",
+      "Invalid input",
+      422,
+      details,
+    );
 
     const body = await res.json();
     expect(body).toHaveProperty("error");
@@ -25,11 +30,16 @@ describe("errorResponse", () => {
     expect(body.error).toHaveProperty("details");
     expect(Array.isArray(body.error.details)).toBe(true);
     expect(body.error.details).toHaveLength(2);
-    expect(body.error.details[0]).toEqual({ field: "email", message: "Email is required" });
+    expect(body.error.details[0]).toEqual({
+      field: "email",
+      message: "Email is required",
+    });
   });
 
   it("works with and without details", async () => {
-    const withDetails = errorResponse("ERR", "msg", 400, [{ field: "f", message: "m" }]);
+    const withDetails = errorResponse("ERR", "msg", 400, [
+      { field: "f", message: "m" },
+    ]);
     const bodyWith = await withDetails.json();
     expect(bodyWith.error.details).toHaveLength(1);
 

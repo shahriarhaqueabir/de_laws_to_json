@@ -34,14 +34,16 @@ describe("sanitizeErrorMessage", () => {
   });
 
   it("redacts bearer tokens in error messages", () => {
-    const msg = "Authorization: Bearer sk-proj-abcdefghijklmnopqrstuvwxyz123456";
+    const msg =
+      "Authorization: Bearer sk-proj-abcdefghijklmnopqrstuvwxyz123456";
     expect(sanitizeErrorMessage(new Error(msg))).toBe(
       "Cloud AI call failed. Check your API key and provider settings.",
     );
   });
 
   it("redacts API key patterns in Authorization headers", () => {
-    const msg = "Response status 401. Authorization: Bearer sk-proj-test-key-1234567890abcdef";
+    const msg =
+      "Response status 401. Authorization: Bearer sk-proj-test-key-1234567890abcdef";
     expect(sanitizeErrorMessage(new Error(msg))).toBe(
       "Cloud AI call failed. Check your API key and provider settings.",
     );

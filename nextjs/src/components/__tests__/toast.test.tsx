@@ -4,7 +4,9 @@ import { render, screen, act, fireEvent } from "@testing-library/react";
 beforeEach(() => {
   vi.useFakeTimers();
   let idCounter = 0;
-  vi.spyOn(crypto, "randomUUID").mockImplementation(() => `test-uuid-${idCounter++}`);
+  vi.spyOn(crypto, "randomUUID").mockImplementation(
+    () => `test-uuid-${idCounter++}`,
+  );
 });
 
 afterEach(() => {
@@ -24,9 +26,7 @@ function TestComponent() {
       <button onClick={() => toast("Error occurred", "error")}>
         Show Error
       </button>
-      <button onClick={() => toast("Info here", "info")}>
-        Show Info
-      </button>
+      <button onClick={() => toast("Info here", "info")}>Show Info</button>
     </div>
   );
 }

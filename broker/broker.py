@@ -1,175 +1,198 @@
 """
-Local broker — bridges the Next.js app to a local Ollama instance.
-Serves as an optional AI guidance layer.
+German Law Vault — Local Ollama Broker
+======================================
+
+A lightweight FastAPI proxy that allows the Next.js frontend to use
+a local Ollama instance for AI-powered legal guidance.
 
 Usage:
-    pip install -r requirements.txt
+    pip install fastapi uvicorn httpx
     python broker.py
-    # Server starts on http://localhost:9000
+    # Open http://localhost:9000/health
+
+Required:
+    - Ollama running on http://localhost:11434
+    - At least one model pulled (default: qwen2.5:1.5b)
+
+Environment:
+    OLLAMA_BASE_URL   Ollama endpoint (default: http://localhost:11434)
+    BROKER_PORT       Port to listen on (default: 9000)
+    DEFAULT_MODEL     Default model (default: qwen2.5:1.5b)
 """
 
-import asyncio
+from __future__ import annotations
+
 import json
-import logging
 import os
-from typing import Optional
+import sys
+from typing import AsyncGenerator
 
 import httpx
-import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("broker")
+app = FastAPI(title="German Law Vault — Local Broker")
 
-app = FastAPI(title="German Law Vault Broker")
-
-# Allow requests from the Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://*.vercel.app",
-        os.environ.get("CORS_ORIGIN", ""),
-    ],
-    allow_origin_regex=r"https://.*\.vercel\.app",
-    allow_methods=["POST", "GET"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+DEFAULT_MODEL = os.environ.get("DEFAULT_MODEL", "qwen2.5:1.5b")
+client = httpx.AsyncClient(timeout=120.0)
 
 
-class ChatRequest(BaseModel):
-    message: str = Field(..., min_length=1, max_length=4000)
-    context: str = Field(default="")
-    conversationId: Optional[str] = None
-    model: str = Field(default="qwen2.5:1.5b")
-    language: str = Field(default="English")
-    temperature: float = Field(default=0.3, ge=0.0, le=2.0)
-    top_p: float = Field(default=0.9, ge=0.0, le=1.0)
-    top_k: int = Field(default=40, ge=0)
-    max_tokens: int = Field(default=1024, ge=1, le=4096)
-    system_prompt: Optional[str] = None
-    stream: bool = Field(default=False)
+# ── Helpers ──
 
 
-class ChatResponse(BaseModel):
-    response: str
-    model: str
+def build_ollama_messages(
+    message: str,
+    context: str = "",
+    language: str = "English",
+    system_prompt: str = "",
+) -> list[dict]:
+    system = system_prompt or (
+        "You are a precise multilingual German legal expert. "
+        "Analyze the provided German law context and answer the user's "
+        "question in their language. Cite specific section numbers. "
+        "Provide clear practical implications."
+    )
+    system_with_lang = (
+        f"{system}\n\nThe user's language is: {language}. Always respond in {language}."
+    )
+    messages = [{"role": "system", "content": system_with_lang}]
+    if context:
+        messages.append(
+            {"role": "user", "content": f"Context from German laws:\n{context}"}
+        )
+    messages.append({"role": "user", "content": message})
+    return messages
+
+
+async def stream_ollama(
+    messages: list[dict],
+    model: str,
+    temperature: float = 0.3,
+    top_p: float = 0.9,
+    top_k: int = 40,
+    max_tokens: int = 1024,
+) -> AsyncGenerator[str, None]:
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": True,
+        "options": {
+            "temperature": temperature,
+            "top_p": top_p,
+            "top_k": top_k,
+            "num_predict": max_tokens,
+        },
+    }
+    async with httpx.AsyncClient(timeout=120.0) as stream_client:
+        async with stream_client.stream(
+            "POST",
+            f"{OLLAMA_BASE_URL}/api/chat",
+            json=payload,
+        ) as response:
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                if not line.strip():
+                    continue
+                try:
+                    chunk = json.loads(line)
+                    content = chunk.get("message", {}).get("content", "")
+                    if content:
+                        yield content
+                    if chunk.get("done"):
+                        return
+                except json.JSONDecodeError:
+                    continue
+
+
+# ── Endpoints ──
 
 
 @app.get("/health")
 async def health():
-    """Health check — called by the frontend to detect broker availability."""
-    return {"status": "ok", "ollama_url": OLLAMA_URL}
-
-
-@app.get("/api/tags")
-async def list_models():
-    """Proxy Ollama's /api/tags to list available models."""
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{OLLAMA_URL}/api/tags")
-        resp.raise_for_status()
-        return resp.json()
+    """Check broker and Ollama connectivity."""
+    try:
+        r = await client.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5.0)
+        models = r.json().get("models", [])
+        model_names = [m["name"] for m in models]
+        return {
+            "status": "ok",
+            "ollama": True,
+            "models": model_names,
+            "default_model": DEFAULT_MODEL,
+        }
+    except Exception as e:
+        return {
+            "status": "degraded",
+            "ollama": False,
+            "error": str(e),
+        }
 
 
 @app.post("/api/chat")
-async def chat(req: ChatRequest):
-    """Forward a chat request to Ollama with legal context.
+async def chat(request: Request):
+    """Proxy a chat request to Ollama."""
+    body = await request.json()
+    message = body.get("message", "")
+    context = body.get("context", "")
+    model = body.get("model") or DEFAULT_MODEL
+    language = body.get("language", "English")
+    temperature = body.get("temperature", 0.3)
+    top_p = body.get("top_p", 0.9)
+    top_k = body.get("top_k", 40)
+    max_tokens = body.get("max_tokens", 1024)
+    system_prompt = body.get("system_prompt", "")
+    use_stream = body.get("stream", False)
 
-    When stream=True, returns a Server-Sent Events stream of response chunks.
-    When stream=False, returns the complete response as JSON.
-    """
-    user_prompt = f"""Context from German laws:
-{req.context or "(No specific laws found)"}
+    if not message:
+        return {"error": "No message provided"}
 
-User situation:
-{req.message}
+    messages = build_ollama_messages(message, context, language, system_prompt)
 
-Provide guidance based on the relevant laws above. Include citations."""
+    if use_stream:
+        return StreamingResponse(
+            stream_ollama(messages, model, temperature, top_p, top_k, max_tokens),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
+        )
 
-    system = (
-        req.system_prompt
-        or "You are a multilingual German legal assistant. Always respond in the user's language."
-    )
-    # Inject language into the system prompt
-    system = (
-        system
-        + f"\n\nThe user's language is: {req.language}. Always respond in {req.language}."
-    )
-
+    # Non-streaming fallback
     payload = {
-        "model": req.model,
-        "prompt": f"{system}\n\n{user_prompt}",
-        "stream": req.stream,
+        "model": model,
+        "messages": messages,
+        "stream": False,
         "options": {
-            "temperature": req.temperature,
-            "top_p": req.top_p,
-            "top_k": req.top_k,
-            "num_predict": req.max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "top_k": top_k,
+            "num_predict": max_tokens,
         },
     }
-
-    try:
-        client = httpx.AsyncClient(timeout=120.0)
-
-        if req.stream:
-            async with client:
-                return StreamingResponse(
-                    _stream_ollama_response(client, payload),
-                    media_type="text/event-stream",
-                )
-
-        # Non-streaming: get full response
-        async with client:
-            resp = await client.post(
-                f"{OLLAMA_URL}/api/generate",
-                json=payload,
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            response_text = data.get("response", "").strip()
-            return ChatResponse(response=response_text, model=req.model)
-    except Exception as e:
-        logger.error("Ollama request failed: %s", e)
-        raise HTTPException(status_code=503, detail=f"Ollama unavailable: {str(e)}")
+    r = await client.post(f"{OLLAMA_BASE_URL}/api/chat", json=payload)
+    r.raise_for_status()
+    data = r.json()
+    return {"response": data.get("message", {}).get("content", "")}
 
 
-async def _stream_ollama_response(client, payload):
-    """Stream Ollama response as SSE events.
-
-    Ollama returns NDJSON lines when stream=True.
-    Each line: {"response": "text chunk", "done": false}
-    We wrap these as SSE data events for the frontend.
-
-    The caller is responsible for entering the client context.
-    Detects client disconnects by checking for CancelledError.
-    """
-    try:
-        async with client.stream(
-            "POST", f"{OLLAMA_URL}/api/generate", json=payload
-        ) as resp:
-            resp.raise_for_status()
-            async for line in resp.aiter_lines():
-                if line:
-                    try:
-                        chunk = json.loads(line)
-                        if "response" in chunk:
-                            yield f"data: {json.dumps({'response': chunk['response']})}\n\n"
-                        if chunk.get("done"):
-                            break
-                    except json.JSONDecodeError:
-                        continue
-    except asyncio.CancelledError:
-        logger.info("Streaming client disconnected, cleaning up")
-        return
-    except Exception:
-        logger.exception("Streaming error")
-        yield f"data: {json.dumps({'error': 'Streaming error'})}\n\n"
+# ── Startup ──
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=9000)
+    import uvicorn
+
+    port = int(os.environ.get("BROKER_PORT", "9000"))
+    print(f"Starting broker on http://localhost:{port}")
+    print(f"Ollama endpoint: {OLLAMA_BASE_URL}")
+    print(f"Default model: {DEFAULT_MODEL}")
+    uvicorn.run(app, host="0.0.0.0", port=port)

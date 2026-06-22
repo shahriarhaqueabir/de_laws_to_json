@@ -1,4 +1,10 @@
-import { CloudProvider, CitedLaw, AppLanguage, NormExplanation, LANGUAGE_NAMES } from './types';
+import {
+  CloudProvider,
+  CitedLaw,
+  AppLanguage,
+  NormExplanation,
+  LANGUAGE_NAMES,
+} from "./types";
 
 const SYSTEM_PROMPT = `You are a multilingual German legal expert — a highly precise "Rechtsexperte". Your expertise covers the entire German federal legal code (Bundesrecht), including BGB, StGB, StVO, and specialized areas like Mietrecht and Arbeitsrecht.
 
@@ -29,10 +35,14 @@ You should be familiar with and correctly apply terms from these categories:
 - **RDG Compliance:** You provide information and logical analysis based on text. You do not provide "legal services" as defined by the German Legal Services Act (RDG).`;
 
 const LEGAL_DISCLAIMER =
-  '\n\n---\n*Disclaimer: This information is provided for educational and research purposes only. It is a logical analysis of legal texts and **not legally binding advice** under the German Legal Services Act (Rechtsdienstleistungsgesetz - RDG). For your specific situation, consult a licensed attorney (Rechtsanwalt).*';
+  "\n\n---\n*Disclaimer: This information is provided for educational and research purposes only. It is a logical analysis of legal texts and **not legally binding advice** under the German Legal Services Act (Rechtsdienstleistungsgesetz - RDG). For your specific situation, consult a licensed attorney (Rechtsanwalt).*";
 
-function buildUserPrompt(question: string, norms: CitedLaw[], context: string): string {
-  return `Context from German laws:\n${context || '(No specific laws found)'}\n\nUser situation:\n${question}\n\nProvide guidance based on the relevant laws above. Include citations.`;
+function buildUserPrompt(
+  question: string,
+  norms: CitedLaw[],
+  context: string,
+): string {
+  return `Context from German laws:\n${context || "(No specific laws found)"}\n\nUser situation:\n${question}\n\nProvide guidance based on the relevant laws above. Include citations.`;
 }
 
 // ── OpenAI ──
@@ -44,17 +54,23 @@ async function callOpenAI(
   maxTokens: number = 1024,
   temperature: number = 0.3,
 ): Promise<string> {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+    }),
   });
-  if (!res.ok) throw new Error(`OpenAI API error: ${res.status} ${await res.text()}`);
+  if (!res.ok)
+    throw new Error(`OpenAI API error: ${res.status} ${await res.text()}`);
   const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || '';
+  return data.choices?.[0]?.message?.content?.trim() || "";
 }
 
 // ── Anthropic ──
@@ -67,12 +83,12 @@ async function callAnthropic(
   maxTokens: number = 1024,
   temperature: number = 0.3,
 ): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
       model,
@@ -82,9 +98,10 @@ async function callAnthropic(
       temperature,
     }),
   });
-  if (!res.ok) throw new Error(`Anthropic API error: ${res.status} ${await res.text()}`);
+  if (!res.ok)
+    throw new Error(`Anthropic API error: ${res.status} ${await res.text()}`);
   const data = await res.json();
-  return data.content?.[0]?.text?.trim() || '';
+  return data.content?.[0]?.text?.trim() || "";
 }
 
 // ── OpenAI-Compatible ──
@@ -97,17 +114,26 @@ async function callOpenAICompatible(
   maxTokens: number = 1024,
   temperature: number = 0.3,
 ): Promise<string> {
-  const res = await fetch(`${endpoint.replace(/\/$/, '')}/v1/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
+  const res = await fetch(
+    `${endpoint.replace(/\/$/, "")}/v1/chat/completions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature,
+        max_tokens: maxTokens,
+      }),
     },
-    body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
-  });
-  if (!res.ok) throw new Error(`Provider API error: ${res.status} ${await res.text()}`);
+  );
+  if (!res.ok)
+    throw new Error(`Provider API error: ${res.status} ${await res.text()}`);
   const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || '';
+  return data.choices?.[0]?.message?.content?.trim() || "";
 }
 
 // ── GenerateParams ──
@@ -126,30 +152,66 @@ export interface GenerateParams {
   systemPrompt?: string;
 }
 
-export async function generateChatResponse(params: GenerateParams): Promise<string> {
-  const { provider, apiKey, model, customEndpoint, question, context, language, temperature, maxTokens, systemPrompt } = params;
-  const langName = LANGUAGE_NAMES[language] || 'English';
+export async function generateChatResponse(
+  params: GenerateParams,
+): Promise<string> {
+  const {
+    provider,
+    apiKey,
+    model,
+    customEndpoint,
+    question,
+    context,
+    language,
+    temperature,
+    maxTokens,
+    systemPrompt,
+  } = params;
+  const langName = LANGUAGE_NAMES[language] || "English";
   const baseSystem = systemPrompt || SYSTEM_PROMPT;
   const systemWithLang = `${baseSystem}\n\nThe user's language is: ${langName}. Always respond in ${langName}.`;
 
   const messages = [
-    { role: 'system', content: systemWithLang },
-    { role: 'user', content: buildUserPrompt(question, params.norms, context) },
+    { role: "system", content: systemWithLang },
+    { role: "user", content: buildUserPrompt(question, params.norms, context) },
   ];
 
   let response: string;
 
   switch (provider) {
-    case 'openai':
-      response = await callOpenAI(apiKey, model, messages, maxTokens, temperature);
+    case "openai":
+      response = await callOpenAI(
+        apiKey,
+        model,
+        messages,
+        maxTokens,
+        temperature,
+      );
       break;
-    case 'anthropic':
-      response = await callAnthropic(apiKey, model, systemWithLang, [
-        { role: 'user', content: buildUserPrompt(question, params.norms, context) },
-      ], maxTokens, temperature);
+    case "anthropic":
+      response = await callAnthropic(
+        apiKey,
+        model,
+        systemWithLang,
+        [
+          {
+            role: "user",
+            content: buildUserPrompt(question, params.norms, context),
+          },
+        ],
+        maxTokens,
+        temperature,
+      );
       break;
-    case 'openai-compatible':
-      response = await callOpenAICompatible(customEndpoint || 'https://api.openai.com', apiKey, model, messages, maxTokens, temperature);
+    case "openai-compatible":
+      response = await callOpenAICompatible(
+        customEndpoint || "https://api.openai.com",
+        apiKey,
+        model,
+        messages,
+        maxTokens,
+        temperature,
+      );
       break;
     default:
       throw new Error(`Unknown provider: ${provider}`);
@@ -180,9 +242,20 @@ Rules:
 - Cite specific section references where applicable.
 - Return ONLY valid JSON. No markdown, no code fences, no extra text.`;
 
-export async function generateNormExplanation(params: ExplainParams): Promise<NormExplanation> {
-  const { provider, apiKey, model, customEndpoint, normId, lawKey, content, lang } = params;
-  const langName = LANGUAGE_NAMES[lang] || 'English';
+export async function generateNormExplanation(
+  params: ExplainParams,
+): Promise<NormExplanation> {
+  const {
+    provider,
+    apiKey,
+    model,
+    customEndpoint,
+    normId,
+    lawKey,
+    content,
+    lang,
+  } = params;
+  const langName = LANGUAGE_NAMES[lang] || "English";
 
   const systemMessage = EXPLAIN_SYSTEM_PROMPT;
 
@@ -199,23 +272,33 @@ Return STRICT JSON with these exact fields:
 }`;
 
   const messages = [
-    { role: 'system', content: systemMessage },
-    { role: 'user', content: userMessage },
+    { role: "system", content: systemMessage },
+    { role: "user", content: userMessage },
   ];
 
   let raw: string;
 
   switch (provider) {
-    case 'openai':
+    case "openai":
       raw = await callOpenAI(apiKey, model, messages, 2048);
       break;
-    case 'anthropic':
-      raw = await callAnthropic(apiKey, model, systemMessage, [
-        { role: 'user', content: userMessage },
-      ], 2048);
+    case "anthropic":
+      raw = await callAnthropic(
+        apiKey,
+        model,
+        systemMessage,
+        [{ role: "user", content: userMessage }],
+        2048,
+      );
       break;
-    case 'openai-compatible':
-      raw = await callOpenAICompatible(customEndpoint || 'https://api.openai.com', apiKey, model, messages, 2048);
+    case "openai-compatible":
+      raw = await callOpenAICompatible(
+        customEndpoint || "https://api.openai.com",
+        apiKey,
+        model,
+        messages,
+        2048,
+      );
       break;
     default:
       throw new Error(`Unknown provider: ${provider}`);
@@ -228,7 +311,10 @@ Return STRICT JSON with these exact fields:
     jsonStr = codeBlockMatch[1].trim();
   }
 
-  let parsed: Pick<NormExplanation, 'translation' | 'summary' | 'implications' | 'next_steps'>;
+  let parsed: Pick<
+    NormExplanation,
+    "translation" | "summary" | "implications" | "next_steps"
+  >;
   try {
     parsed = JSON.parse(jsonStr);
   } catch {
@@ -244,12 +330,12 @@ Return STRICT JSON with these exact fields:
   return {
     norm_id: normId,
     law_key: lawKey,
-    law_title: '',
+    law_title: "",
     lang,
-    translation: parsed.translation || '',
-    summary: parsed.summary || '',
-    implications: parsed.implications || '',
-    next_steps: parsed.next_steps || '',
+    translation: parsed.translation || "",
+    summary: parsed.summary || "",
+    implications: parsed.implications || "",
+    next_steps: parsed.next_steps || "",
     disclaimer: LEGAL_DISCLAIMER.trim(),
   };
 }

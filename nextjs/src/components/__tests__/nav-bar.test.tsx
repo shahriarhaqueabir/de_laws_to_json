@@ -37,7 +37,7 @@ beforeEach(() => {
   );
   // Mock localStorage.clear for tests
   Storage.prototype.clear = vi.fn().mockImplementation(() => {
-    Object.keys(store).forEach(key => delete store[key]);
+    Object.keys(store).forEach((key) => delete store[key]);
   });
 });
 
@@ -58,10 +58,10 @@ describe("NavBar", () => {
   it("active link has accent styling", () => {
     renderWithContext(<NavBar />);
     // There are two "Vault" links: one brand link (group) and one nav item
-    const navVaultLink = screen.getAllByText("Vault").find(el =>
-        el.closest('a')?.className.includes('px-3') // Nav items have px-3 padding
+    const navVaultLink = screen.getAllByText("Vault").find(
+      (el) => el.closest("a")?.className.includes("px-3"), // Nav items have px-3 padding
     )!;
-    expect(navVaultLink.closest('a')?.className).toContain("text-accent-gold");
+    expect(navVaultLink.closest("a")?.className).toContain("text-accent-gold");
   });
 
   it("shows sign-in link when not authenticated", () => {

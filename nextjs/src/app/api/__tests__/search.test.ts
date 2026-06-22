@@ -201,6 +201,8 @@ describe("GET /api/search", () => {
 
     expect(res.status).toBe(500);
     expect(body.error.code).toBe("SEARCH_FAILED");
-    expect(body.error.message).toContain("Search failed: Qdrant connection refused");
+    expect(body.error.message).toContain(
+      "Search failed: Qdrant connection refused",
+    );
   });
 });

@@ -52,13 +52,17 @@ vi.mock("../../components/auth-context", () => ({
     signUp: vi.fn(),
     signOut: vi.fn(),
   }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 // Mock toast
 vi.mock("../../components/toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
-  ToastProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ToastProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 // Mock chat context
@@ -79,13 +83,15 @@ vi.mock("../../components/chat-context", () => ({
     mode: "basic",
     setMode: vi.fn(),
   })),
-  ChatProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ChatProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 describe("SettingsPage", () => {
   beforeEach(() => {
     // Provide a mock for localStorage if it's not present or broken
-    Object.defineProperty(window, 'localStorage', {
+    Object.defineProperty(window, "localStorage", {
       value: {
         getItem: vi.fn(),
         setItem: vi.fn(),
@@ -94,7 +100,7 @@ describe("SettingsPage", () => {
         length: 0,
         key: vi.fn(),
       },
-      writable: true
+      writable: true,
     });
     localStorage.clear();
   });
@@ -150,6 +156,8 @@ describe("SettingsPage", () => {
     });
 
     render(<SettingsPage />);
-    expect(screen.getByPlaceholderText(/e.g. gpt-4o-mini/i)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/e.g. gpt-4o-mini/i),
+    ).toBeInTheDocument();
   });
 });

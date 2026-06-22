@@ -22,7 +22,10 @@ export async function GET(req: NextRequest) {
     // Pagination
     const url = new URL(req.url);
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
-    const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") || "20", 10)));
+    const limit = Math.min(
+      50,
+      Math.max(1, parseInt(url.searchParams.get("limit") || "20", 10)),
+    );
     const offset = (page - 1) * limit;
 
     // Get total count
@@ -34,7 +37,8 @@ export async function GET(req: NextRequest) {
     // Get case files with path summaries
     const { data: sessions, error } = await supabase
       .from("case_files")
-      .select(`
+      .select(
+        `
         *,
         guidance_paths (
           id,
@@ -43,7 +47,8 @@ export async function GET(req: NextRequest) {
           risk_level,
           cost_estimate
         )
-      `)
+      `,
+      )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);

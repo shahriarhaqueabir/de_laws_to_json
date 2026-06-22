@@ -14,10 +14,7 @@ export function errorResponse(
   status: number,
   details?: Array<{ field: string; message: string }>,
 ): NextResponse<ApiError> {
-  return NextResponse.json(
-    { error: { code, message, details } },
-    { status },
-  );
+  return NextResponse.json({ error: { code, message, details } }, { status });
 }
 
 export function successResponse<T>(data: T, status = 200) {

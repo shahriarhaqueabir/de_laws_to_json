@@ -52,9 +52,7 @@ describe("NormViewer", () => {
 
     // Content should not be visible initially
     expect(
-      screen.queryByText(
-        "Wer vorsätzlich oder fahrlässig das Leben...",
-      ),
+      screen.queryByText("Wer vorsätzlich oder fahrlässig das Leben..."),
     ).not.toBeInTheDocument();
 
     // Click the header to expand

@@ -343,7 +343,7 @@ describe("generateNormExplanation", () => {
 
   it("strips markdown code fences without json tag", async () => {
     const wrappedJson =
-      "```\n{\"translation\": \"T\", \"summary\": \"S\", \"implications\": \"I\", \"next_steps\": \"N\"}\n```";
+      '```\n{"translation": "T", "summary": "S", "implications": "I", "next_steps": "N"}\n```';
     openAISuccess(wrappedJson);
 
     const result = await generateNormExplanation(baseParams);
@@ -357,9 +357,13 @@ describe("generateNormExplanation", () => {
     const result = await generateNormExplanation(baseParams);
 
     // Fallback: all fields contain the raw text
-    expect(result.translation).toBe("This is not JSON at all. Just plain text.");
+    expect(result.translation).toBe(
+      "This is not JSON at all. Just plain text.",
+    );
     expect(result.summary).toBe("This is not JSON at all. Just plain text.");
-    expect(result.implications).toBe("This is not JSON at all. Just plain text.");
+    expect(result.implications).toBe(
+      "This is not JSON at all. Just plain text.",
+    );
     expect(result.next_steps).toBe("This is not JSON at all. Just plain text.");
   });
 });

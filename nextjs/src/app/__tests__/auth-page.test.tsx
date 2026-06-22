@@ -34,7 +34,9 @@ beforeEach(() => {
 describe("AuthPage", () => {
   it("shows sign-in form with email and password fields", () => {
     render(<AuthPage />);
-    expect(screen.getByRole("heading", { name: /Initialize Session/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Initialize Session/i }),
+    ).toBeInTheDocument();
     expect(screen.getByPlaceholderText("you@example.com")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("••••••••")).toBeInTheDocument();
   });
@@ -43,12 +45,16 @@ describe("AuthPage", () => {
     const user = userEvent.setup();
     render(<AuthPage />);
 
-    expect(screen.getByRole("heading", { name: /Initialize Session/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Initialize Session/i }),
+    ).toBeInTheDocument();
 
     const toggleBtn = screen.getByText("Create one");
     await user.click(toggleBtn);
 
-    expect(screen.getByRole("heading", { name: /Create Account/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Create Account/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText("Create an account to save your progress"),
     ).toBeInTheDocument();
@@ -60,11 +66,15 @@ describe("AuthPage", () => {
 
     // Switch to sign up
     await user.click(screen.getByText("Create one"));
-    expect(screen.getByRole("heading", { name: /Create Account/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Create Account/i }),
+    ).toBeInTheDocument();
 
     // Switch back
     await user.click(screen.getByText("Initialize session"));
-    expect(screen.getByRole("heading", { name: /Initialize Session/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Initialize Session/i }),
+    ).toBeInTheDocument();
   });
 
   it("error message displays on failed sign-in", async () => {
@@ -77,12 +87,12 @@ describe("AuthPage", () => {
       "bad@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "wrongpw");
-    await user.click(screen.getByRole("button", { name: /Initialize Session$/i }));
+    await user.click(
+      screen.getByRole("button", { name: /Initialize Session$/i }),
+    );
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Invalid login credentials"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Invalid login credentials")).toBeInTheDocument();
     });
   });
 
@@ -99,15 +109,11 @@ describe("AuthPage", () => {
       "new@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "password123");
-    await user.click(
-      screen.getByRole("button", { name: /Create Account/ }),
-    );
+    await user.click(screen.getByRole("button", { name: /Create Account/ }));
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          "Account created! Check your email for confirmation.",
-        ),
+        screen.getByText("Account created! Check your email for confirmation."),
       ).toBeInTheDocument();
     });
   });
@@ -139,7 +145,9 @@ describe("AuthPage", () => {
       "test@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "password");
-    await user.click(screen.getByRole("button", { name: /Initialize Session$/i }));
+    await user.click(
+      screen.getByRole("button", { name: /Initialize Session$/i }),
+    );
 
     // Button should show spinner
     const buttons = screen.getAllByRole("button");
@@ -161,7 +169,9 @@ describe("AuthPage", () => {
       "test@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "pw");
-    await user.click(screen.getByRole("button", { name: /Initialize Session$/i }));
+    await user.click(
+      screen.getByRole("button", { name: /Initialize Session$/i }),
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Some error")).toBeInTheDocument();
@@ -184,7 +194,9 @@ describe("AuthPage", () => {
       "valid@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "correctpw");
-    await user.click(screen.getByRole("button", { name: /Initialize Session$/i }));
+    await user.click(
+      screen.getByRole("button", { name: /Initialize Session$/i }),
+    );
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/");
@@ -197,7 +209,7 @@ describe("AuthPage", () => {
 
     // Provide a mock for sessionStorage
     const mockRemoveItem = vi.fn();
-    Object.defineProperty(window, 'sessionStorage', {
+    Object.defineProperty(window, "sessionStorage", {
       value: {
         getItem: vi.fn(),
         setItem: vi.fn(),
@@ -205,7 +217,7 @@ describe("AuthPage", () => {
         clear: vi.fn(),
       },
       writable: true,
-      configurable: true
+      configurable: true,
     });
 
     render(<AuthPage />);
@@ -215,7 +227,9 @@ describe("AuthPage", () => {
       "valid@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "correctpw");
-    await user.click(screen.getByRole("button", { name: /Initialize Session$/i }));
+    await user.click(
+      screen.getByRole("button", { name: /Initialize Session$/i }),
+    );
 
     await waitFor(() => {
       expect(mockRemoveItem).toHaveBeenCalledWith("glv_guest_chat");

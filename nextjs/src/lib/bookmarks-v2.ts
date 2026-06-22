@@ -108,8 +108,7 @@ export async function addBookmark(
 ): Promise<void> {
   const bookmarks = getLocalBookmarks();
   const exists = bookmarks.some(
-    (x) =>
-      x.law_key === b.law_key && (x.norm_id || "") === (b.norm_id || ""),
+    (x) => x.law_key === b.law_key && (x.norm_id || "") === (b.norm_id || ""),
   );
   if (exists) return;
 
@@ -343,7 +342,8 @@ export async function syncBookmarksToSupabase(): Promise<void> {
       const merged = [...local];
       for (const r of remote) {
         const exists = merged.some(
-          (l) => l.law_key === r.law_key && (l.norm_id || "") === (r.norm_id || ""),
+          (l) =>
+            l.law_key === r.law_key && (l.norm_id || "") === (r.norm_id || ""),
         );
         if (!exists) {
           merged.push({

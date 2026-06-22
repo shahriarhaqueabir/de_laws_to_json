@@ -17,10 +17,7 @@ import type { AppLanguage } from "../lib/types";
 // These are the hardcoded English status messages used across pages.
 // The map provides translations for all 9 supported languages.
 
-const UI_STRINGS: Record<
-  string,
-  Record<AppLanguage, string>
-> = {
+const UI_STRINGS: Record<string, Record<AppLanguage, string>> = {
   "search.loading": {
     de: "Durchsuche Archiv...",
     en: "Scanning Archives...",
@@ -164,10 +161,7 @@ export function useLanguage() {
    * @example
    *   t("search.results_count", { n: 12 }) // → "12 Statutes Retrieved"
    */
-  const t = (
-    key: string,
-    vars?: Record<string, string | number>,
-  ): string => {
+  const t = (key: string, vars?: Record<string, string | number>): string => {
     const translations = UI_STRINGS[key];
     if (!translations) return key;
 

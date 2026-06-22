@@ -103,8 +103,12 @@ export default function CategoryGrid() {
         >
           <div className="absolute top-0 left-0 w-1 h-0 bg-accent-gold group-hover:h-full transition-all duration-700" />
           <cat.icon className="w-6 h-6 mx-auto mb-4 text-zinc-600 group-hover:text-accent-gold transition-colors duration-500" />
-          <h3 className="font-serif font-bold text-white text-[13px] tracking-tight mb-1">{cat.name}</h3>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">{cat.en}</p>
+          <h3 className="font-serif font-bold text-white text-[13px] tracking-tight mb-1">
+            {cat.name}
+          </h3>
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
+            {cat.en}
+          </p>
         </Link>
       ))}
     </div>

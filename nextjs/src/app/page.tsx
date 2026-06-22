@@ -36,10 +36,16 @@ const modes = [
 
 const LAW_QUOTES = [
   { text: "The law is reason, free from passion.", author: "Aristotle" },
-  { text: "Justice delayed is justice denied.", author: "William E. Gladstone" },
+  {
+    text: "Justice delayed is justice denied.",
+    author: "William E. Gladstone",
+  },
   { text: "Law is the art of the good and the equitable.", author: "Celsus" },
   { text: "The more laws, the less justice.", author: "Marcus Tullius Cicero" },
-  { text: "Lawyers are the only persons in whom ignorance of the law is not punished.", author: "Jeremy Bentham" }
+  {
+    text: "Lawyers are the only persons in whom ignorance of the law is not punished.",
+    author: "Jeremy Bentham",
+  },
 ];
 
 export default function Home() {
