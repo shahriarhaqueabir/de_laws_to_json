@@ -50,6 +50,7 @@ description = "Known safe patterns for this project"
 paths = [
     # Dependencies
     ".*node_modules/.*",
+    ".*\\.venv/.*",
     # Test files use fake keys
     ".*__tests__/.*",
     ".*vitest\\.setup\\.ts",
@@ -59,4 +60,10 @@ paths = [
     ".*\\.md$",
     # Git directory
     ".*\\.git/.*",
+    # IDE / editor config
+    ".*\\.idea/.*",
+    ".*\\.vscode/.*",
+    # Build cache / worktrees
+    ".*\\.next/.*",
+    ".*\\.worktrees/.*",
 ]

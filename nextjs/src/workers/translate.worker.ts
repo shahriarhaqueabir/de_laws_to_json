@@ -15,8 +15,7 @@ import { pipeline, env } from "@huggingface/transformers";
 // Skip local model check — always download from HuggingFace Hub
 env.allowLocalModels = false;
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* Transformers.js pipeline API is dynamic */
+// Transformers.js pipeline API is dynamic — safe to suppress
 
 // ── Model Definitions ─────────────────────────────────────────────────────
 
@@ -66,6 +65,7 @@ const OPUS_TGT = "en";
 
 // ── Worker State ──────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let currentModel: any = null;
 let currentModelId: string | null = null;
 
@@ -84,12 +84,14 @@ function selectModel(sourceLang: string, targetLang: string): string {
 
 async function getTranslator(
   modelKey: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   progress_callback?: (x: any) => void,
 ) {
   const config = MODELS[modelKey];
   if (!config) throw new Error(`Unknown model: ${modelKey}`);
 
   if (!currentModel || currentModelId !== modelKey) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     currentModel = await pipeline(config.task as any, config.modelId as any, {
       progress_callback,
     });
@@ -109,6 +111,7 @@ self.addEventListener("message", async (event: MessageEvent) => {
   try {
     const modelKey = selectModel(src, tgt);
     const config = MODELS[modelKey];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const translator = await getTranslator(modelKey, (x: any) => {
       self.postMessage({ status: "progress", id, modelKey, ...x });
     });
@@ -141,6 +144,7 @@ self.addEventListener("message", async (event: MessageEvent) => {
       output,
       modelUsed: config.description,
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     self.postMessage({
       status: "error",
