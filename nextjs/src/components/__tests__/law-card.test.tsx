@@ -3,8 +3,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { LawSearchResult } from "../../lib/types";
 
-const mockToast = vi.fn();
-let mockStore: Record<string, boolean> = {};
+const mockToast = vi.hoisted(() => vi.fn());
+const mockStore = vi.hoisted((): Record<string, boolean> => ({}));
 
 // Mock the auth context to return no user (anonymous)
 vi.mock("../auth-context", () => ({
@@ -21,8 +21,14 @@ vi.mock("../../lib/bookmarks-v2", () => ({
   }),
 }));
 
-vi.mock("../toast", () => ({
-  useToast: () => ({ toast: mockToast }),
+vi.mock("sonner", () => ({
+  toast: Object.assign(mockToast, {
+    info: mockToast,
+    success: mockToast,
+    error: mockToast,
+    warning: mockToast,
+  }),
+  Toaster: ({ children }: { children: any }) => children ?? null,
 }));
 
 import LawCard from "../law-card";
@@ -64,7 +70,9 @@ const mockLawFewNorms: LawSearchResult = {
 };
 
 beforeEach(() => {
-  mockStore = {};
+  for (const key of Object.keys(mockStore)) {
+    delete mockStore[key];
+  }
   mockToast.mockClear();
   // Provide a mock for localStorage
   Object.defineProperty(window, "localStorage", {
@@ -133,7 +141,6 @@ describe("LawCard", () => {
     expect(screen.getByTitle("Remove bookmark")).toBeInTheDocument();
     expect(mockToast).toHaveBeenCalledWith(
       "Saved locally. Sign in to sync bookmarks.",
-      "info",
     );
   });
 
@@ -148,7 +155,7 @@ describe("LawCard", () => {
     await user.click(bookmarkBtn);
 
     expect(screen.getByTitle("Add bookmark")).toBeInTheDocument();
-    expect(mockToast).toHaveBeenCalledWith("Bookmark removed", "info");
+    expect(mockToast).toHaveBeenCalledWith("Bookmark removed");
   });
 
   it('"View full law" link points to /laws/{key}', () => {

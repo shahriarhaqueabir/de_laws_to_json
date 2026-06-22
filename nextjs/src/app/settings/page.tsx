@@ -38,9 +38,10 @@ const MODE_LIMITATIONS: Record<ChatMode, string[]> = {
     "Your question and law context are sent to the provider for processing",
   ],
   browser: [
-    "Requires downloading a ~1GB AI model on first use (Qwen1.5, one-time)",
+    "Requires downloading an ~800MB AI model on first use (SmolLM2, one-time)",
     "Generation is slower than cloud AI — runs on your CPU",
-    "Uses Qwen1.5-0.5B — decent for simple guidance, less capable for complex legal reasoning",
+    "Uses SmolLM2-360M — faster than Qwen1.5 with improved instruction following",
+    "Still limited for complex legal reasoning — upgrade to cloud or local AI for difficult cases",
     "Only works in browsers that support Web Workers + WASM",
   ],
   basic: [
@@ -109,12 +110,10 @@ export default function SettingsPage() {
     try {
       if (settings.mode === "local") {
         const res = await fetch(`${settings.brokerUrl}/health`);
-        setTestResult(
-          res.ok ? "System Reachable ✓" : `Protocol Error: ${res.status}`,
-        );
+        setTestResult(res.ok ? "Connected ✓" : `Error: ${res.status}`);
       } else if (settings.mode === "cloud") {
         if (!hasStoredKey && !newApiKey) {
-          setTestResult("Authentication Required");
+          setTestResult("API key required");
           setTesting(false);
           return;
         }
@@ -132,12 +131,12 @@ export default function SettingsPage() {
         const data = await res.json();
         setTestResult(
           res.ok
-            ? "Access Verified ✓"
-            : `Gateway Error: ${data.error?.message || data.error || res.status}`,
+            ? "Connected ✓"
+            : `Error: ${data.error?.message || data.error || res.status}`,
         );
       } else if (settings.mode === "browser") {
         // Test browser model download/init
-        setTestResult("Initializing Neural Bridge...");
+        setTestResult("Testing connection...");
         const worker = new Worker(
           new URL("../../workers/chat.worker.ts", import.meta.url),
           { type: "module" },
@@ -148,14 +147,14 @@ export default function SettingsPage() {
             if (e.data.status === "progress") {
               if (e.data.status === "download") {
                 setTestResult(
-                  `Retrieving Core... ${Math.round((e.data.loaded / e.data.total) * 100)}%`,
+                  `Downloading model... ${Math.round((e.data.loaded / e.data.total) * 100)}%`,
                 );
               }
             } else if (
               e.data.status === "ready" ||
               e.data.status === "complete"
             ) {
-              resolve("Cognition Ready ✓");
+              resolve("Model ready ✓");
             } else if (e.data.status === "error") {
               reject(new Error(e.data.error));
             }
@@ -171,10 +170,12 @@ export default function SettingsPage() {
         setTestResult(result);
         worker.terminate();
       } else {
-        setTestResult("Operational Mode Fixed");
+        setTestResult("Mode active");
       }
     } catch (err: unknown) {
-      setTestResult(`Link Failure: ${(err as Error).message}`);
+      setTestResult(
+        `Error: ${err instanceof Error ? err.message : String(err)}`,
+      );
     } finally {
       setTesting(false);
     }
@@ -188,15 +189,21 @@ export default function SettingsPage() {
             <Settings className="w-6 h-6 text-accent-gold" />
           </div>
           <div>
-            <p className="monumental-type opacity-40 mb-1">System Core</p>
+            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-40 mb-1">
+              Settings
+            </p>
             <h1 className="text-4xl font-serif font-bold text-white tracking-tight">
               Configuration
             </h1>
           </div>
         </div>
         {saved && (
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-gold-bright animate-fade-in bg-accent-gold/10 px-3 py-1 border border-accent-gold/20">
-            States Synchronized
+          <span
+            className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-gold-bright animate-fade-in bg-accent-gold/10 px-3 py-1 border border-accent-gold/20"
+            role="status"
+            aria-live="polite"
+          >
+            Saved
           </span>
         )}
       </div>
@@ -204,8 +211,8 @@ export default function SettingsPage() {
       {/* ── Chat Mode Selector ── */}
       <section className="mb-12">
         <div className="flex items-center gap-4 mb-8">
-          <h2 className="monumental-type opacity-50 shrink-0">
-            Inference Protocols
+          <h2 className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-50 shrink-0">
+            AI Mode
           </h2>
           <div className="h-px w-full bg-zinc-800/50" />
         </div>
@@ -236,7 +243,7 @@ export default function SettingsPage() {
                   className={`p-3 border transition-colors duration-500 ${
                     isActive
                       ? "border-accent-gold/30 bg-accent-gold/10 text-accent-gold-bright"
-                      : "border-white/5 bg-white/5 text-zinc-600 group-hover:text-zinc-400"
+                      : "border-white/5 bg-white/5 text-zinc-400 group-hover:text-zinc-300"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -248,7 +255,7 @@ export default function SettingsPage() {
                     </span>
                     {isActive && (
                       <span className="text-[8px] font-black uppercase tracking-[0.2em] text-accent-gold bg-accent-gold/10 px-2 py-0.5 border border-accent-gold/20">
-                        Operational
+                        Active
                       </span>
                     )}
                   </div>
@@ -257,8 +264,8 @@ export default function SettingsPage() {
                   </p>
                   {isActive && (
                     <div className="mt-4 space-y-2 pt-4 border-t border-white/5">
-                      <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
-                        Environmental Constraints
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">
+                        Limitations
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
                         {MODE_LIMITATIONS[mode].map((lim, i) => (
@@ -288,8 +295,8 @@ export default function SettingsPage() {
       {(settings.mode === "local" || settings.mode === "cloud") && (
         <section className="mb-12">
           <div className="flex items-center gap-4 mb-8">
-            <h2 className="monumental-type opacity-50 shrink-0">
-              Global AI Constraints
+            <h2 className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-50 shrink-0">
+              AI Parameters
             </h2>
             <div className="h-px w-full bg-zinc-800/50" />
           </div>
@@ -298,7 +305,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                  Inference Temperature ({settings.ollamaParams.temperature})
+                  Temperature ({settings.ollamaParams.temperature})
                 </label>
                 <input
                   type="range"
@@ -317,10 +324,10 @@ export default function SettingsPage() {
                   className="w-full accent-accent-gold"
                 />
                 <div className="flex justify-between mt-2">
-                  <span className="text-[9px] font-bold text-zinc-600 uppercase">
+                  <span className="text-[9px] font-bold text-zinc-400 uppercase">
                     Precise
                   </span>
-                  <span className="text-[9px] font-bold text-zinc-600 uppercase">
+                  <span className="text-[9px] font-bold text-zinc-400 uppercase">
                     Creative
                   </span>
                 </div>
@@ -341,14 +348,14 @@ export default function SettingsPage() {
                       },
                     })
                   }
-                  className="w-full px-4 py-2 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 transition-all font-mono text-sm"
+                  className="w-full px-4 py-2 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 transition-all font-mono text-sm"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                Master System Guidelines (Consistency Logic)
+                System Prompt
               </label>
               <textarea
                 rows={6}
@@ -361,9 +368,9 @@ export default function SettingsPage() {
                     },
                   })
                 }
-                className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-sans text-xs leading-relaxed"
+                className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-sans text-xs leading-relaxed"
               />
-              <p className="text-[10px] text-zinc-600 font-bold mt-3 italic">
+              <p className="text-[10px] text-zinc-400 font-bold mt-3 italic">
                 These guidelines ensure all AI modes (Local & Cloud) maintain
                 the same &quot;Rechtsexperte&quot; persona and citation
                 standards.
@@ -386,26 +393,26 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                  Endpoint Protocol (BROKER_URL)
+                  Broker URL
                 </label>
                 <input
                   type="text"
                   value={settings.brokerUrl}
                   onChange={(e) => update({ brokerUrl: e.target.value })}
-                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
                 />
               </div>
 
               <div>
                 <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                  Ollama Model Designation
+                  Ollama Model
                 </label>
                 <input
                   type="text"
                   value={settings.ollamaModel}
                   onChange={(e) => update({ ollamaModel: e.target.value })}
                   placeholder="e.g. qwen2.5:1.5b"
-                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
                 />
               </div>
             </div>
@@ -414,7 +421,7 @@ export default function SettingsPage() {
               <ShieldAlert className="w-5 h-5 text-accent-gold mt-0.5" />
               <div>
                 <p className="text-[10px] font-black text-accent-gold uppercase tracking-[0.2em] mb-1">
-                  Architecture Requirement
+                  Requirement
                 </p>
                 <p className="text-xs text-zinc-400 font-bold leading-relaxed">
                   Ensure you have <span className="text-white">Ollama</span>{" "}
@@ -428,26 +435,26 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
-              <span className="text-zinc-600">Connectivity Status:</span>
+              <span className="text-zinc-400">Status:</span>
               {brokerOk === null ? (
                 <span className="text-zinc-500 flex items-center gap-2">
                   <div className="w-1 h-1 rounded-full bg-zinc-600 animate-pulse" />
-                  Pinging Node...
+                  Checking...
                 </span>
               ) : brokerOk ? (
                 <span className="flex items-center gap-2 text-accent-gold-bright">
                   <div className="w-1.5 h-1.5 rounded-full bg-accent-gold-bright shadow-[0_0_8px_var(--accent-gold-bright)]" />
-                  Link Established
+                  Connected
                 </span>
               ) : (
                 <span className="flex items-center gap-2 text-red-500">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-                  Node Offline
+                  Offline
                 </span>
               )}
             </div>
 
-            <p className="text-[10px] text-zinc-600 font-bold italic border-l border-accent-gold/20 pl-4">
+            <p className="text-[10px] text-zinc-400 font-bold italic border-l border-accent-gold/20 pl-4">
               Note: {MODE_STATUS_NOTE.local}
             </p>
           </div>
@@ -458,49 +465,45 @@ export default function SettingsPage() {
         <section className="glass-panel p-8 mb-8 border-white/5">
           <div className="flex items-center gap-4 mb-8">
             <Cloud className="w-5 h-5 text-accent-gold" />
-            <h2 className="font-serif font-bold text-xl text-white">
-              Gateway Credentials
-            </h2>
+            <h2 className="font-serif font-bold text-xl text-white">API Key</h2>
           </div>
 
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                  Service Provider
+                  Provider
                 </label>
                 <select
                   value={settings.provider}
                   onChange={(e) =>
                     update({ provider: e.target.value as CloudProvider })
                   }
-                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-bold text-sm"
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-bold text-sm"
                 >
-                  <option value="openai">OpenAI Architecture</option>
-                  <option value="anthropic">Anthropic Models</option>
-                  <option value="openai-compatible">
-                    OpenAI-Compatible Gateway
-                  </option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="openai-compatible">OpenAI Compatible</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                  Model Designation
+                  Model
                 </label>
                 <input
                   type="text"
                   value={settings.model}
                   onChange={(e) => update({ model: e.target.value })}
                   placeholder="e.g. gpt-4o-mini"
-                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                Secure Access Key
+                API Key
               </label>
 
               {hasStoredKey && !keyDecryptable && !showKeyInput ? (
@@ -561,7 +564,7 @@ export default function SettingsPage() {
                     value={newApiKey}
                     onChange={(e) => setNewApiKey(e.target.value)}
                     placeholder="sk-..."
-                    className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                    className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
                   />
                   <div className="flex gap-3">
                     <button
@@ -621,7 +624,7 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              <p className="text-[10px] text-zinc-600 font-bold mt-3 italic">
+              <p className="text-[10px] text-zinc-400 font-bold mt-3 italic">
                 Key is encrypted and stored on our server. Never transmitted to
                 third parties.
               </p>
@@ -637,7 +640,7 @@ export default function SettingsPage() {
                   value={settings.customEndpoint}
                   onChange={(e) => update({ customEndpoint: e.target.value })}
                   placeholder="https://api.openai.com"
-                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
                 />
               </div>
             )}
@@ -650,14 +653,14 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4 mb-8">
             <Brain className="w-5 h-5 text-accent-gold" />
             <h2 className="font-serif font-bold text-xl text-white">
-              Neural Weights Selection
+              Model Selection
             </h2>
           </div>
 
           <div className="space-y-8">
             <div>
               <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">
-                Core Model (WASM-Optimized)
+                Model
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {BROWSER_MODELS.map((m) => (
@@ -692,9 +695,9 @@ export default function SettingsPage() {
             <div className="p-5 bg-white/[0.02] border border-white/5">
               <p className="text-[10px] text-zinc-500 font-bold leading-relaxed italic">
                 <ShieldAlert className="w-3.5 h-3.5 inline mr-2 text-accent-gold/40" />
-                The selected neural weights will be cached in your
-                browser&apos;s persistent storage. Initial retrieval requires a
-                high-bandwidth link (~1.5GB).
+                The selected model will be cached in your browser&apos;s
+                persistent storage. Initial retrieval requires a high-bandwidth
+                link (~1.5GB).
               </p>
             </div>
           </div>
@@ -706,14 +709,13 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4 mb-6">
             <FileText className="w-5 h-5 text-accent-gold" />
             <h2 className="font-serif font-bold text-xl text-white">
-              Archives Only
+              Search Only
             </h2>
           </div>
 
           <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-xl">
-            Inert search protocol. This mode bypasses AI analysis and retrieves
-            raw statutory text from the vector vault. High reliability,
-            zero-latency inference.
+            Search only. This mode bypasses AI analysis and retrieves raw
+            statutory text. No setup required.
           </p>
         </section>
       )}
@@ -728,11 +730,7 @@ export default function SettingsPage() {
             disabled={testing}
             className="px-8 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-[10px] hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
           >
-            {testing
-              ? "Running Sync..."
-              : settings.mode === "browser"
-                ? "Initiate Neural Link"
-                : "Verify Link Integrity"}
+            {testing ? "Testing..." : "Test Connection"}
           </button>
           {testResult && (
             <span
@@ -754,23 +752,23 @@ export default function SettingsPage() {
       <section className="border-t border-white/5 pt-12">
         <div className="flex items-center gap-4 mb-8">
           <Database className="w-5 h-5 text-zinc-600" />
-          <h2 className="monumental-type opacity-50 shrink-0">
-            Substrate Status
+          <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 opacity-50 shrink-0">
+            System Status
           </h2>
           <div className="h-px w-full bg-zinc-800/50" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-5 border border-white/5 bg-white/[0.01]">
-            <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2">
-              Vector Reservoir
+            <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">
+              Vector Database
             </p>
             <p className="text-xs text-zinc-400 font-bold">
               Qdrant Cloud (E5-Small // 107K Norms)
             </p>
           </div>
           <div className="p-5 border border-white/5 bg-white/[0.01]">
-            <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2">
-              Relational Registry
+            <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">
+              Database
             </p>
             <p className="text-xs text-zinc-400 font-bold">
               Supabase (PostgreSQL 16 // Auth Tier 1)

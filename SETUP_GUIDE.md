@@ -408,7 +408,7 @@ PORT = 5001  # Use different port
 2. Pull model: `ollama pull qwen2.5:1.5b`
 3. Check URL in `.env`:
    ```
-   OLLAMA_URL=http://127.0.0.1:11434/api/generate
+   OLLAMA_URL=http://127.0.0.1:11434/api/chat
    ```
 
 ### Slow Performance

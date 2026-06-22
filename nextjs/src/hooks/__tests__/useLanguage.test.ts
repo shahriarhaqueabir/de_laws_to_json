@@ -41,13 +41,13 @@ describe("useLanguage", () => {
   describe("t() — UI string translation", () => {
     it("returns English string for en", () => {
       const { result } = renderHook(() => useLanguage());
-      expect(result.current.t("search.loading")).toBe("Scanning Archives...");
+      expect(result.current.t("search.loading")).toBe("Searching...");
     });
 
     it("returns German string for de", () => {
       mockLanguage = "de";
       const { result } = renderHook(() => useLanguage());
-      expect(result.current.t("search.loading")).toBe("Durchsuche Archiv...");
+      expect(result.current.t("search.loading")).toBe("Suche...");
     });
 
     it("returns Turkish for tr", () => {
@@ -66,7 +66,7 @@ describe("useLanguage", () => {
     it("falls back to English for missing language", () => {
       mockLanguage = "ja" as never;
       const { result } = renderHook(() => useLanguage());
-      expect(result.current.t("search.loading")).toBe("Scanning Archives...");
+      expect(result.current.t("search.loading")).toBe("Searching...");
     });
 
     it("returns the key itself for unknown strings", () => {

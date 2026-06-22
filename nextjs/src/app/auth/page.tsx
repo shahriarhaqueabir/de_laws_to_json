@@ -45,39 +45,45 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <div className="bg-[#1a1a1a] w-14 h-14 flex items-center justify-center mx-auto mb-4">
-            <ShieldAlert className="w-7 h-7 text-[#888888]" />
+          <div className="bg-tertiary w-14 h-14 flex items-center justify-center mx-auto mb-4">
+            <ShieldAlert className="w-7 h-7 text-zinc-400" />
           </div>
-          <h1 className="text-3xl font-bold text-[#e8e8e8]">
-            {mode === "signin" ? "Initialize Session" : "Create Account"}
+          <h1 className="text-3xl font-bold text-foreground">
+            {mode === "signin" ? "Sign In" : "Create Account"}
           </h1>
-          <p className="text-[#a3a3a3] mt-2">
+          <p className="text-zinc-400 mt-2">
             {mode === "signin"
-              ? "Establish a secure link to sync bookmarks"
+              ? "Sign in to sync bookmarks across devices"
               : "Create an account to save your progress"}
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-[#141414] shadow-[0_1px_3px_rgba(0,0,0,0.6)] border border-[#2a2a2a] p-8 space-y-5"
+          className="bg-elevated shadow-[0_1px_3px_rgba(0,0,0,0.6)] border border-zinc-800 p-8 space-y-5"
         >
           {error && (
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] text-[#a3a3a3] px-4 py-3 text-sm">
+            <div
+              className="bg-tertiary border border-zinc-700 text-zinc-400 px-4 py-3 text-sm"
+              role="alert"
+            >
               {error}
             </div>
           )}
           {success && (
-            <div className="bg-[#1a1a1a] border border-[#888888] text-[#888888] px-4 py-3 text-sm">
+            <div
+              className="bg-tertiary border border-zinc-500 text-zinc-400 px-4 py-3 text-sm"
+              role="status"
+            >
               {success}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-[#e8e8e8] mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Email
             </label>
             <input
@@ -85,13 +91,13 @@ export default function AuthPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] text-[#e8e8e8] focus:outline-none focus:ring-1 focus:ring-[#888888] transition-shadow duration-100"
+              className="w-full px-3 py-2 bg-tertiary border border-zinc-700 text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold transition-shadow duration-100"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#e8e8e8] mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Password
             </label>
             <input
@@ -100,7 +106,7 @@ export default function AuthPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] text-[#e8e8e8] focus:outline-none focus:ring-1 focus:ring-[#888888] transition-shadow duration-100"
+              className="w-full px-3 py-2 bg-tertiary border border-zinc-700 text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold transition-shadow duration-100"
               placeholder="••••••••"
             />
           </div>
@@ -108,18 +114,18 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#888888] hover:bg-[#aaaaaa] text-[#e8e8e8] font-bold py-3 disabled:opacity-50 transition-colors duration-100 active:translate-y-[1px] flex items-center justify-center gap-2"
+            className="w-full bg-accent-gold hover:bg-accent-gold-bright text-white font-bold py-3 disabled:opacity-50 transition-colors duration-100 active:translate-y-[1px] flex items-center justify-center gap-2"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <LogIn className="w-5 h-5" />
             )}
-            {mode === "signin" ? "Initialize Session" : "Create Account"}
+            {mode === "signin" ? "Sign In" : "Create Account"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-[#a3a3a3] mt-6">
+        <p className="text-center text-sm text-secondary mt-6">
           {mode === "signin" ? (
             <>
               No account?{" "}
@@ -129,7 +135,7 @@ export default function AuthPage() {
                   setError(null);
                   setSuccess(null);
                 }}
-                className="text-[#888888] hover:underline"
+                className="text-accent-gold hover:underline"
               >
                 Create one
               </button>
@@ -143,9 +149,9 @@ export default function AuthPage() {
                   setError(null);
                   setSuccess(null);
                 }}
-                className="text-[#888888] hover:underline"
+                className="text-zinc-400 hover:underline"
               >
-                Initialize session
+                Sign in
               </button>
             </>
           )}
@@ -154,7 +160,7 @@ export default function AuthPage() {
         <p className="text-center mt-4">
           <Link
             href="/"
-            className="text-xs text-[#6b6b6b] hover:text-[#a3a3a3] transition-colors duration-100"
+            className="text-xs text-zinc-400 hover:text-zinc-300 transition-colors duration-100"
           >
             \u2190 Back to search
           </Link>

@@ -1,25 +1,25 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { LawSearchResult } from "../lib/types";
 import { ChevronRight, BookmarkPlus, BookmarkCheck, LogIn } from "lucide-react";
 import { isBookmarked, addBookmark, removeBookmark } from "../lib/bookmarks-v2";
-import { useToast } from "./toast";
+import { toast } from "sonner";
 import { useAuth } from "./auth-context";
 
 export default function LawCard({ law }: { law: LawSearchResult }) {
   const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(() => isBookmarked(law.key));
-  const { toast } = useToast();
 
   const [showSignInTip, setShowSignInTip] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const toggleBookmark = async () => {
     if (bookmarked) {
       await removeBookmark(law.key);
       setBookmarked(false);
-      toast("Bookmark removed", "info");
+      toast.info("Bookmark removed");
     } else {
       await addBookmark({
         law_key: law.key,
@@ -30,14 +30,20 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
       setBookmarked(true);
       if (!user) {
         setShowSignInTip(true);
-        toast("Saved locally. Sign in to sync bookmarks.", "info");
+        toast.info("Saved locally. Sign in to sync bookmarks.");
         // Auto-dismiss after 8 seconds
-        setTimeout(() => setShowSignInTip(false), 8000);
+        timerRef.current = setTimeout(() => setShowSignInTip(false), 8000);
       } else {
-        toast("Bookmark added", "success");
+        toast.success("Bookmark added");
       }
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   return (
     <div className="premium-card p-10 group relative border-white/5 bg-zinc-900/20">
@@ -76,7 +82,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
           <div className="text-xs text-accent-gold-bright font-black tracking-widest uppercase mb-1">
             {law.relevance}% Match
           </div>
-          <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">
+          <div className="text-[10px] text-muted font-bold uppercase tracking-tighter">
             {law.normHits} Relevant Sections
           </div>
         </div>
@@ -106,7 +112,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
         >
           Detailed Examination <ChevronRight className="w-4 h-4" />
         </Link>
-        <div className="text-[10px] font-bold text-zinc-700 italic font-serif">
+        <div className="text-[10px] font-bold text-muted italic font-serif">
           Source: Bundesamt für Justiz
         </div>
       </div>

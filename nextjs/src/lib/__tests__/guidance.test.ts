@@ -25,6 +25,7 @@ import type {
   GuidancePath,
   GenerateGuidanceParams,
 } from "@/lib/guidance";
+import type { AppLanguage } from "@/lib/types";
 
 // ── Mock Data ──────────────────────────────────────────────────────────────
 
@@ -298,7 +299,7 @@ describe("getLanguagePrompt", () => {
   });
 
   it("defaults to English for unknown languages", () => {
-    expect(getLanguagePrompt("unknown" as any)).toBe("English");
+    expect(getLanguagePrompt("unknown" as AppLanguage)).toBe("English");
   });
 });
 

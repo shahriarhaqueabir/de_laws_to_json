@@ -19,15 +19,15 @@ import type { AppLanguage } from "../lib/types";
 
 const UI_STRINGS: Record<string, Record<AppLanguage, string>> = {
   "search.loading": {
-    de: "Durchsuche Archiv...",
-    en: "Scanning Archives...",
+    de: "Suche...",
+    en: "Searching...",
     tr: "Arşiv taranıyor...",
     ar: "جارٍ مسح الأرشيف...",
-    fr: "Analyse des archives...",
-    es: "Escaneando archivos...",
+    fr: "Recherche...",
+    es: "Buscando...",
     pl: "Skanowanie archiwów...",
     uk: "Сканування архіву...",
-    ru: "Сканирование архива...",
+    ru: "Поиск...",
   },
   "search.results_count": {
     de: "{n} Gesetze gefunden",

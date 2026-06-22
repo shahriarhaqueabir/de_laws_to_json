@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Languages,
-  Loader2,
-  ChevronDown,
-  ChevronUp,
-  Scale,
-} from "lucide-react";
+import { Languages, Loader2, ChevronDown } from "lucide-react";
 import {
   AppLanguage,
   LANGUAGE_NAMES,
@@ -15,7 +9,7 @@ import {
   ChatSettings,
   DEFAULT_CHAT_SETTINGS,
 } from "../lib/types";
-import { useToast } from "./toast";
+import { toast } from "sonner";
 
 const STORAGE_KEY = "glv_chat_settings";
 
@@ -44,8 +38,6 @@ export default function NormViewer({
     } catch {}
     return DEFAULT_CHAT_SETTINGS;
   });
-  const { toast } = useToast();
-
   const handleExplain = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (explanation) return;
@@ -126,7 +118,7 @@ export default function NormViewer({
       setExplanation(data);
     } catch (err) {
       console.error("Norm explain failed:", err);
-      toast("Inference failed. Check system config.", "error");
+      toast.error("Explanation failed. Check settings.");
     } finally {
       setExplaining(false);
     }
@@ -153,7 +145,7 @@ export default function NormViewer({
               onClick={handleExplain}
             >
               <div className="w-1 h-1 rounded-full bg-accent-gold shadow-[0_0_8px_var(--accent-gold-bright)]" />
-              Neural Ready
+              Ready
             </div>
           )}
           <div
@@ -226,7 +218,7 @@ export default function NormViewer({
                   <div className="p-6 border border-accent-gold/10 bg-accent-gold/[0.02] relative group/insight">
                     <div className="absolute top-0 left-0 w-1 h-1 bg-accent-gold opacity-40" />
                     <div className="monumental-type opacity-30 mb-4 flex items-center gap-2 text-accent-gold-bright group-hover/insight:opacity-100 transition-opacity">
-                      Protocol
+                      Steps
                     </div>
                     <p className="text-sm text-zinc-400 leading-relaxed font-black uppercase tracking-wide">
                       {explanation.next_steps}

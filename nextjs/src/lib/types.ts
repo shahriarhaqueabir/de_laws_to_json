@@ -136,10 +136,10 @@ export interface ChatSettings {
 
 export const BROWSER_MODELS = [
   {
-    id: "Xenova/Qwen1.5-0.5B-Chat",
-    name: "Qwen 1.5 (0.5B)",
-    size: "~1.2GB",
-    description: "Default instruction-tuned model.",
+    id: "HuggingFaceTB/SmolLM2-360M-Instruct",
+    name: "SmolLM2 (360M)",
+    size: "~800MB",
+    description: "Fast, efficient on-device model (recommended).",
   },
   {
     id: "Xenova/LaMini-Flan-T5-783M",
@@ -158,7 +158,7 @@ export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
   provider: "openai",
   model: "gpt-4o-mini",
   customEndpoint: "",
-  browserModel: "Xenova/Qwen1.5-0.5B-Chat",
+  browserModel: "HuggingFaceTB/SmolLM2-360M-Instruct",
 };
 
 export interface CitedLaw {

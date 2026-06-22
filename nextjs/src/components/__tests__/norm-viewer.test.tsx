@@ -8,9 +8,15 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
-const mockToast = vi.fn();
-vi.mock("../toast", () => ({
-  useToast: () => ({ toast: mockToast }),
+const mockToast = vi.hoisted(() => vi.fn());
+vi.mock("sonner", () => ({
+  toast: Object.assign(mockToast, {
+    info: mockToast,
+    success: mockToast,
+    error: mockToast,
+    warning: mockToast,
+  }),
+  Toaster: ({ children }: { children: any }) => children ?? null,
 }));
 
 import NormViewer from "../norm-viewer";
@@ -174,8 +180,7 @@ describe("NormViewer", () => {
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(
-        "Inference failed. Check system config.",
-        "error",
+        "Explanation failed. Check settings.",
       );
     });
   });

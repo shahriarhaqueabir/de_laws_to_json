@@ -13,7 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuth } from "@/components/auth-context";
-import { useToast } from "@/components/toast";
+import { toast } from "sonner";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -81,7 +81,6 @@ function truncate(text: string, max: number): string {
 
 export default function GuidanceHistoryPage() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [sessions, setSessions] = useState<GuidanceSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,6 +112,7 @@ export default function GuidanceHistoryPage() {
   }, [page]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSessions();
   }, [loadSessions]);
 
@@ -126,9 +126,9 @@ export default function GuidanceHistoryPage() {
       });
       if (!res.ok) throw new Error("Delete failed");
       setSessions((prev) => prev.filter((s) => s.id !== id));
-      toast("Session deleted", "success");
+      toast.success("Session deleted");
     } catch {
-      toast("Failed to delete session", "error");
+      toast.error("Failed to delete session");
     } finally {
       setDeleting(null);
     }
@@ -157,7 +157,8 @@ export default function GuidanceHistoryPage() {
       <div className="flex items-center gap-4 mb-16 pb-8 border-b border-white/5">
         <Link
           href="/guidance"
-          className="p-2 text-zinc-600 hover:text-white transition-colors"
+          className="p-2 text-muted hover:text-white transition-colors"
+          aria-label="Back to guidance"
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
@@ -165,13 +166,15 @@ export default function GuidanceHistoryPage() {
           <Scale className="w-6 h-6 text-accent-gold" />
         </div>
         <div>
-          <p className="monumental-type opacity-40 mb-1">Case Analysis</p>
+          <p className="text-muted text-xs font-bold uppercase tracking-widest opacity-40 mb-1">
+            Case Analysis
+          </p>
           <h1 className="text-4xl font-serif font-bold text-white tracking-tight">
             Guidance History
           </h1>
         </div>
         {pagination && (
-          <span className="ml-auto text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">
+          <span className="ml-auto text-[10px] font-black uppercase tracking-[0.3em] text-muted">
             {pagination.total} Sessions
           </span>
         )}
@@ -184,7 +187,7 @@ export default function GuidanceHistoryPage() {
           <h2 className="text-2xl font-serif font-bold text-white mb-4">
             Sign In Required
           </h2>
-          <p className="text-zinc-500 max-w-md mx-auto">
+          <p className="text-muted max-w-md mx-auto">
             Sign in to view your guidance history. Sessions are automatically
             saved when you run case analysis while signed in.
           </p>
@@ -201,7 +204,7 @@ export default function GuidanceHistoryPage() {
       {loading && (
         <div className="text-center py-32">
           <Loader2 className="w-8 h-8 text-accent-gold/60 animate-spin mx-auto mb-6" />
-          <p className="text-zinc-500 text-sm">Loading sessions...</p>
+          <p className="text-muted text-sm">Loading sessions...</p>
         </div>
       )}
 
@@ -228,7 +231,7 @@ export default function GuidanceHistoryPage() {
           <h2 className="text-2xl font-serif font-bold text-white mb-4">
             No Guidance Sessions Yet
           </h2>
-          <p className="text-zinc-500 max-w-md mx-auto mb-8">
+          <p className="text-muted max-w-md mx-auto mb-8">
             Describe your legal situation and the AI will generate 3-5 outcome
             paths. Sessions are saved automatically when you are signed in.
           </p>
@@ -260,7 +263,7 @@ export default function GuidanceHistoryPage() {
                       <span className={getStatusBadgeClass(session.status)}>
                         {STATUS_LABELS[session.status] || session.status}
                       </span>
-                      <span className="text-[9px] font-mono font-black text-zinc-600 uppercase">
+                      <span className="text-[9px] font-mono font-black text-muted uppercase">
                         {session.category}
                       </span>
                     </div>
@@ -268,11 +271,11 @@ export default function GuidanceHistoryPage() {
                       {session.title || "Untitled Session"}
                     </h3>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-zinc-600 flex-shrink-0 mt-2" />
+                  <ChevronRight className="w-5 h-5 text-muted flex-shrink-0 mt-2" />
                 </div>
 
                 {/* Session Meta */}
-                <div className="flex flex-wrap items-center gap-4 text-[10px] text-zinc-500">
+                <div className="flex flex-wrap items-center gap-4 text-[10px] text-muted">
                   <span className="flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
                     {formatDate(session.created_at)}
@@ -313,7 +316,7 @@ export default function GuidanceHistoryPage() {
                     handleDelete(session.id);
                   }}
                   disabled={deleting === session.id}
-                  className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-700 hover:text-red-500 transition-colors disabled:opacity-50"
+                  className="text-[9px] font-black uppercase tracking-[0.2em] text-muted hover:text-red-500 transition-colors disabled:opacity-50"
                 >
                   {deleting === session.id ? "Deleting..." : "Delete Session"}
                 </button>
@@ -327,17 +330,17 @@ export default function GuidanceHistoryPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
-              <span className="text-[10px] font-mono text-zinc-600">
+              <span className="text-[10px] font-mono text-muted">
                 Page {page} of {pagination.totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= (pagination?.totalPages || 1)}
-                className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Next
               </button>

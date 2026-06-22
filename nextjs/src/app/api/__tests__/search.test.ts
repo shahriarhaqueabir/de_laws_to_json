@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
@@ -22,8 +24,8 @@ const mockSupabaseChain = vi.hoisted(() => {
 });
 
 const mockSupabaseResult = vi.hoisted(() => ({
-  data: null as any,
-  error: null as any,
+  data: null as unknown,
+  error: null as unknown,
   count: 0,
 }));
 
@@ -98,14 +100,18 @@ describe("GET /api/search", () => {
     // Grouped by law_key — 2 BGB norms + 1 StGB norm → 2 law-level results
     expect(body.results).toHaveLength(2);
 
-    const bgb = body.results.find((r: any) => r.key === "BGB");
+    const bgb = body.results.find(
+      (r: Record<string, unknown>) => r.key === "BGB",
+    );
     expect(bgb).toBeDefined();
     expect(bgb.normHits).toBe(2);
     expect(bgb.relevantNorms).toHaveLength(2);
     // relevance = Math.round(0.95 * 100) = 95
     expect(bgb.relevance).toBe(95);
 
-    const stgb = body.results.find((r: any) => r.key === "StGB");
+    const stgb = body.results.find(
+      (r: Record<string, unknown>) => r.key === "StGB",
+    );
     expect(stgb).toBeDefined();
     expect(stgb.normHits).toBe(1);
     expect(stgb.relevantNorms).toHaveLength(1);

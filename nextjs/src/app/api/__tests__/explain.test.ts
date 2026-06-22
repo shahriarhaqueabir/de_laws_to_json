@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
@@ -16,8 +18,8 @@ vi.mock("next/headers", () => ({
 }));
 
 const mockSupabaseResult = vi.hoisted(() => ({
-  data: null as any,
-  error: null as any,
+  data: null as unknown,
+  error: null as unknown,
   count: 0,
 }));
 
@@ -41,7 +43,10 @@ vi.mock("@supabase/ssr", () => {
 
 global.fetch = mockFetch;
 
-function makePostRequest(url: string, body: any): NextRequest {
+function makePostRequest(
+  url: string,
+  body: Record<string, unknown>,
+): NextRequest {
   return new NextRequest(new URL(url, "http://localhost:3000"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },

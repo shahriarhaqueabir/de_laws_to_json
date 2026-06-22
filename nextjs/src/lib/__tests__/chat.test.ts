@@ -5,6 +5,7 @@ import {
   LEGAL_DISCLAIMER,
 } from "../chat";
 import type { GenerateParams, ExplainParams } from "../chat";
+import type { CloudProvider } from "../types";
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -221,7 +222,7 @@ describe("generateChatResponse — routing", () => {
   it("throws for unknown provider", async () => {
     await expect(
       generateChatResponse({
-        provider: "unknown" as any,
+        provider: "unknown" as CloudProvider,
         apiKey: "",
         model: "",
         customEndpoint: "",

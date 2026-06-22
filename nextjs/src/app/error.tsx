@@ -25,12 +25,11 @@ export default function RootError({
         </div>
 
         <h1 className="font-serif text-3xl font-bold text-white">
-          System Interruption
+          Unexpected Error
         </h1>
 
         <p className="text-zinc-400 text-sm leading-relaxed">
-          The vault encountered an unexpected error. This has been logged.
-          Please try again, or return to the main vault.
+          An unexpected error occurred. This has been logged. Please try again.
         </p>
 
         {error.digest && (
@@ -51,7 +50,7 @@ export default function RootError({
             href="/"
             className="px-6 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-colors duration-300"
           >
-            Return to Vault
+            Back to Home
           </Link>
         </div>
       </div>

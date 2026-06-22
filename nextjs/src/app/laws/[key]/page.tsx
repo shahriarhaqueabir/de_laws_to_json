@@ -17,7 +17,7 @@ import {
   addBookmark,
   removeBookmark,
 } from "../../../lib/bookmarks-v2";
-import { useToast } from "../../../components/toast";
+import { toast } from "sonner";
 import { useAuth } from "../../../components/auth-context";
 import { useLanguage } from "../../../hooks/useLanguage";
 
@@ -29,8 +29,6 @@ export default function LawDetailPage() {
   const [qdrantError, setQdrantError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
-
   useEffect(() => {
     if (!key) return;
 
@@ -59,7 +57,7 @@ export default function LawDetailPage() {
     if (!data) return;
     if (bookmarked) {
       await removeBookmark(data.key);
-      toast("Archive entry removed", "info");
+      toast.info("Archive entry removed");
     } else {
       await addBookmark({
         law_key: data.key,
@@ -68,12 +66,9 @@ export default function LawDetailPage() {
         added_at: new Date().toISOString().split("T")[0],
       });
       if (!user) {
-        toast(
-          "Bookmark saved locally. Sign in to sync across devices.",
-          "info",
-        );
+        toast.info("Bookmark saved locally. Sign in to sync across devices.");
       } else {
-        toast("Statute archived", "success");
+        toast.success("Statute archived");
       }
     }
   };
@@ -82,7 +77,9 @@ export default function LawDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] animate-pulse">
         <Loader2 className="w-16 h-16 text-accent-gold animate-spin mb-6" />
-        <p className="monumental-type opacity-40">{t("laws.loading")}</p>
+        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-40">
+          {t("laws.loading")}
+        </p>
       </div>
     );
   }
@@ -95,9 +92,9 @@ export default function LawDetailPage() {
         </h2>
         <Link
           href="/"
-          className="text-accent-gold hover:text-accent-gold-bright flex items-center justify-center gap-3 monumental-type"
+          className="text-accent-gold hover:text-accent-gold-bright flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest"
         >
-          <ArrowLeft className="w-4 h-4" /> Return to Vault
+          <ArrowLeft className="w-4 h-4" /> Back
         </Link>
       </div>
     );
@@ -107,9 +104,9 @@ export default function LawDetailPage() {
     <div className="max-w-5xl mx-auto px-6 py-20">
       <Link
         href="/"
-        className="inline-flex items-center gap-3 monumental-type opacity-40 hover:opacity-100 hover:text-accent-gold mb-16 transition-all duration-500"
+        className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-widest opacity-40 hover:opacity-100 hover:text-accent-gold mb-16 transition-all duration-500"
       >
-        <ArrowLeft className="w-4 h-4" /> Return to Vault
+        <ArrowLeft className="w-4 h-4" /> Back
       </Link>
 
       <header className="mb-20">
@@ -117,7 +114,9 @@ export default function LawDetailPage() {
           <div className="px-6 py-2 border border-accent-gold/40 bg-accent-gold/10 text-accent-gold-bright font-black tracking-[0.3em] text-sm">
             {data.key}
           </div>
-          <div className="monumental-type opacity-40">{data.category}</div>
+          <div className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-40">
+            {data.category}
+          </div>
           <button
             onClick={toggleBookmark}
             className={`ml-auto flex items-center gap-3 px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] border transition-all duration-500 active:scale-95 ${
@@ -131,7 +130,7 @@ export default function LawDetailPage() {
             ) : (
               <BookmarkPlus className="w-4 h-4" />
             )}
-            {bookmarked ? "Archived" : "Add to Archives"}
+            {bookmarked ? "Saved" : "Save"}
           </button>
         </div>
 
@@ -146,7 +145,7 @@ export default function LawDetailPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5 border border-white/5 overflow-hidden rounded-sm mt-16">
           <div className="bg-zinc-950/40 p-8">
-            <span className="monumental-type opacity-30 block mb-3 text-[8px]">
+            <span className="text-zinc-500 text-[8px] font-bold uppercase tracking-widest opacity-30 block mb-3">
               Status
             </span>
             <span className="font-bold text-zinc-300 tracking-wide">
@@ -154,7 +153,7 @@ export default function LawDetailPage() {
             </span>
           </div>
           <div className="bg-zinc-950/40 p-8">
-            <span className="monumental-type opacity-30 block mb-3 text-[8px]">
+            <span className="text-zinc-500 text-[8px] font-bold uppercase tracking-widest opacity-30 block mb-3">
               Authority
             </span>
             <span className="font-bold text-zinc-300 tracking-wide">
@@ -162,7 +161,7 @@ export default function LawDetailPage() {
             </span>
           </div>
           <div className="bg-zinc-950/40 p-8">
-            <span className="monumental-type opacity-30 block mb-3 text-[8px]">
+            <span className="text-zinc-500 text-[8px] font-bold uppercase tracking-widest opacity-30 block mb-3">
               Modified
             </span>
             <span className="font-bold text-zinc-300 tracking-wide">
@@ -170,7 +169,7 @@ export default function LawDetailPage() {
             </span>
           </div>
           <div className="bg-zinc-950/40 p-8">
-            <span className="monumental-type opacity-30 block mb-3 text-[8px]">
+            <span className="text-zinc-500 text-[8px] font-bold uppercase tracking-widest opacity-30 block mb-3">
               Density
             </span>
             <span className="font-bold text-zinc-300 tracking-wide">
@@ -182,7 +181,7 @@ export default function LawDetailPage() {
 
       <section>
         <div className="flex items-center gap-6 mb-12">
-          <h2 className="monumental-type opacity-40 shrink-0">
+          <h2 className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-40 shrink-0">
             Statutory Framework
           </h2>
           <div className="h-px w-full bg-white/5" />
@@ -201,7 +200,7 @@ export default function LawDetailPage() {
             ))
           ) : (
             <div className="text-center py-20 glass-panel border-white/5">
-              <p className="text-zinc-600 font-serif italic text-lg opacity-40">
+              <p className="text-muted font-serif italic text-lg opacity-40">
                 {t("laws.norms_empty")}
               </p>
             </div>

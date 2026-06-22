@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const mockQuery = vi.fn();
 
-const MockQdrantClient = vi.fn(function (this: any) {
+const MockQdrantClient = vi.fn(function (this: { query: typeof mockQuery }) {
   this.query = mockQuery;
-}) as any;
+}) as unknown as { new (): { query: typeof mockQuery }; mockClear: () => void };
 
 vi.mock("@qdrant/js-client-rest", () => ({
   QdrantClient: MockQdrantClient,

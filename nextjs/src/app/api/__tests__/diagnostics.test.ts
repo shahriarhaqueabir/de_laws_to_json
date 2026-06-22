@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
 import { NextRequest } from "next/server";
 
@@ -15,8 +17,8 @@ vi.mock("next/headers", () => ({
 }));
 
 const mockSupabaseResult = vi.hoisted(() => ({
-  data: null as any,
-  error: null as any,
+  data: null as unknown,
+  error: null as unknown,
   count: 0,
 }));
 

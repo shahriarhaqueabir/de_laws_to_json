@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Calculator, Info } from "lucide-react";
 import { calculateTotalLegalRisk } from "../lib/fees";
 
@@ -24,7 +24,7 @@ export default function CostRiskCalculator() {
       <div className="space-y-8">
         {/* Input */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b6b6b] mb-4">
+          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted mb-4">
             Dispute Value (Streitwert)
           </label>
           <div className="flex items-center gap-4">
@@ -41,7 +41,7 @@ export default function CostRiskCalculator() {
               €{disputeValue.toLocaleString()}
             </div>
           </div>
-          <p className="text-[10px] text-[#6b6b6b] mt-2 flex items-center gap-1">
+          <p className="text-[10px] text-muted mt-2 flex items-center gap-1">
             <Info className="w-3 h-3" /> This is the total monetary value at
             stake in your dispute.
           </p>
@@ -50,25 +50,25 @@ export default function CostRiskCalculator() {
         {/* Results Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-4 bg-white/5 border border-white/5">
-            <div className="text-[10px] font-bold text-[#6b6b6b] uppercase tracking-widest mb-1">
+            <div className="text-[10px] font-bold text-muted uppercase tracking-widest mb-1">
               Court Fees (GKG)
             </div>
             <div className="text-2xl font-serif text-white">
               €{fees.courtFees.toLocaleString()}
             </div>
-            <div className="text-[9px] text-[#444444] mt-2 uppercase">
+            <div className="text-[9px] text-muted mt-2 uppercase">
               Statutory Anlage 2 GKG
             </div>
           </div>
 
           <div className="p-4 bg-white/5 border border-white/5">
-            <div className="text-[10px] font-bold text-[#6b6b6b] uppercase tracking-widest mb-1">
+            <div className="text-[10px] font-bold text-muted uppercase tracking-widest mb-1">
               Lawyer Fees (RVG)
             </div>
             <div className="text-2xl font-serif text-white">
               €{fees.lawyerFees.toLocaleString()}
             </div>
-            <div className="text-[9px] text-[#444444] mt-2 uppercase">
+            <div className="text-[9px] text-muted mt-2 uppercase">
               Per Instance (1.0 factor)
             </div>
           </div>
@@ -87,8 +87,8 @@ export default function CostRiskCalculator() {
         </div>
 
         {/* Fine Print */}
-        <div className="p-4 bg-[#0d0d0d]/50 border-l-2 border-l-accent-amber">
-          <p className="text-xs text-[#a3a3a3] leading-relaxed">
+        <div className="p-4 bg-tertiary/50 border-l-2 border-l-accent-amber">
+          <p className="text-xs text-secondary leading-relaxed">
             <strong>Calculation Basis:</strong> These figures are statutory
             estimates based on the German Legal Fee Framework (RVG & GKG). Total
             risk includes your own lawyer&apos;s fees, the opposing party&apos;s

@@ -35,7 +35,7 @@ describe("AuthPage", () => {
   it("shows sign-in form with email and password fields", () => {
     render(<AuthPage />);
     expect(
-      screen.getByRole("heading", { name: /Initialize Session/i }),
+      screen.getByRole("heading", { name: /Sign In/i }),
     ).toBeInTheDocument();
     expect(screen.getByPlaceholderText("you@example.com")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("••••••••")).toBeInTheDocument();
@@ -46,7 +46,7 @@ describe("AuthPage", () => {
     render(<AuthPage />);
 
     expect(
-      screen.getByRole("heading", { name: /Initialize Session/i }),
+      screen.getByRole("heading", { name: /Sign In/i }),
     ).toBeInTheDocument();
 
     const toggleBtn = screen.getByText("Create one");
@@ -60,7 +60,7 @@ describe("AuthPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("toggle back to 'Initialize Session' after switching to sign up", async () => {
+  it("toggles back to 'Sign In' after switching to sign up", async () => {
     const user = userEvent.setup();
     render(<AuthPage />);
 
@@ -71,9 +71,9 @@ describe("AuthPage", () => {
     ).toBeInTheDocument();
 
     // Switch back
-    await user.click(screen.getByText("Initialize session"));
+    await user.click(screen.getByText("Sign in"));
     expect(
-      screen.getByRole("heading", { name: /Initialize Session/i }),
+      screen.getByRole("heading", { name: /Sign In/i }),
     ).toBeInTheDocument();
   });
 
@@ -87,9 +87,7 @@ describe("AuthPage", () => {
       "bad@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "wrongpw");
-    await user.click(
-      screen.getByRole("button", { name: /Initialize Session$/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /Sign In$/i }));
 
     await waitFor(() => {
       expect(screen.getByText("Invalid login credentials")).toBeInTheDocument();
@@ -145,9 +143,7 @@ describe("AuthPage", () => {
       "test@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "password");
-    await user.click(
-      screen.getByRole("button", { name: /Initialize Session$/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /Sign In$/i }));
 
     // Button should show spinner
     const buttons = screen.getAllByRole("button");
@@ -169,9 +165,7 @@ describe("AuthPage", () => {
       "test@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "pw");
-    await user.click(
-      screen.getByRole("button", { name: /Initialize Session$/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /Sign In$/i }));
 
     await waitFor(() => {
       expect(screen.getByText("Some error")).toBeInTheDocument();
@@ -194,9 +188,7 @@ describe("AuthPage", () => {
       "valid@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "correctpw");
-    await user.click(
-      screen.getByRole("button", { name: /Initialize Session$/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /Sign In$/i }));
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/");
@@ -227,9 +219,7 @@ describe("AuthPage", () => {
       "valid@test.com",
     );
     await user.type(screen.getByPlaceholderText("••••••••"), "correctpw");
-    await user.click(
-      screen.getByRole("button", { name: /Initialize Session$/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /Sign In$/i }));
 
     await waitFor(() => {
       expect(mockRemoveItem).toHaveBeenCalledWith("glv_guest_chat");

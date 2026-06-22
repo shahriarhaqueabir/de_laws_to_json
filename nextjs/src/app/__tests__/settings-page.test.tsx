@@ -73,7 +73,7 @@ vi.mock("../../components/chat-context", () => ({
       language: "en",
       localBrokerUrl: "http://localhost:9000",
       ollamaModel: "llama3",
-      browserModel: "Xenova/Qwen1.5-0.5B-Chat",
+      browserModel: "HuggingFaceTB/SmolLM2-360M-Instruct",
       apiKey: "",
       provider: "openai",
       model: "gpt-4o-mini",
@@ -120,8 +120,8 @@ describe("SettingsPage", () => {
 
   it("highlights the selected mode", () => {
     render(<SettingsPage />);
-    // In the new UI, the active mode card has "Operational" badge
-    expect(screen.getByText(/operational/i)).toBeInTheDocument();
+    // In the new UI, the active mode card has "Active" badge
+    expect(screen.getByText(/active/i)).toBeInTheDocument();
   });
 
   it("renders the broker URL input when in local mode", () => {

@@ -16,7 +16,7 @@ beforeEach(() => {
 describe("SearchBar", () => {
   it("renders search input with placeholder text", () => {
     render(<SearchBar />);
-    const input = screen.getByPlaceholderText(/SEARCH STATUTE REPOSITORY/i);
+    const input = screen.getByPlaceholderText(/Search German laws/i);
     expect(input).toBeInTheDocument();
     expect(input).toHaveValue("");
   });
@@ -25,7 +25,7 @@ describe("SearchBar", () => {
     const user = userEvent.setup();
     render(<SearchBar />);
 
-    const input = screen.getByPlaceholderText(/SEARCH STATUTE REPOSITORY/i);
+    const input = screen.getByPlaceholderText(/Search German laws/i);
     await user.type(input, "BGB § 823");
     await user.type(input, "{Enter}");
 
@@ -38,7 +38,7 @@ describe("SearchBar", () => {
     const user = userEvent.setup();
     render(<SearchBar />);
 
-    const input = screen.getByPlaceholderText(/SEARCH STATUTE REPOSITORY/i);
+    const input = screen.getByPlaceholderText(/Search German laws/i);
     // Submit without typing anything
     await user.type(input, "{Enter}");
 
@@ -49,7 +49,7 @@ describe("SearchBar", () => {
     const user = userEvent.setup();
     render(<SearchBar />);
 
-    const input = screen.getByPlaceholderText(/SEARCH STATUTE REPOSITORY/i);
+    const input = screen.getByPlaceholderText(/Search German laws/i);
     await user.type(input, "Mietrecht");
 
     expect(input).toHaveValue("Mietrecht");
@@ -57,7 +57,7 @@ describe("SearchBar", () => {
 
   it("renders with initial value", () => {
     render(<SearchBar initialValue="StGB" />);
-    const input = screen.getByPlaceholderText(/SEARCH STATUTE REPOSITORY/i);
+    const input = screen.getByPlaceholderText(/Search German laws/i);
     expect(input).toHaveValue("StGB");
   });
 });

@@ -1,18 +1,24 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 
-let mockWorkerOnmessage: ((event: any) => void) | null = null;
+let mockWorkerOnmessage:
+  | ((event: { data: Record<string, unknown> }) => void)
+  | null = null;
 const mockPostMessage = vi.fn();
 
 // Replace Worker on globalThis directly (more reliable than vi.stubGlobal in jsdom)
 class MockWorker {
   postMessage = mockPostMessage;
-  private _onmessage: ((event: any) => void) | null = null;
+  private _onmessage:
+    | ((event: { data: Record<string, unknown> }) => void)
+    | null = null;
 
-  constructor(_url: string | URL, _options?: any) {
+  constructor(_url: string | URL, _options?: Record<string, unknown>) {
     // Constructor called
   }
 
-  set onmessage(fn: ((event: any) => void) | null) {
+  set onmessage(
+    fn: ((event: { data: Record<string, unknown> }) => void) | null,
+  ) {
     mockWorkerOnmessage = fn;
     this._onmessage = fn;
   }

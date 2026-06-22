@@ -72,7 +72,7 @@ describe("SearchPage", () => {
   it("renders SearchBar component", () => {
     renderWithProviders(<SearchPage />);
     expect(
-      screen.getByPlaceholderText(/SEARCH STATUTE REPOSITORY/i),
+      screen.getByPlaceholderText(/Search German laws/i),
     ).toBeInTheDocument();
   });
 
@@ -84,7 +84,7 @@ describe("SearchPage", () => {
     renderWithProviders(<SearchPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("Scanning Archives...")).toBeInTheDocument();
+      expect(screen.getByText("Searching...")).toBeInTheDocument();
     });
   });
 
@@ -114,7 +114,7 @@ describe("SearchPage", () => {
     renderWithProviders(<SearchPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Operational Error/)).toBeInTheDocument();
+      expect(screen.getByText(/Error/)).toBeInTheDocument();
     });
 
     expect(

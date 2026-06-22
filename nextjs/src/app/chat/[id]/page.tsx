@@ -268,7 +268,7 @@ export default function ConversationPage() {
               href="/settings"
               className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500 hover:text-accent-gold transition-colors duration-300 flex items-center gap-2"
             >
-              Terminal Config <ArrowRight className="w-3 h-3" />
+              Settings <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
         </div>
@@ -281,9 +281,7 @@ export default function ConversationPage() {
                 <div className="w-24 h-24 flex items-center justify-center mx-auto mb-10 border border-accent-gold/20 bg-accent-gold/5">
                   <MessageSquare className="w-10 h-10 text-accent-gold/40" />
                 </div>
-                <p className="monumental-type opacity-40 mb-4">
-                  Continue Your Consultation
-                </p>
+                <p className="monumental-type opacity-40 mb-4">Continue</p>
                 <h2 className="text-3xl font-serif font-bold text-white mb-6 tracking-tight">
                   {conversation.title}
                 </h2>
@@ -304,7 +302,11 @@ export default function ConversationPage() {
             ))}
 
             {sendMutation.isPending && (
-              <div className="flex justify-start">
+              <div
+                className="flex justify-start"
+                role="status"
+                aria-live="polite"
+              >
                 <div className="glass-panel border-accent-gold/20 px-6 py-4 flex items-center gap-4">
                   <div className="relative w-5 h-5">
                     <Loader2 className="absolute inset-0 w-5 h-5 text-accent-gold animate-spin" />
@@ -331,25 +333,28 @@ export default function ConversationPage() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              aria-label="Chat message"
               placeholder={
                 mode === "basic"
                   ? "SEARCH STATUTE CODE..."
                   : "DESCRIBE SCENARIO FOR ANALYSIS..."
               }
-              className="w-full bg-white/5 border border-white/10 px-8 py-5 pr-20 focus:outline-none focus:border-accent-gold/40 focus:bg-white/[0.07] text-white placeholder:text-zinc-600 transition-all duration-500 font-bold tracking-wide"
+              className="w-full bg-white/5 border border-white/10 px-8 py-5 pr-20 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/[0.07] text-white placeholder:text-zinc-400 transition-all duration-500 font-bold tracking-wide"
               disabled={sendMutation.isPending}
             />
             <button
               type="submit"
               disabled={sendMutation.isPending || !input.trim()}
               className="absolute right-2 top-2 bottom-2 aspect-square bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright disabled:opacity-20 transition-all duration-300 flex items-center justify-center group/btn active:scale-95 border border-accent-gold/10"
+              aria-label="Send message"
             >
               <Send className="w-5 h-5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
             </button>
           </form>
 
           <p className="text-[8px] text-center text-zinc-700 mt-5 uppercase tracking-[0.5em] font-bold">
-            The Vault provides statutory analysis. This is not legally binding.
+            AI-generated analysis for informational purposes. Not legally
+            binding.
           </p>
         </div>
       </main>

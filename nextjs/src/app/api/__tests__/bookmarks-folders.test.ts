@@ -6,32 +6,32 @@ import { NextRequest } from "next/server";
 const mockUser = { id: "user-123", email: "test@example.com" };
 
 // Simple mock that creates fresh query builders
+interface MockResponse {
+  data: unknown;
+  error: null | { message: string };
+}
+
 function createMockChain(data: unknown) {
+  const response: MockResponse = { data, error: null };
   return vi.fn(() => ({
     select: vi.fn(() => ({
       eq: vi.fn(() => ({
-        order: vi.fn(() => Promise.resolve({ data, error: null })),
+        order: vi.fn(() => Promise.resolve(response)),
         maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
-        single: vi.fn(() =>
-          Promise.resolve({ data: data as any, error: null }),
-        ),
+        single: vi.fn(() => Promise.resolve(response)),
       })),
-      single: vi.fn(() => Promise.resolve({ data: data as any, error: null })),
+      single: vi.fn(() => Promise.resolve(response)),
     })),
     insert: vi.fn(() => ({
       select: vi.fn(() => ({
-        single: vi.fn(() =>
-          Promise.resolve({ data: data as any, error: null }),
-        ),
+        single: vi.fn(() => Promise.resolve(response)),
       })),
     })),
     update: vi.fn(() => ({
       eq: vi.fn(() => ({
         eq: vi.fn(() => ({
           select: vi.fn(() => ({
-            single: vi.fn(() =>
-              Promise.resolve({ data: data as any, error: null }),
-            ),
+            single: vi.fn(() => Promise.resolve(response)),
           })),
         })),
       })),

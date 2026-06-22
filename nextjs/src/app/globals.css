@@ -31,10 +31,20 @@
 @theme inline {
   --color-background: var(--bg-primary);
   --color-foreground: var(--text-primary);
+  --color-secondary: var(--bg-secondary);
+  --color-tertiary: var(--bg-tertiary);
+  --color-elevated: var(--bg-elevated);
   --color-accent-gold: var(--accent-gold);
   --color-accent-gold-bright: var(--accent-gold-bright);
+  --color-accent-cobalt: #3b82f6;
+  --color-accent-amber: #f59e0b;
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border-glass: var(--border-glass);
+  --color-border-metal: var(--border-metal);
+  --color-border-gold: var(--border-gold);
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-serif: var(--font-geist-sans), serif;
+  --font-serif: var(--font-serif-playfair), serif;
 }
 
 body {
@@ -144,20 +154,6 @@ h3 {
   color: var(--accent-gold);
 }
 
-/* Typography refinements */
-h1,
-h2,
-h3 {
-  font-family: var(--font-serif);
-  letter-spacing: -0.02em;
-}
-
-.legal-text {
-  line-height: 1.7;
-  font-size: 1.05rem;
-  letter-spacing: 0.01em;
-}
-
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -180,6 +176,36 @@ h3 {
   color: white;
 }
 
+/* Slide-in-left animation (mobile drawer) */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.animate-slide-in-left {
+  animation: slide-in-left 0.25s ease-out;
+}
+
+/* Fade-in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
 /* Toast animation */
 @keyframes slide-in-from-right {
   from {
@@ -197,7 +223,7 @@ h3 {
 
 /* Focus ring */
 :focus-visible {
-  outline: 1px solid var(--accent-primary);
+  outline: 1px solid var(--accent-gold-bright);
   outline-offset: 2px;
 }
 

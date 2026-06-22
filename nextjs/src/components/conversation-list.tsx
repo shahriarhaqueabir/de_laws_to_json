@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ky from "ky";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "../components/auth-context";
+import Link from "next/link";
 import { MessageSquare, Plus, X, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -118,13 +119,13 @@ export default function ConversationList({
             <X className="w-4 h-4" />
           </button>
         </div>
-        <a
+        <Link
           href="/chat"
           className="flex items-center gap-2 w-full px-3 py-2 text-xs font-bold uppercase tracking-wider text-accent-gold-bright bg-accent-gold/10 border border-accent-gold/20 hover:bg-accent-gold/20 transition-all duration-300"
         >
           <Plus className="w-3.5 h-3.5" />
           New Chat
-        </a>
+        </Link>
       </div>
 
       {/* Conversation list */}

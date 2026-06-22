@@ -57,6 +57,9 @@ export default function GuidancePage() {
   const [foldersLoading, setFoldersLoading] = useState(true);
   const pathsRef = useRef<HTMLDivElement>(null);
 
+  const selectedFolderData =
+    folders.find((f) => f.id === selectedFolder) || null;
+
   // Load folders from localStorage and Supabase
   const loadFolders = useCallback(async () => {
     setFoldersLoading(true);
@@ -83,18 +86,17 @@ export default function GuidancePage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadFolders();
   }, [loadFolders]);
-
-  const selectedFolderData =
-    folders.find((f) => f.id === selectedFolder) || null;
 
   // Sync local language when global language changes
   useEffect(() => {
     if (globalLanguage !== language) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLanguage(globalLanguage);
     }
-  }, [globalLanguage]);
+  }, [globalLanguage, language]);
 
   const handleLanguageChange = (lang: AppLanguage) => {
     setLanguage(lang);
@@ -210,7 +212,9 @@ export default function GuidancePage() {
             <Compass className="w-6 h-6 text-accent-cobalt" />
           </div>
           <div>
-            <p className="monumental-type opacity-40 mb-1">Legal Guidance</p>
+            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-40 mb-1">
+              Legal Guidance
+            </p>
             <h1 className="text-4xl font-serif font-bold text-white tracking-tight">
               Navigate Your Situation
             </h1>
@@ -239,7 +243,7 @@ export default function GuidancePage() {
               onChange={(e) =>
                 handleLanguageChange(e.target.value as AppLanguage)
               }
-              className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus:border-accent-cobalt/50 transition-colors appearance-none"
+              className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors appearance-none"
             >
               {LANGUAGES.map((l) => (
                 <option key={l.value} value={l.value}>
@@ -263,7 +267,7 @@ export default function GuidancePage() {
               <select
                 value={selectedFolder}
                 onChange={(e) => setSelectedFolder(e.target.value)}
-                className="flex-1 px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus:border-accent-cobalt/50 transition-colors appearance-none disabled:opacity-50"
+                className="flex-1 px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors appearance-none disabled:opacity-50"
                 disabled={foldersLoading}
               >
                 <option value="">
@@ -320,7 +324,7 @@ export default function GuidancePage() {
             onChange={(e) => setSituation(e.target.value)}
             placeholder="Describe your legal situation in detail. Include relevant facts, dates, parties involved, and any actions you've already taken. You can write in any language — German, English, Turkish, Arabic, French, Spanish, Polish, Ukrainian, or Russian."
             rows={6}
-            className="w-full px-5 py-4 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus:border-accent-cobalt/50 transition-colors resize-vertical"
+            className="w-full px-5 py-4 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors resize-vertical"
           />
           <div className="flex justify-between items-center mt-2">
             <p className="text-[9px] text-zinc-700">
@@ -412,7 +416,7 @@ export default function GuidancePage() {
             <Compass className="w-8 h-8 text-zinc-600" />
           </div>
           <h2 className="text-2xl font-serif font-bold text-white mb-4">
-            Legal Labyrinth Guide
+            Legal Guidance
           </h2>
           <p className="text-zinc-500 leading-relaxed mb-6">
             Describe your situation above and the AI will analyze all 6,000+

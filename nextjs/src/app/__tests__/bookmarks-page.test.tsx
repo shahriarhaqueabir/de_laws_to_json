@@ -23,7 +23,9 @@ vi.mock("../../components/auth-context", () => ({
 
 vi.mock("../../components/toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
-  ToastProvider: ({ children }: any) => <div>{children}</div>,
+  ToastProvider: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock("../../lib/bookmarks", () => ({
@@ -68,16 +70,16 @@ beforeEach(() => {
 
 describe("BookmarksPage", () => {
   it("empty state shows 'Archives Empty' message", async () => {
-    (getBookmarks as any).mockReturnValue([]);
+    vi.mocked(getBookmarks).mockReturnValue([]);
     render(<BookmarksPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Archives Empty/)).toBeInTheDocument();
+      expect(screen.getByText(/No Saved Laws/)).toBeInTheDocument();
     });
   });
 
   it("populated list shows bookmarks with law key and title", async () => {
-    (getBookmarks as any).mockReturnValue(mockBookmarks);
+    vi.mocked(getBookmarks).mockReturnValue(mockBookmarks);
     render(<BookmarksPage />);
 
     // Wait for the Ungrouped section heading
@@ -92,7 +94,7 @@ describe("BookmarksPage", () => {
   });
 
   it("displays bookmarks grouped under Ungrouped section", async () => {
-    (getBookmarks as any).mockReturnValue(mockBookmarks);
+    vi.mocked(getBookmarks).mockReturnValue(mockBookmarks);
     render(<BookmarksPage />);
 
     await waitFor(() => {
@@ -103,7 +105,7 @@ describe("BookmarksPage", () => {
 
   it("remove button removes a bookmark from the list", async () => {
     const user = userEvent.setup();
-    (getBookmarks as any).mockReturnValue(mockBookmarks);
+    vi.mocked(getBookmarks).mockReturnValue(mockBookmarks);
 
     render(<BookmarksPage />);
 
@@ -113,7 +115,7 @@ describe("BookmarksPage", () => {
     });
 
     // Find the first remove button (aria-label based)
-    const removeButtons = screen.getAllByLabelText("Remove from Archives");
+    const removeButtons = screen.getAllByLabelText("Remove bookmark");
     expect(removeButtons.length).toBe(2);
 
     // Click first one
@@ -123,7 +125,7 @@ describe("BookmarksPage", () => {
   });
 
   it("law links navigate to /laws/{law_key}", async () => {
-    (getBookmarks as any).mockReturnValue(mockBookmarks);
+    vi.mocked(getBookmarks).mockReturnValue(mockBookmarks);
     render(<BookmarksPage />);
 
     await waitFor(() => {
@@ -133,7 +135,7 @@ describe("BookmarksPage", () => {
   });
 
   it("shows New Folder button when empty", async () => {
-    (getBookmarks as any).mockReturnValue([]);
+    vi.mocked(getBookmarks).mockReturnValue([]);
     render(<BookmarksPage />);
 
     await waitFor(() => {
@@ -142,7 +144,7 @@ describe("BookmarksPage", () => {
   });
 
   it("shows entries and folders count", async () => {
-    (getBookmarks as any).mockReturnValue(mockBookmarks);
+    vi.mocked(getBookmarks).mockReturnValue(mockBookmarks);
     render(<BookmarksPage />);
 
     await waitFor(() => {

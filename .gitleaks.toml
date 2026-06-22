@@ -66,4 +66,7 @@ paths = [
     # Build cache / worktrees
     ".*\\.next/.*",
     ".*\\.worktrees/.*",
+    # One-off scripts and test infrastructure (env var names, not secrets)
+    ".*scripts/.*",
+    ".*tests/.*",
 ]

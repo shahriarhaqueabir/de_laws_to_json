@@ -7,6 +7,7 @@ import { generateDocument } from "@/lib/guidance";
 import { decryptApiKey } from "@/lib/encryption";
 import type { CloudProvider } from "@/lib/types";
 import type { FolderContext } from "@/lib/guidance";
+import type { BookmarkFolder } from "@/lib/bookmarks-v2";
 
 // ── Validation ─────────────────────────────────────────────────────────────
 
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       parsed.data;
 
     // 1. Get the folder (from Supabase or localStorage)
-    let folderData: any = null;
+    let folderData: BookmarkFolder | null = null;
 
     if (user) {
       const { data: folder } = await supabase

@@ -147,7 +147,7 @@ describe("BROWSER_MODELS", () => {
     expect(BROWSER_MODELS.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("first model contains Xenova in id", () => {
-    expect(BROWSER_MODELS[0].id).toContain("Xenova");
+  it("first model contains HuggingFaceTB in id", () => {
+    expect(BROWSER_MODELS[0].id).toContain("HuggingFaceTB");
   });
 });

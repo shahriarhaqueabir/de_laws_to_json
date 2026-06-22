@@ -91,35 +91,39 @@ export default function BookmarksPage() {
   const [loading, setLoading] = useState(true);
 
   // Load data from localStorage and sync Supabase
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Try to sync from Supabase if signed in
-      await syncBookmarksToSupabase();
-
-      const bms = getBookmarks() as BookmarkV2[];
-      const flds = getFolders();
-      setBookmarks(bms);
-      setFolders(flds);
-
-      // Auto-expand folders that have bookmarks + ungrouped section
-      const folderIds = flds.map((f) => f.id);
-      const hasBookmarks = new Set(
-        bms.filter((b) => b.folder_id).map((b) => b.folder_id),
-      );
-      const toExpand = new Set(folderIds.filter((id) => hasBookmarks.has(id)));
-      // Auto-expand ungroupped if there are bookmarks without folders
-      const hasUngrouped = bms.some((b) => !b.folder_id);
-      if (hasUngrouped) toExpand.add("ungrouped");
-      setExpandedFolders(toExpand);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let cancelled = false;
+    (async () => {
+      try {
+        // Try to sync from Supabase if signed in
+        await syncBookmarksToSupabase();
+
+        if (cancelled) return;
+        const bms = getBookmarks() as BookmarkV2[];
+        const flds = getFolders();
+        setBookmarks(bms);
+        setFolders(flds);
+
+        // Auto-expand folders that have bookmarks + ungrouped section
+        const folderIds = flds.map((f) => f.id);
+        const hasBookmarks = new Set(
+          bms.filter((b) => b.folder_id).map((b) => b.folder_id),
+        );
+        const toExpand = new Set(
+          folderIds.filter((id) => hasBookmarks.has(id)),
+        );
+        // Auto-expand ungroupped if there are bookmarks without folders
+        const hasUngrouped = bms.some((b) => !b.folder_id);
+        if (hasUngrouped) toExpand.add("ungrouped");
+        setExpandedFolders(toExpand);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -214,19 +218,18 @@ export default function BookmarksPage() {
         <div className="w-20 h-20 border border-white/5 bg-white/[0.02] flex items-center justify-center mx-auto mb-10 group">
           <Bookmark className="w-8 h-8 text-zinc-600 group-hover:text-accent-gold transition-colors duration-500" />
         </div>
-        <p className="monumental-type opacity-40 mb-4">Registry Inactive</p>
+        <p className="monumental-type opacity-40 mb-4">No Bookmarks</p>
         <h1 className="text-5xl font-serif font-bold text-white mb-8 tracking-tight">
-          Archives Empty
+          No Saved Laws
         </h1>
         <p className="text-xl text-zinc-500 mb-16 max-w-xl mx-auto legal-text italic font-serif">
-          No statutory sections have been prioritized for the permanent registry
-          yet.
+          Bookmark laws to save them here.
         </p>
 
         <div className="glass-panel p-16 border-white/5 max-w-2xl mx-auto">
           <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px] mb-6">
-            Browse the vault and use the archive trigger to populate this
-            registry. Create folders to organize your research.
+            Browse laws and bookmark them to save them here. Create folders to
+            organize your research.
           </p>
           <button
             onClick={() => setShowFolderModal(true)}
@@ -249,9 +252,9 @@ export default function BookmarksPage() {
             <Bookmark className="w-6 h-6 text-accent-gold" />
           </div>
           <div>
-            <p className="monumental-type opacity-40 mb-1">Archived Statutes</p>
+            <p className="monumental-type opacity-40 mb-1">Saved Statutes</p>
             <h1 className="text-4xl font-serif font-bold text-white tracking-tight">
-              Personal Registry
+              My Bookmarks
             </h1>
           </div>
         </div>
@@ -424,8 +427,8 @@ export default function BookmarksPage() {
                       <button
                         onClick={() => handleRemoveBookmark(bm)}
                         className="p-2 text-zinc-800 hover:text-red-900 transition-all duration-500 active:scale-90 group-hover/item:text-zinc-600 flex-shrink-0"
-                        aria-label="Remove from Archives"
-                        title="Remove from Archives"
+                        aria-label="Remove bookmark"
+                        title="Remove bookmark"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

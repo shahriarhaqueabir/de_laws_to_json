@@ -15,7 +15,7 @@ const modes = [
     icon: Brain,
     label: "Browser AI",
     description:
-      "AI runs entirely in your browser via Qwen. Fully private, no server calls. ~1GB download.",
+      "AI runs entirely in your browser via SmolLM2. Fully private, no server calls. ~800MB download.",
     href: "/chat",
   },
   {
@@ -60,10 +60,10 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto px-4 py-24 lg:py-40 relative z-10">
         <header className="text-center mb-24">
-          <p className="monumental-type mb-6 animate-fade-in text-accent-gold/60">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-600 mb-6 animate-fade-in">
             &ldquo;{quote.text}&rdquo; &mdash; {quote.author}
           </p>
-          <p className="monumental-type mb-6 animate-fade-in">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-600 mb-6 animate-fade-in">
             Bundesrepublik Deutschland
           </p>
           <h1 className="font-serif font-bold text-white text-7xl md:text-8xl mb-8 tracking-tighter leading-[0.9]">
@@ -71,8 +71,7 @@ export default function Home() {
           </h1>
           <div className="h-px w-24 bg-gradient-to-r from-transparent via-accent-gold/50 to-transparent mx-auto mb-10" />
           <p className="text-xl text-zinc-400 max-w-2xl mx-auto legal-text italic font-serif">
-            A precise repository of over 6,000 federal statutes. Powered by
-            authoritative intelligence and sovereign privacy.
+            A comprehensive repository of over 6,000 German federal statutes.
           </p>
         </header>
 
@@ -103,7 +102,7 @@ export default function Home() {
                   </div>
                   <div className="mt-8">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 group-hover:text-accent-gold transition-colors flex items-center gap-2">
-                      Initialize <ArrowRight className="w-3 h-3" />
+                      Get Started <ArrowRight className="w-3 h-3" />
                     </span>
                   </div>
                 </Link>
@@ -115,7 +114,7 @@ export default function Home() {
         <div className="mt-40">
           <div className="flex items-center gap-4 mb-12">
             <h2 className="text-2xl font-serif font-bold text-white tracking-tight shrink-0">
-              Jurisdiction Domains
+              Categories
             </h2>
             <div className="h-px w-full bg-zinc-800" />
           </div>
@@ -125,7 +124,7 @@ export default function Home() {
         </div>
 
         <footer className="mt-48 pb-20 text-center">
-          <div className="monumental-type opacity-20 mb-4">
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-700 opacity-20 mb-4">
             Sub lege libertas
           </div>
           <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-zinc-700">

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
   describe,
   it,
@@ -8,16 +10,23 @@ import {
   afterAll,
 } from "vitest";
 
+const mockPipeline = vi.fn();
 const mockTranslator = vi.fn();
 const { progressCallbackRef } = vi.hoisted(() => ({
-  progressCallbackRef: { current: null as ((x: any) => void) | null },
+  progressCallbackRef: {
+    current: null as ((x: Record<string, unknown>) => void) | null,
+  },
 }));
 
 vi.mock("@huggingface/transformers", () => ({
-  pipeline: vi.fn((_task: string, _model: string, options: any) => {
-    progressCallbackRef.current = options.progress_callback ?? null;
-    return mockTranslator;
-  }),
+  pipeline: vi.fn(
+    (_task: string, _model: string, options: Record<string, unknown>) => {
+      progressCallbackRef.current =
+        (options.progress_callback as (x: Record<string, unknown>) => void) ??
+        null;
+      return mockTranslator;
+    },
+  ),
   env: { allowLocalModels: false },
 }));
 
@@ -28,9 +37,11 @@ describe("translate.worker", () => {
   beforeAll(async () => {
     vi.stubGlobal("self", {
       postMessage,
-      addEventListener: vi.fn((_type: string, handler: any) => {
-        messageHandler = handler;
-      }),
+      addEventListener: vi.fn(
+        (_type: string, handler: (event: MessageEvent) => void) => {
+          messageHandler = handler;
+        },
+      ),
     });
 
     await import("../translate.worker");

@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import GuidancePathsDisplay from "@/components/guidance-paths-display";
 import type { GuidancePath } from "@/lib/guidance";
-import { useToast } from "@/components/toast";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -43,7 +42,6 @@ interface SessionResponse {
 export default function SessionDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const { toast } = useToast();
   const [data, setData] = useState<SessionResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +98,7 @@ export default function SessionDetailPage() {
         <Link
           href="/guidance/history"
           className="p-2 text-zinc-600 hover:text-white transition-colors"
+          aria-label="Back to history"
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
@@ -107,7 +106,9 @@ export default function SessionDetailPage() {
           <Scale className="w-6 h-6 text-accent-gold" />
         </div>
         <div>
-          <p className="monumental-type opacity-40 mb-1">Case Analysis</p>
+          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-40 mb-1">
+            Case Analysis
+          </p>
           <h1 className="text-3xl font-serif font-bold text-white tracking-tight">
             Session Details
           </h1>
@@ -152,7 +153,9 @@ export default function SessionDetailPage() {
                 <Clock className="w-3 h-3" />
                 {formatDate(data.session.created_at)}
               </span>
-              <span className="monumental-type">{data.session.category}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                {data.session.category}
+              </span>
               {data.session.dispute_value > 0 && (
                 <span className="flex items-center gap-1.5">
                   <Euro className="w-3 h-3" />

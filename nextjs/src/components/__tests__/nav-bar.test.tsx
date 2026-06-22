@@ -46,27 +46,24 @@ const renderWithContext = (ui: React.ReactElement) => {
 };
 
 describe("NavBar", () => {
-  it("renders navigation links: Vault, Consult, Archives", () => {
+  it("renders navigation links", () => {
     renderWithContext(<NavBar />);
     // Use getAllByText and check for at least one visible link
-    const vaultLinks = screen.getAllByText("Vault");
-    expect(vaultLinks.length).toBeGreaterThan(0);
-    expect(screen.getByText("Consult")).toBeInTheDocument();
-    expect(screen.getByText("Archives")).toBeInTheDocument();
+    expect(screen.getByText("Search")).toBeInTheDocument();
+    expect(screen.getByText("Chat")).toBeInTheDocument();
+    expect(screen.getByText("Bookmarks")).toBeInTheDocument();
   });
 
   it("active link has accent styling", () => {
     renderWithContext(<NavBar />);
-    // There are two "Vault" links: one brand link (group) and one nav item
-    const navVaultLink = screen.getAllByText("Vault").find(
-      (el) => el.closest("a")?.className.includes("px-3"), // Nav items have px-3 padding
-    )!;
-    expect(navVaultLink.closest("a")?.className).toContain("text-accent-gold");
+    // Find the Search nav link
+    const navSearchLink = screen.getByText("Search").closest("a");
+    expect(navSearchLink?.className).toContain("text-accent-gold");
   });
 
   it("shows sign-in link when not authenticated", () => {
     renderWithContext(<NavBar />);
-    expect(screen.getByText("Initialize Session")).toBeInTheDocument();
+    expect(screen.getByText("Sign In")).toBeInTheDocument();
   });
 
   it("shows user email and sign-out when authenticated", async () => {
@@ -95,7 +92,7 @@ describe("NavBar", () => {
     const modeBtn = screen.getByText("Basic Search").closest("button")!;
     await user.click(modeBtn);
 
-    expect(screen.getByText("Operational Mode")).toBeInTheDocument();
+    expect(screen.getByText("Mode")).toBeInTheDocument();
     expect(screen.getByText("Local AI")).toBeInTheDocument();
     expect(screen.getByText("Cloud AI")).toBeInTheDocument();
     expect(screen.getByText("Browser AI")).toBeInTheDocument();
@@ -103,8 +100,7 @@ describe("NavBar", () => {
 
   it("renders correctly in different viewports", () => {
     renderWithContext(<NavBar />);
-    const vaultLinks = screen.getAllByText("Vault");
-    expect(vaultLinks.length).toBeGreaterThan(0);
+    expect(screen.getByText("Search")).toBeInTheDocument();
   });
 
   it("sign-out button is absent when not authenticated", () => {
@@ -121,7 +117,7 @@ describe("NavBar", () => {
 
   it("settings link points to /auth when not authenticated", () => {
     renderWithContext(<NavBar />);
-    const authLink = screen.getByRole("link", { name: /Initialize Session/i });
+    const authLink = screen.getByRole("link", { name: /Sign In/i });
     expect(authLink).toHaveAttribute("href", "/auth");
   });
 });

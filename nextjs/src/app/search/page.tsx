@@ -38,7 +38,7 @@ function SearchResults() {
     };
 
     fetchResults();
-  }, [query, category, language]);
+  }, [query, category, language, t]);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-20">
@@ -47,21 +47,27 @@ function SearchResults() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 animate-pulse">
+        <div
+          className="flex flex-col items-center justify-center py-32 animate-pulse"
+          role="status"
+          aria-live="polite"
+        >
           <div className="relative w-12 h-12 mb-8">
             <Loader2 className="absolute inset-0 w-12 h-12 text-accent-gold animate-spin" />
             <Loader2 className="absolute inset-0 w-12 h-12 text-accent-gold animate-ping opacity-20" />
           </div>
-          <p className="monumental-type opacity-60">{t("search.loading")}</p>
+          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-60">
+            {t("search.loading")}
+          </p>
         </div>
       ) : error ? (
         <div className="p-8 bg-red-950/20 border border-red-900/30 text-red-400 font-bold uppercase tracking-widest text-[10px] text-center">
-          ⚠️ Operational Error: {error}
+          ⚠️ Error: {error}
         </div>
       ) : results.length > 0 ? (
         <div className="space-y-12">
           <div className="flex items-center gap-4 mb-8">
-            <h2 className="monumental-type opacity-50 shrink-0">
+            <h2 className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-50 shrink-0">
               {t("search.results_count", { n: results.length })}
             </h2>
             <div className="h-px w-full bg-zinc-800/50" />
@@ -79,7 +85,9 @@ function SearchResults() {
       ) : (
         <div className="text-center py-32 opacity-20">
           <Scale className="w-16 h-16 mx-auto mb-6 text-accent-gold" />
-          <p className="monumental-type">{t("search.awaiting")}</p>
+          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-40">
+            {t("search.awaiting")}
+          </p>
         </div>
       )}
     </div>
@@ -91,8 +99,8 @@ export default function SearchPage() {
     <main className="min-h-screen bg-transparent">
       <Suspense
         fallback={
-          <div className="py-40 text-center monumental-type animate-pulse opacity-40">
-            Initializing Search Environment...
+          <div className="py-40 text-center text-zinc-500 text-xs font-bold uppercase tracking-widest animate-pulse opacity-40">
+            Loading...
           </div>
         }
       >

@@ -31,7 +31,7 @@ export function ChatMessageBubble({
             <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-accent-gold/30" />
             <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-accent-gold/30" />
             <div className="monumental-type opacity-20 mb-6 text-[8px]">
-              VAULT RESPONSE // REF {String(index).padStart(4, "0")}
+              Response #{String(index).padStart(2, "0")}
             </div>
           </>
         )}
