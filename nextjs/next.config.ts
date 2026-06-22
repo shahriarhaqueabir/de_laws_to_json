@@ -17,13 +17,26 @@ const nextConfig: NextConfig = {
             value: "credentialless",
           },
           {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Permissions-Policy",
+            value:
+              "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+          },
+          {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self'",
+              "script-src 'self' 'wasm-unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.qdrant.io",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.qdrant.io https://huggingface.co",
               "worker-src 'self' blob:",
               "frame-ancestors 'none'",
               "base-uri 'self'",
