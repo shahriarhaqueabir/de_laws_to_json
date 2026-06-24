@@ -61,7 +61,7 @@ function SearchResults() {
           </p>
         </div>
       ) : error ? (
-        <div className="p-8 bg-red-950/20 border border-red-900/30 text-red-400 font-bold uppercase tracking-widest text-[10px] text-center">
+        <div className="p-8 bg-red-950/20 border border-red-900/30 text-red-400 font-bold uppercase tracking-widest text-xs text-center">
           ⚠️ Error: {error}
         </div>
       ) : results.length > 0 ? (

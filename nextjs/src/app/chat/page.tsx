@@ -25,6 +25,7 @@ import {
   AppLanguage,
   LANGUAGE_NAMES,
 } from "../../lib/types";
+import { useLanguage } from "../../hooks/useLanguage";
 
 interface Message {
   role: "user" | "assistant";
@@ -44,12 +45,12 @@ interface ChatRequestBody {
 
 const MODE_META: Record<
   ChatMode,
-  { icon: typeof Plug; color: string; label: string }
+  { icon: typeof Plug; color: string; tKey: string }
 > = {
-  local: { icon: Plug, color: "text-[#888888]", label: "Local AI" },
-  cloud: { icon: Cloud, color: "text-[#888888]", label: "Cloud AI" },
-  browser: { icon: Brain, color: "text-[#888888]", label: "Browser AI" },
-  basic: { icon: FileText, color: "text-[#888888]", label: "Basic Search" },
+  local: { icon: Plug, color: "text-[#888888]", tKey: "chat.mode_local" },
+  cloud: { icon: Cloud, color: "text-[#888888]", tKey: "chat.mode_cloud" },
+  browser: { icon: Brain, color: "text-[#888888]", tKey: "chat.mode_browser" },
+  basic: { icon: FileText, color: "text-[#888888]", tKey: "chat.mode_basic" },
 };
 
 const LIMITATION_BANNERS: Record<ChatMode, string | null> = {
@@ -64,6 +65,7 @@ const LIMITATION_BANNERS: Record<ChatMode, string | null> = {
 function ChatContent() {
   const { settings, mode } = useChat();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q");
 
@@ -467,17 +469,17 @@ function ChatContent() {
               <Scale className="w-6 h-6 text-accent-gold-bright" />
               <div className="flex flex-col">
                 <h1 className="font-serif font-bold text-2xl text-white leading-tight tracking-tight">
-                  Legal Advisor
+                  {t("chat.title")}
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
                   <span
-                    className={`flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 bg-accent-gold/10 text-accent-gold border border-accent-gold/20`}
+                    className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] px-2 py-0.5 bg-accent-gold/10 text-accent-gold-body border border-accent-gold/20`}
                   >
                     <ModeIcon className="w-2.5 h-2.5" />
-                    {modeMeta.label}
+                    {t(modeMeta.tKey)}
                   </span>
                   {mode === "local" && brokerAvailable === true && (
-                    <span className="flex items-center gap-1 text-[9px] font-bold text-accent-gold-bright uppercase tracking-widest">
+                    <span className="flex items-center gap-1 text-xs font-bold text-accent-gold-bright uppercase tracking-widest">
                       <div className="w-1 h-1 rounded-full bg-accent-gold-bright animate-pulse" />
                       Online
                     </span>
@@ -487,15 +489,15 @@ function ChatContent() {
             </div>
             <Link
               href="/settings"
-              className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500 hover:text-accent-gold transition-colors duration-300 flex items-center gap-2"
+              className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500 hover:text-accent-gold transition-colors duration-300 flex items-center gap-2"
             >
-              Settings <ArrowRight className="w-3 h-3" />
+              {t("chat.settings")} <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
         </div>
 
         {/* ── Mode Limitation Banner ── */}
-        <div className="bg-accent-gold/5 border-b border-accent-gold/10 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.3em] text-center text-accent-gold opacity-60">
+        <div className="bg-accent-gold/5 border-b border-accent-gold/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] text-center text-accent-gold-body opacity-60">
           {LIMITATION_BANNERS[mode]}
         </div>
 
@@ -515,7 +517,7 @@ function ChatContent() {
                 </div>
                 <p className="monumental-type opacity-40 mb-4">Legal Advice</p>
                 <h2 className="text-3xl font-serif font-bold text-white mb-6 tracking-tight">
-                  Legal Advisor
+                  {t("chat.title")}
                 </h2>
                 <p className="text-zinc-500 max-w-sm mx-auto mb-10 legal-text italic font-serif leading-relaxed">
                   Provide a factual scenario for precise statute retrieval and
@@ -551,7 +553,7 @@ function ChatContent() {
 
                   {m.citedLaws && m.citedLaws.length > 0 && (
                     <div className="mt-10 pt-8 border-t border-white/5">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-zinc-400 mb-6 flex items-center gap-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.4em] text-zinc-400 mb-6 flex items-center gap-3">
                         <Scale className="w-3 h-3" /> Referenced Statutes
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -559,7 +561,7 @@ function ChatContent() {
                           <Link
                             key={j}
                             href={`/laws/${law.law_key}`}
-                            className="text-[10px] font-bold px-3 py-2 bg-white/5 border border-white/5 text-zinc-500 hover:bg-accent-gold/10 hover:text-accent-gold-bright hover:border-accent-gold/30 transition-all duration-500"
+                            className="text-xs font-bold px-3 py-2 bg-white/5 border border-white/5 text-zinc-500 hover:bg-accent-gold/10 hover:text-accent-gold-bright hover:border-accent-gold/30 transition-all duration-500"
                           >
                             {law.law_key} {law.norm_id}
                           </Link>
@@ -583,11 +585,11 @@ function ChatContent() {
                     <Loader2 className="absolute inset-0 w-5 h-5 text-accent-gold animate-ping opacity-20" />
                   </div>
                   {mode === "browser" && workerStatus ? (
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-accent-gold">
+                    <span className="text-xs font-bold uppercase tracking-widest text-accent-gold-body">
                       {workerStatus}
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                       Searching laws...
                     </span>
                   )}
@@ -609,18 +611,18 @@ function ChatContent() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              aria-label="Chat message"
+              aria-label={t("chat.placeholder")}
               placeholder={
                 mode === "basic"
                   ? "Search statute code..."
-                  : "Describe your situation..."
+                  : t("chat.placeholder")
               }
               className="w-full bg-white/5 border border-white/10 px-8 py-5 pr-20 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/[0.07] text-white placeholder:text-zinc-400 transition-all duration-500 font-bold tracking-wide"
               disabled={loading}
             />
             <button
               type="submit"
-              aria-label="Send"
+              aria-label={t("chat.send")}
               disabled={loading || !input.trim()}
               className="absolute right-2 top-2 bottom-2 aspect-square bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright disabled:opacity-20 transition-all duration-300 flex items-center justify-center group/btn active:scale-95 border border-accent-gold/10"
             >
@@ -629,12 +631,12 @@ function ChatContent() {
           </form>
 
           {mode === "local" && brokerAvailable === false && (
-            <p className="text-[9px] text-center text-red-500 mt-4 uppercase tracking-[0.2em] font-black animate-pulse">
-              Local Node Offline — Ensure Ollama and Broker are running
+            <p className="text-xs text-center text-red-500 mt-4 uppercase tracking-[0.2em] font-black animate-pulse">
+              {t("chat.local_offline")} — Ensure Ollama and Broker are running
             </p>
           )}
 
-          <p className="text-[8px] text-center text-zinc-700 mt-5 uppercase tracking-[0.5em] font-bold">
+          <p className="text-xs text-center text-zinc-700 mt-5 uppercase tracking-[0.5em] font-bold">
             AI-generated analysis for informational purposes. Not legally
             binding.
           </p>

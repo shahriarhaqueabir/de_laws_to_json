@@ -5,6 +5,12 @@ import {
   NormExplanation,
   LANGUAGE_NAMES,
 } from "./types";
+import {
+  callOpenAI,
+  callAnthropic,
+  callOpenAICompatible,
+  LEGAL_DISCLAIMER,
+} from "./ai-provider";
 
 const SYSTEM_PROMPT = `You are a multilingual German legal expert — a highly precise "Rechtsexperte". Your expertise covers the entire German federal legal code (Bundesrecht), including BGB, StGB, StVO, and specialized areas like Mietrecht and Arbeitsrecht.
 
@@ -34,106 +40,12 @@ You should be familiar with and correctly apply terms from these categories:
 - **Ambiguity:** Explain legal ambiguities or multiple interpretations if they exist.
 - **RDG Compliance:** You provide information and logical analysis based on text. You do not provide "legal services" as defined by the German Legal Services Act (RDG).`;
 
-const LEGAL_DISCLAIMER =
-  "\n\n---\n*Disclaimer: This information is provided for educational and research purposes only. It is a logical analysis of legal texts and **not legally binding advice** under the German Legal Services Act (Rechtsdienstleistungsgesetz - RDG). For your specific situation, consult a licensed attorney (Rechtsanwalt).*";
-
 function buildUserPrompt(
   question: string,
   norms: CitedLaw[],
   context: string,
 ): string {
   return `Context from German laws:\n${context || "(No specific laws found)"}\n\nUser situation:\n${question}\n\nProvide guidance based on the relevant laws above. Include citations.`;
-}
-
-// ── OpenAI ──
-
-async function callOpenAI(
-  apiKey: string,
-  model: string,
-  messages: Array<{ role: string; content: string }>,
-  maxTokens: number = 1024,
-  temperature: number = 0.3,
-): Promise<string> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-    }),
-  });
-  if (!res.ok)
-    throw new Error(`OpenAI API error: ${res.status} ${await res.text()}`);
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || "";
-}
-
-// ── Anthropic ──
-
-async function callAnthropic(
-  apiKey: string,
-  model: string,
-  system: string,
-  messages: Array<{ role: string; content: string }>,
-  maxTokens: number = 1024,
-  temperature: number = 0.3,
-): Promise<string> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      system,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-      max_tokens: maxTokens,
-      temperature,
-    }),
-  });
-  if (!res.ok)
-    throw new Error(`Anthropic API error: ${res.status} ${await res.text()}`);
-  const data = await res.json();
-  return data.content?.[0]?.text?.trim() || "";
-}
-
-// ── OpenAI-Compatible ──
-
-async function callOpenAICompatible(
-  endpoint: string,
-  apiKey: string,
-  model: string,
-  messages: Array<{ role: string; content: string }>,
-  maxTokens: number = 1024,
-  temperature: number = 0.3,
-): Promise<string> {
-  const res = await fetch(
-    `${endpoint.replace(/\/$/, "")}/v1/chat/completions`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature,
-        max_tokens: maxTokens,
-      }),
-    },
-  );
-  if (!res.ok)
-    throw new Error(`Provider API error: ${res.status} ${await res.text()}`);
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || "";
 }
 
 // ── GenerateParams ──

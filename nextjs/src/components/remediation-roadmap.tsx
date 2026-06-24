@@ -90,7 +90,7 @@ export default function RemediationRoadmap({
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-bold text-white">{step.title}</h3>
                   {step.deadline && (
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-accent-amber uppercase tracking-widest bg-accent-amber/10 px-2 py-1">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-accent-amber uppercase tracking-widest bg-accent-amber/10 px-2 py-1">
                       <Clock className="w-3 h-3" />
                       Deadline: {step.deadline.toLocaleDateString()}
                     </div>
@@ -101,7 +101,7 @@ export default function RemediationRoadmap({
                 </p>
 
                 {step.status === "current" && (
-                  <button className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-accent-cobalt hover:text-white transition-colors">
+                  <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-accent-cobalt hover:text-white transition-colors">
                     Start this step <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 )}

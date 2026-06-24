@@ -60,10 +60,10 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto px-4 py-24 lg:py-40 relative z-10">
         <header className="text-center mb-24">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-600 mb-6 animate-fade-in">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-600 mb-6 animate-fade-in">
             &ldquo;{quote.text}&rdquo; &mdash; {quote.author}
           </p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-600 mb-6 animate-fade-in">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-600 mb-6 animate-fade-in">
             Bundesrepublik Deutschland
           </p>
           <h1 className="font-serif font-bold text-white text-7xl md:text-8xl mb-8 tracking-tighter leading-[0.9]">
@@ -101,7 +101,7 @@ export default function Home() {
                     </p>
                   </div>
                   <div className="mt-8">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 group-hover:text-accent-gold transition-colors flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-600 group-hover:text-accent-gold transition-colors flex items-center gap-2">
                       Get Started <ArrowRight className="w-3 h-3" />
                     </span>
                   </div>
@@ -123,14 +123,7 @@ export default function Home() {
           </div>
         </div>
 
-        <footer className="mt-48 pb-20 text-center">
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-700 opacity-20 mb-4">
-            Sub lege libertas
-          </div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-zinc-700">
-            © 2026 German Law Vault — Official Legal Intelligence Repository
-          </p>
-        </footer>
+        <div className="pb-20" />
       </div>
     </main>
   );

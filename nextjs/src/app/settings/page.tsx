@@ -199,7 +199,7 @@ export default function SettingsPage() {
         </div>
         {saved && (
           <span
-            className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-gold-bright animate-fade-in bg-accent-gold/10 px-3 py-1 border border-accent-gold/20"
+            className="text-xs font-black uppercase tracking-[0.3em] text-accent-gold-bright animate-fade-in bg-accent-gold/10 px-3 py-1 border border-accent-gold/20"
             role="status"
             aria-live="polite"
           >
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                       {info.label}
                     </span>
                     {isActive && (
-                      <span className="text-[8px] font-black uppercase tracking-[0.2em] text-accent-gold bg-accent-gold/10 px-2 py-0.5 border border-accent-gold/20">
+                      <span className="text-xs font-black uppercase tracking-[0.2em] text-accent-gold-body bg-accent-gold/10 px-2 py-0.5 border border-accent-gold/20">
                         Active
                       </span>
                     )}
@@ -264,16 +264,16 @@ export default function SettingsPage() {
                   </p>
                   {isActive && (
                     <div className="mt-4 space-y-2 pt-4 border-t border-white/5">
-                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">
+                      <p className="text-xs font-black text-zinc-400 uppercase tracking-widest">
                         Limitations
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
                         {MODE_LIMITATIONS[mode].map((lim, i) => (
                           <p
                             key={i}
-                            className="text-[10px] text-zinc-500 font-bold flex items-start gap-2 italic"
+                            className="text-xs text-zinc-500 font-bold flex items-start gap-2 italic"
                           >
-                            <span className="text-accent-gold opacity-40">
+                            <span className="text-accent-gold-body opacity-40">
                               /
                             </span>
                             {lim}
@@ -304,7 +304,7 @@ export default function SettingsPage() {
           <div className="glass-panel p-8 border-white/5 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                   Temperature ({settings.ollamaParams.temperature})
                 </label>
                 <input
@@ -324,17 +324,17 @@ export default function SettingsPage() {
                   className="w-full accent-accent-gold"
                 />
                 <div className="flex justify-between mt-2">
-                  <span className="text-[9px] font-bold text-zinc-400 uppercase">
+                  <span className="text-xs font-bold text-zinc-400 uppercase">
                     Precise
                   </span>
-                  <span className="text-[9px] font-bold text-zinc-400 uppercase">
+                  <span className="text-xs font-bold text-zinc-400 uppercase">
                     Creative
                   </span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                   Max Generation Tokens
                 </label>
                 <input
@@ -354,7 +354,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                 System Prompt
               </label>
               <textarea
@@ -370,7 +370,7 @@ export default function SettingsPage() {
                 }
                 className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-sans text-xs leading-relaxed"
               />
-              <p className="text-[10px] text-zinc-400 font-bold mt-3 italic">
+              <p className="text-xs text-zinc-400 font-bold mt-3 italic">
                 These guidelines ensure all AI modes (Local & Cloud) maintain
                 the same &quot;Rechtsexperte&quot; persona and citation
                 standards.
@@ -392,7 +392,7 @@ export default function SettingsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                   Broker URL
                 </label>
                 <input
@@ -404,7 +404,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                   Ollama Model
                 </label>
                 <input
@@ -420,21 +420,21 @@ export default function SettingsPage() {
             <div className="p-4 bg-accent-gold/5 border border-accent-gold/20 flex items-start gap-4">
               <ShieldAlert className="w-5 h-5 text-accent-gold mt-0.5" />
               <div>
-                <p className="text-[10px] font-black text-accent-gold uppercase tracking-[0.2em] mb-1">
+                <p className="text-xs font-black text-accent-gold-body uppercase tracking-[0.2em] mb-1">
                   Requirement
                 </p>
                 <p className="text-xs text-zinc-400 font-bold leading-relaxed">
                   Ensure you have <span className="text-white">Ollama</span>{" "}
                   running on your machine and have started the{" "}
                   <span className="text-white">local broker</span> script:
-                  <code className="block mt-2 p-2 bg-black/40 border border-white/5 text-accent-gold">
+                  <code className="block mt-2 p-2 bg-black/40 border border-white/5 text-accent-gold-body">
                     cd broker && python broker.py
                   </code>
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
+            <div className="flex items-center gap-3 text-xs font-black uppercase tracking-widest">
               <span className="text-zinc-400">Status:</span>
               {brokerOk === null ? (
                 <span className="text-zinc-500 flex items-center gap-2">
@@ -454,7 +454,7 @@ export default function SettingsPage() {
               )}
             </div>
 
-            <p className="text-[10px] text-zinc-400 font-bold italic border-l border-accent-gold/20 pl-4">
+            <p className="text-xs text-zinc-400 font-bold italic border-l border-accent-gold/20 pl-4">
               Note: {MODE_STATUS_NOTE.local}
             </p>
           </div>
@@ -471,7 +471,7 @@ export default function SettingsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                   Provider
                 </label>
                 <select
@@ -488,7 +488,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                   Model
                 </label>
                 <input
@@ -502,7 +502,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                 API Key
               </label>
 
@@ -537,7 +537,7 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => setShowKeyInput(true)}
-                    className="px-4 py-3 border border-accent-gold/30 text-accent-gold text-xs font-bold hover:bg-accent-gold/10 transition-all"
+                    className="px-4 py-3 border border-accent-gold/30 text-accent-gold-body text-xs font-bold hover:bg-accent-gold/10 transition-all"
                   >
                     Change
                   </button>
@@ -600,7 +600,7 @@ export default function SettingsPage() {
                         }
                       }}
                       disabled={savingKey || !newApiKey}
-                      className="px-4 py-3 border border-accent-gold/30 text-accent-gold text-xs font-bold hover:bg-accent-gold/10 transition-all disabled:opacity-40"
+                      className="px-4 py-3 border border-accent-gold/30 text-accent-gold-body text-xs font-bold hover:bg-accent-gold/10 transition-all disabled:opacity-40"
                     >
                       {savingKey ? "Saving..." : "Save Key"}
                     </button>
@@ -617,14 +617,14 @@ export default function SettingsPage() {
                     )}
                   </div>
                   {keyMessage && (
-                    <p className="text-[10px] text-accent-gold font-bold mt-1">
+                    <p className="text-xs text-accent-gold-body font-bold mt-1">
                       {keyMessage}
                     </p>
                   )}
                 </div>
               )}
 
-              <p className="text-[10px] text-zinc-400 font-bold mt-3 italic">
+              <p className="text-xs text-zinc-400 font-bold mt-3 italic">
                 Key is encrypted and stored on our server. Never transmitted to
                 third parties.
               </p>
@@ -632,7 +632,7 @@ export default function SettingsPage() {
 
             {settings.provider === "openai-compatible" && (
               <div>
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                   Custom Gateway URL
                 </label>
                 <input
@@ -659,7 +659,7 @@ export default function SettingsPage() {
 
           <div className="space-y-8">
             <div>
-              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-4">
                 Model
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -677,11 +677,11 @@ export default function SettingsPage() {
                       <span className="font-serif font-bold text-lg text-white group-hover:text-accent-gold-bright transition-colors">
                         {m.name}
                       </span>
-                      <span className="text-[9px] uppercase font-black text-accent-gold bg-accent-gold/10 px-2 py-0.5 border border-accent-gold/20">
+                      <span className="text-xs uppercase font-black text-accent-gold-body bg-accent-gold/10 px-2 py-0.5 border border-accent-gold/20">
                         {m.size}
                       </span>
                     </div>
-                    <p className="text-[11px] text-zinc-500 font-bold leading-relaxed">
+                    <p className="text-xs text-zinc-500 font-bold leading-relaxed">
                       {m.description}
                     </p>
                     {settings.browserModel === m.id && (
@@ -693,7 +693,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="p-5 bg-white/[0.02] border border-white/5">
-              <p className="text-[10px] text-zinc-500 font-bold leading-relaxed italic">
+              <p className="text-xs text-zinc-500 font-bold leading-relaxed italic">
                 <ShieldAlert className="w-3.5 h-3.5 inline mr-2 text-accent-gold/40" />
                 The selected model will be cached in your browser&apos;s
                 persistent storage. Initial retrieval requires a high-bandwidth
@@ -728,13 +728,13 @@ export default function SettingsPage() {
           <button
             onClick={handleTestConnection}
             disabled={testing}
-            className="px-8 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-[10px] hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
+            className="px-8 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-xs hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
           >
             {testing ? "Testing..." : "Test Connection"}
           </button>
           {testResult && (
             <span
-              className={`text-[10px] font-black uppercase tracking-widest ${
+              className={`text-xs font-black uppercase tracking-widest ${
                 testResult.includes("✓") ||
                 testResult.includes("Ready") ||
                 testResult.includes("Established")
@@ -752,14 +752,14 @@ export default function SettingsPage() {
       <section className="border-t border-white/5 pt-12">
         <div className="flex items-center gap-4 mb-8">
           <Database className="w-5 h-5 text-zinc-600" />
-          <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 opacity-50 shrink-0">
+          <h2 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 opacity-50 shrink-0">
             System Status
           </h2>
           <div className="h-px w-full bg-zinc-800/50" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-5 border border-white/5 bg-white/[0.01]">
-            <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">
+            <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
               Vector Database
             </p>
             <p className="text-xs text-zinc-400 font-bold">
@@ -767,7 +767,7 @@ export default function SettingsPage() {
             </p>
           </div>
           <div className="p-5 border border-white/5 bg-white/[0.01]">
-            <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">
+            <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
               Database
             </p>
             <p className="text-xs text-zinc-400 font-bold">

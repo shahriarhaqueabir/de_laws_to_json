@@ -166,7 +166,7 @@ export default function ConversationPage() {
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 animate-pulse">
             <Loader2 className="w-10 h-10 text-accent-gold animate-spin" />
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500">
               Loading conversation...
             </p>
           </div>
@@ -199,7 +199,7 @@ export default function ConversationPage() {
                 </p>
                 <Link
                   href="/chat"
-                  className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-accent-gold hover:text-accent-gold-bright transition-colors"
+                  className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-accent-gold-body hover:text-accent-gold-bright transition-colors"
                 >
                   Start New Chat <ArrowRight className="w-3 h-3" />
                 </Link>
@@ -214,7 +214,7 @@ export default function ConversationPage() {
                 </p>
                 <button
                   onClick={() => refetch()}
-                  className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent-gold hover:text-accent-gold-bright transition-colors"
+                  className="text-xs font-bold uppercase tracking-[0.3em] text-accent-gold-body hover:text-accent-gold-bright transition-colors"
                 >
                   Try Again
                 </button>
@@ -257,7 +257,7 @@ export default function ConversationPage() {
                   {conversation.title}
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 bg-accent-gold/10 text-accent-gold border border-accent-gold/20">
+                  <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] px-2 py-0.5 bg-accent-gold/10 text-accent-gold-body border border-accent-gold/20">
                     <ModeIcon className="w-2.5 h-2.5" />
                     {MODE_META[mode]?.label ?? mode}
                   </span>
@@ -266,7 +266,7 @@ export default function ConversationPage() {
             </div>
             <Link
               href="/settings"
-              className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500 hover:text-accent-gold transition-colors duration-300 flex items-center gap-2"
+              className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500 hover:text-accent-gold transition-colors duration-300 flex items-center gap-2"
             >
               Settings <ArrowRight className="w-3 h-3" />
             </Link>
@@ -312,7 +312,7 @@ export default function ConversationPage() {
                     <Loader2 className="absolute inset-0 w-5 h-5 text-accent-gold animate-spin" />
                     <Loader2 className="absolute inset-0 w-5 h-5 text-accent-gold animate-ping opacity-20" />
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                     Retrieving Statutes...
                   </span>
                 </div>
@@ -352,7 +352,7 @@ export default function ConversationPage() {
             </button>
           </form>
 
-          <p className="text-[8px] text-center text-zinc-700 mt-5 uppercase tracking-[0.5em] font-bold">
+          <p className="text-xs text-center text-zinc-700 mt-5 uppercase tracking-[0.5em] font-bold">
             AI-generated analysis for informational purposes. Not legally
             binding.
           </p>

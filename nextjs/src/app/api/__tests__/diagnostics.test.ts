@@ -88,7 +88,7 @@ describe("GET /api/diagnostics", () => {
 
   it("Supabase failure returns overall 500 with partial error", async () => {
     mockSupabaseResult.data = null;
-    mockSupabaseResult.error = { message: "Permission denied" };
+    mockSupabaseResult.error = new Error("Supabase query failed");
 
     const { GET } = await import("../diagnostics/route");
     const req = makeRequest("/api/diagnostics");
@@ -115,7 +115,7 @@ describe("GET /api/diagnostics", () => {
 
   it("both failing returns 500 with both errors", async () => {
     mockSupabaseResult.data = null;
-    mockSupabaseResult.error = { message: "DB down" };
+    mockSupabaseResult.error = new Error("DB down");
     mockSearchNorms.mockRejectedValue(new Error("Qdrant down"));
 
     const { GET } = await import("../diagnostics/route");

@@ -106,7 +106,7 @@ export default function CategoryGrid() {
           <h3 className="font-serif font-bold text-white text-[13px] tracking-tight mb-1">
             {cat.name}
           </h3>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
+          <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
             {cat.en}
           </p>
         </Link>

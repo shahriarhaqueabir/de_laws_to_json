@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { getServerClient } from "@/lib/supabase-server";
@@ -11,8 +11,14 @@ import {
   type FolderContext,
 } from "@/lib/guidance";
 import { decryptApiKey } from "@/lib/encryption";
+import { sanitizeErrorMessage } from "@/lib/sanitize";
 import { translateFromGerman } from "@/lib/translate-server";
 import { LANGUAGE_NAMES, type AppLanguage } from "@/lib/types";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_AI_RATE_LIMIT,
+} from "@/lib/rate-limiter";
 
 // ── Validation ─────────────────────────────────────────────────────────────
 
@@ -82,6 +88,24 @@ async function saveGuidancePaths(
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = checkRateLimit(
+      ip,
+      DEFAULT_AI_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "RATE_LIMITED",
+            message: "Too many requests. Please wait before trying again.",
+          },
+        },
+        { status: 429, headers: rateLimitHeaders },
+      );
+    }
+
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
     const {
@@ -299,7 +323,9 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     console.error("Guidance API Error:", err);
     const message =
-      err instanceof Error ? err.message : "Internal server error";
+      err instanceof Error
+        ? sanitizeErrorMessage(err)
+        : "Internal server error";
     return errorResponse("SERVER_ERROR", message, 500);
   }
 }

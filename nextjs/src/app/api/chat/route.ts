@@ -14,6 +14,11 @@ import { LANGUAGE_NAMES } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
 import { decryptApiKey } from "../../../lib/encryption";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_AI_RATE_LIMIT,
+} from "../../../lib/rate-limiter";
 
 const BROKER_URL =
   process.env.NEXT_PUBLIC_BROKER_URL || "http://localhost:9000";
@@ -42,6 +47,24 @@ const ChatBodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = checkRateLimit(
+      ip,
+      DEFAULT_AI_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "RATE_LIMITED",
+            message: "Too many requests. Please wait before trying again.",
+          },
+        },
+        { status: 429, headers: rateLimitHeaders },
+      );
+    }
+
     const body = await req.json();
 
     const parsed = ChatBodySchema.safeParse(body);
@@ -267,8 +290,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     console.error("Chat API Error:", err);
-    const message =
-      err instanceof Error ? err.message : "Internal server error";
+    const message = sanitizeErrorMessage(err);
     return errorResponse("SERVER_ERROR", message, 500);
   }
 }

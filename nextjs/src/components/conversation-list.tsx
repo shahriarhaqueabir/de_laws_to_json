@@ -108,7 +108,7 @@ export default function ConversationList({
       {/* Header */}
       <div className="p-4 border-b border-white/5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent-gold">
+          <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-accent-gold-body">
             History
           </h2>
           <button
@@ -132,7 +132,7 @@ export default function ConversationList({
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {!user ? (
           <div className="p-4 text-center">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wider">
+            <p className="text-xs text-zinc-600 uppercase tracking-wider">
               Sign in to save conversations
             </p>
           </div>
@@ -142,12 +142,12 @@ export default function ConversationList({
           </div>
         ) : isError ? (
           <div className="p-4 text-center">
-            <p className="text-[10px] text-red-400 mb-2 uppercase tracking-wider">
+            <p className="text-xs text-red-400 mb-2 uppercase tracking-wider">
               Failed to load
             </p>
             <button
               onClick={() => refetch()}
-              className="text-[9px] text-accent-gold uppercase tracking-wider hover:text-accent-gold-bright transition-colors"
+              className="text-xs text-accent-gold-body uppercase tracking-wider hover:text-accent-gold-bright transition-colors"
             >
               Retry
             </button>
@@ -155,7 +155,7 @@ export default function ConversationList({
         ) : conversations.length === 0 ? (
           <div className="p-4 text-center">
             <MessageSquare className="w-6 h-6 text-zinc-700 mx-auto mb-2" />
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wider">
+            <p className="text-xs text-zinc-600 uppercase tracking-wider">
               No conversations yet
             </p>
           </div>
@@ -176,7 +176,7 @@ export default function ConversationList({
                   <MessageSquare className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-50" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{conv.title}</p>
-                    <p className="text-[9px] text-zinc-600 mt-0.5 uppercase tracking-wider">
+                    <p className="text-xs text-zinc-600 mt-0.5 uppercase tracking-wider">
                       {formatDistanceToNow(new Date(conv.updated_at), {
                         addSuffix: true,
                       })}

@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../components/auth-context";
+import { useLanguage } from "../../hooks/useLanguage";
 import { LogIn, Loader2, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 
 export default function AuthPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -52,7 +54,7 @@ export default function AuthPage() {
             <ShieldAlert className="w-7 h-7 text-zinc-400" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">
-            {mode === "signin" ? "Sign In" : "Create Account"}
+            {mode === "signin" ? t("nav.sign_in") : t("auth.sign_up_button")}
           </h1>
           <p className="text-zinc-400 mt-2">
             {mode === "signin"
@@ -84,7 +86,7 @@ export default function AuthPage() {
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              Email
+              {t("auth.email")}
             </label>
             <input
               type="email"
@@ -98,7 +100,7 @@ export default function AuthPage() {
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              Password
+              {t("auth.password")}
             </label>
             <input
               type="password"
@@ -121,28 +123,30 @@ export default function AuthPage() {
             ) : (
               <LogIn className="w-5 h-5" />
             )}
-            {mode === "signin" ? "Sign In" : "Create Account"}
+            {mode === "signin"
+              ? t("auth.sign_in_button")
+              : t("auth.sign_up_button")}
           </button>
         </form>
 
         <p className="text-center text-sm text-secondary mt-6">
           {mode === "signin" ? (
             <>
-              No account?{" "}
+              {t("auth.no_account")}{" "}
               <button
                 onClick={() => {
                   setMode("signup");
                   setError(null);
                   setSuccess(null);
                 }}
-                className="text-accent-gold hover:underline"
+                className="text-accent-gold-body hover:underline"
               >
-                Create one
+                {t("auth.sign_up_button")}
               </button>
             </>
           ) : (
             <>
-              Already have an account?{" "}
+              {t("auth.has_account")}{" "}
               <button
                 onClick={() => {
                   setMode("signin");
@@ -151,7 +155,7 @@ export default function AuthPage() {
                 }}
                 className="text-zinc-400 hover:underline"
               >
-                Sign in
+                {t("auth.sign_in_button")}
               </button>
             </>
           )}

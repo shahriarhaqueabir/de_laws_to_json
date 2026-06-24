@@ -227,13 +227,13 @@ export default function BookmarksPage() {
         </p>
 
         <div className="glass-panel p-16 border-white/5 max-w-2xl mx-auto">
-          <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px] mb-6">
+          <p className="text-zinc-600 font-bold uppercase tracking-widest text-xs mb-6">
             Browse laws and bookmark them to save them here. Create folders to
             organize your research.
           </p>
           <button
             onClick={() => setShowFolderModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
+            className="inline-flex items-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold-body hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
           >
             <FolderPlus className="w-3.5 h-3.5" />
             Create Your First Folder
@@ -264,12 +264,12 @@ export default function BookmarksPage() {
               setEditingFolder(null);
               setShowFolderModal(true);
             }}
-            className="flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
+            className="flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold-body hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
           >
             <Plus className="w-3.5 h-3.5" />
             New Folder
           </button>
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">
+          <span className="text-xs font-black uppercase tracking-[0.3em] text-zinc-600">
             {totalBookmarks} Entries · {totalFolders} Folders
           </span>
         </div>
@@ -316,7 +316,7 @@ export default function BookmarksPage() {
                     <span className="font-serif font-bold text-white text-lg">
                       {isFolder ? group.folder!.name : "Ungrouped"}
                     </span>
-                    <span className="ml-3 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
+                    <span className="ml-3 text-xs font-black uppercase tracking-[0.2em] text-zinc-600">
                       {group.bookmarks.length} entries
                     </span>
 
@@ -338,7 +338,7 @@ export default function BookmarksPage() {
                 {isFolder && (
                   <div className="relative flex items-center gap-1 ml-4">
                     {group.folder!.dispute_value > 0 && (
-                      <span className="text-[9px] font-bold px-2 py-1 bg-white/5 text-zinc-400">
+                      <span className="text-xs font-bold px-2 py-1 bg-white/5 text-zinc-400">
                         {formatEur(group.folder!.dispute_value)}
                       </span>
                     )}
@@ -387,11 +387,11 @@ export default function BookmarksPage() {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-4 mb-3">
-                          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-accent-gold/60">
+                          <span className="text-xs font-black uppercase tracking-[0.3em] text-accent-gold-body">
                             {bm.category}
                           </span>
                           {bm.norm_id && (
-                            <span className="text-[9px] font-mono font-black bg-white/5 text-zinc-400 border border-white/10 px-2 py-0.5">
+                            <span className="text-xs font-mono font-black bg-white/5 text-zinc-400 border border-white/10 px-2 py-0.5">
                               Section {bm.norm_id}
                             </span>
                           )}
@@ -401,7 +401,7 @@ export default function BookmarksPage() {
                           href={`/laws/${bm.law_key}`}
                           className="text-lg font-serif font-bold text-white hover:text-accent-gold-bright transition-colors duration-500 block leading-tight"
                         >
-                          <span className="text-accent-gold/40 mr-2">
+                          <span className="text-accent-gold-body mr-2">
                             {bm.law_key}
                           </span>
                           {bm.law_title}
@@ -419,7 +419,7 @@ export default function BookmarksPage() {
                           </p>
                         )}
 
-                        <p className="text-[7px] font-black uppercase tracking-[0.4em] text-zinc-700 mt-4">
+                        <p className="text-xs font-black uppercase tracking-[0.4em] text-zinc-700 mt-4">
                           Archived {bm.added_at}
                         </p>
                       </div>

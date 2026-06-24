@@ -67,7 +67,7 @@ export default function SearchBar({
               onClick={(e) =>
                 handleSearch(e as unknown as React.FormEvent, true)
               }
-              className="px-6 bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright transition-all duration-500 active:scale-95 flex items-center gap-3 border border-accent-gold/20 font-black uppercase tracking-widest text-[10px] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+              className="px-6 bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright transition-all duration-500 active:scale-95 flex items-center gap-3 border border-accent-gold/20 font-black uppercase tracking-widest text-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
             >
               <Brain className="w-4 h-4" />
               Analyze via AI
@@ -78,7 +78,7 @@ export default function SearchBar({
 
       {query.length > 5 && (
         <p
-          className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.4em] text-center animate-fade-in"
+          className="text-xs text-zinc-600 font-black uppercase tracking-[0.4em] text-center animate-fade-in"
           role="status"
           aria-live="polite"
         >

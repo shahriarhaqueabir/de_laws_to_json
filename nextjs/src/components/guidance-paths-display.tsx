@@ -163,7 +163,7 @@ export default function GuidancePathsDisplay({
             Your Possible Paths Forward
           </h2>
         </div>
-        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">
+        <span className="text-xs font-black uppercase tracking-[0.3em] text-zinc-600">
           {paths.length} of 5 paths shown
         </span>
       </div>
@@ -222,7 +222,7 @@ export default function GuidancePathsDisplay({
                       {path.cost_estimate !== null &&
                         path.cost_estimate > 0 && (
                           <div className="flex-shrink-0 text-right">
-                            <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
+                            <div className="text-xs font-black uppercase tracking-[0.2em] text-zinc-600">
                               Est. Cost
                             </div>
                             <div className="text-sm font-bold text-white flex items-center gap-1">
@@ -241,20 +241,20 @@ export default function GuidancePathsDisplay({
                     <div className="flex flex-wrap items-center gap-3">
                       {/* Risk Badge */}
                       <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.1em] border ${colors.badge}`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] border ${colors.badge}`}
                       >
                         <RiskIcon className="w-3 h-3" />
                         {getRiskLabel(path.risk_level)}
                       </span>
 
                       {/* Timeline */}
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.1em] bg-white/5 text-zinc-400 border border-white/10">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] bg-white/5 text-zinc-400 border border-white/10">
                         <Clock className="w-3 h-3" />
                         {path.estimated_timeline}
                       </span>
 
                       {/* Success Probability */}
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.1em] bg-white/5 text-zinc-400 border border-white/10">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] bg-white/5 text-zinc-400 border border-white/10">
                         <CheckCircle2 className="w-3 h-3" />
                         {getProbabilityLabel(path.success_probability)} (
                         {Math.round(path.success_probability * 100)}%)
@@ -281,7 +281,7 @@ export default function GuidancePathsDisplay({
                     <div className="lg:col-span-2 space-y-6">
                       {/* Detailed Analysis */}
                       <section>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-3">
+                        <h4 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-600 mb-3">
                           Detailed Analysis
                         </h4>
                         <div className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">
@@ -306,7 +306,7 @@ export default function GuidancePathsDisplay({
 
                       {/* Step-by-Step Actions */}
                       <section>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-3">
+                        <h4 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-600 mb-3">
                           Step-by-Step Plan
                         </h4>
                         <div className="space-y-3">
@@ -315,7 +315,7 @@ export default function GuidancePathsDisplay({
                               key={i}
                               className="flex items-start gap-3 p-3 bg-white/[0.02] border border-white/5"
                             >
-                              <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-[9px] font-bold bg-accent-cobalt/20 text-accent-cobalt border border-accent-cobalt/20">
+                              <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-xs font-bold bg-accent-cobalt/20 text-accent-cobalt border border-accent-cobalt/20">
                                 {i + 1}
                               </span>
                               <span className="text-sm text-zinc-300">
@@ -345,7 +345,7 @@ export default function GuidancePathsDisplay({
                       {/* Cost Breakdown */}
                       {path.cost_breakdown && (
                         <section className="p-5 bg-black/40 border border-white/5">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-4">
+                          <h4 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-600 mb-4">
                             Cost Breakdown
                           </h4>
                           <div className="space-y-3">
@@ -377,7 +377,7 @@ export default function GuidancePathsDisplay({
                               </span>
                             </div>
                           </div>
-                          <p className="text-[9px] text-zinc-700 mt-3">
+                          <p className="text-xs text-zinc-700 mt-3">
                             Based on Streitwert of €
                             {folderContext?.dispute_value?.toLocaleString() ||
                               "?"}{" "}
@@ -390,7 +390,7 @@ export default function GuidancePathsDisplay({
                       {/* Cited Laws */}
                       {path.laws_cited.length > 0 && (
                         <section className="p-5 bg-black/40 border border-white/5">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-4">
+                          <h4 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-600 mb-4">
                             Relevant Laws Used
                           </h4>
                           <div className="space-y-2">
@@ -414,7 +414,7 @@ export default function GuidancePathsDisplay({
                               </div>
                             ))}
                           </div>
-                          <p className="text-[9px] text-zinc-700 mt-3 flex items-center gap-1">
+                          <p className="text-xs text-zinc-700 mt-3 flex items-center gap-1">
                             <Search className="w-2.5 h-2.5" />
                             Click a law to read its full text
                           </p>
@@ -425,7 +425,7 @@ export default function GuidancePathsDisplay({
                       <button
                         onClick={() => handleGenerateDoc(path.path_number)}
                         disabled={generatingDoc === `path-${path.path_number}`}
-                        className="w-full flex items-center justify-center gap-2 p-4 text-[10px] font-bold uppercase tracking-[0.2em] bg-accent-cobalt/10 text-accent-cobalt border border-accent-cobalt/20 hover:bg-accent-cobalt/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-center gap-2 p-4 text-xs font-bold uppercase tracking-[0.2em] bg-accent-cobalt/10 text-accent-cobalt border border-accent-cobalt/20 hover:bg-accent-cobalt/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {generatingDoc === `path-${path.path_number}` ? (
                           <>
@@ -442,7 +442,7 @@ export default function GuidancePathsDisplay({
 
                       <div className="flex items-start gap-2 p-3 bg-amber-900/10 border border-amber-900/20">
                         <AlertTriangle className="w-3 h-3 text-accent-amber flex-shrink-0 mt-0.5" />
-                        <p className="text-[9px] text-zinc-500">
+                        <p className="text-xs text-zinc-500">
                           This is a draft based on your situation. Have a lawyer
                           (Rechtsanwalt) review it before using it officially.
                         </p>

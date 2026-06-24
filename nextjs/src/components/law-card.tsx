@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
@@ -82,7 +82,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
           <div className="text-xs text-accent-gold-bright font-black tracking-widest uppercase mb-1">
             {law.relevance}% Match
           </div>
-          <div className="text-[10px] text-muted font-bold uppercase tracking-tighter">
+          <div className="text-xs text-muted font-bold uppercase tracking-tighter">
             {law.normHits} Relevant Sections
           </div>
         </div>
@@ -95,8 +95,8 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
             className="bg-white/[0.02] p-6 border border-white/5 relative overflow-hidden group/norm"
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold/20 group-hover/norm:bg-accent-gold transition-colors duration-500" />
-            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-accent-gold/60 mb-3">
-              Section {norm.normId} — {norm.title}
+            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-accent-gold/60 mb-3">
+              Section {norm.normId} � {norm.title}
             </h4>
             <p className="legal-text italic text-zinc-400 line-clamp-3 text-sm leading-relaxed">
               {norm.content}
@@ -112,7 +112,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
         >
           Detailed Examination <ChevronRight className="w-4 h-4" />
         </Link>
-        <div className="text-[10px] font-bold text-muted italic font-serif">
+        <div className="text-xs font-bold text-muted italic font-serif">
           Source: Bundesamt für Justiz
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
             className="flex items-center justify-between group"
           >
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent-gold mb-1">
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-accent-gold-body mb-1">
                 Saved to Local Vault
               </p>
               <p className="text-xs text-zinc-400">
@@ -133,7 +133,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
                 organization.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-accent-gold-bright group-hover:underline">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-accent-gold-bright group-hover:underline">
               <LogIn className="w-4 h-4" />
               Sign In
             </div>

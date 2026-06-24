@@ -9,6 +9,12 @@ import {
   translateFromGerman,
 } from "../../../lib/translate-server";
 import { type AppLanguage, LANGUAGE_NAMES } from "../../../lib/types";
+import { sanitizeErrorMessage } from "../../../lib/sanitize";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_SEARCH_RATE_LIMIT,
+} from "../../../lib/rate-limiter";
 
 interface SearchResult {
   law_key: string;
@@ -63,6 +69,24 @@ export async function GET(req: NextRequest) {
 
   const { q: query, category, lang, page } = parsed.data;
   const safeQuery = (query || "").trim();
+
+  // Rate limiting
+  const ip = getClientIp(req);
+  const { allowed, headers: rateLimitHeaders } = checkRateLimit(
+    ip,
+    DEFAULT_SEARCH_RATE_LIMIT,
+  );
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "RATE_LIMITED",
+          message: "Too many requests. Please wait before trying again.",
+        },
+      },
+      { status: 429, headers: rateLimitHeaders },
+    );
+  }
 
   try {
     let allResults: SearchResult[] = [];
@@ -226,8 +250,8 @@ export async function GET(req: NextRequest) {
       total: allResults.length,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[API Search] Fatal error:", message);
+    const message = sanitizeErrorMessage(err);
+    console.error("[API Search] Fatal error:", err);
     return errorResponse("SEARCH_FAILED", `Search failed: ${message}`, 500);
   }
 }

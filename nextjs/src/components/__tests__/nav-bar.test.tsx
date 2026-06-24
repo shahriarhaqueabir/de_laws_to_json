@@ -58,7 +58,7 @@ describe("NavBar", () => {
     renderWithContext(<NavBar />);
     // Find the Search nav link
     const navSearchLink = screen.getByText("Search").closest("a");
-    expect(navSearchLink?.className).toContain("text-accent-gold");
+    expect(navSearchLink?.className).toContain("text-accent-gold-body");
   });
 
   it("shows sign-in link when not authenticated", () => {
@@ -73,7 +73,7 @@ describe("NavBar", () => {
 
     expect(screen.getByText("user")).toBeInTheDocument();
 
-    const signOutBtn = screen.getByTitle("Sign out");
+    const signOutBtn = screen.getByTitle("Sign Out");
     expect(signOutBtn).toBeInTheDocument();
 
     await user.click(signOutBtn);
@@ -82,20 +82,20 @@ describe("NavBar", () => {
 
   it("mode indicator shows current mode", () => {
     renderWithContext(<NavBar />);
-    expect(screen.getByText("Basic Search")).toBeInTheDocument();
+    expect(screen.getByText("Basic")).toBeInTheDocument();
   });
 
   it("mode switcher dropdown appears on click", async () => {
     const user = userEvent.setup();
     renderWithContext(<NavBar />);
 
-    const modeBtn = screen.getByText("Basic Search").closest("button")!;
+    const modeBtn = screen.getByText("Basic").closest("button")!;
     await user.click(modeBtn);
 
     expect(screen.getByText("Mode")).toBeInTheDocument();
-    expect(screen.getByText("Local AI")).toBeInTheDocument();
-    expect(screen.getByText("Cloud AI")).toBeInTheDocument();
-    expect(screen.getByText("Browser AI")).toBeInTheDocument();
+    expect(screen.getByText("Local")).toBeInTheDocument();
+    expect(screen.getByText("Cloud")).toBeInTheDocument();
+    expect(screen.getByText("Browser")).toBeInTheDocument();
   });
 
   it("renders correctly in different viewports", () => {

@@ -21,6 +21,12 @@ import type {
 } from "./guidance-types";
 import { calculateTotalLegalRisk } from "./fees";
 import { calculateDeadline } from "./diagnosis";
+import {
+  callOpenAI,
+  callAnthropic,
+  callOpenAICompatible,
+  LEGAL_DISCLAIMER,
+} from "./ai-provider";
 
 // ── Remediation Playbook Types ──────────────────────────────────────────────
 
@@ -422,78 +428,40 @@ async function callAI(
   userPrompt: string,
 ): Promise<string> {
   switch (provider) {
-    case "openai": {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          temperature: 0.3,
-          max_tokens: 4096,
-        }),
-      });
-      if (!res.ok)
-        throw new Error(`OpenAI API error: ${res.status} ${await res.text()}`);
-      const data = await res.json();
-      return data.choices?.[0]?.message?.content?.trim() || "";
-    }
+    case "openai":
+      return callOpenAI(
+        apiKey,
+        model,
+        [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        4096,
+        0.3,
+      );
 
-    case "anthropic": {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userPrompt }],
-          max_tokens: 4096,
-          temperature: 0.3,
-        }),
-      });
-      if (!res.ok)
-        throw new Error(
-          `Anthropic API error: ${res.status} ${await res.text()}`,
-        );
-      const data = await res.json();
-      return data.content?.[0]?.text?.trim() || "";
-    }
+    case "anthropic":
+      return callAnthropic(
+        apiKey,
+        model,
+        systemPrompt,
+        [{ role: "user", content: userPrompt }],
+        4096,
+        0.3,
+      );
 
-    case "openai-compatible": {
-      const base = customEndpoint.replace(/\/$/, "");
-      const res = await fetch(`${base}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          temperature: 0.3,
-          max_tokens: 4096,
-        }),
-      });
-      if (!res.ok)
-        throw new Error(
-          `Provider API error: ${res.status} ${await res.text()}`,
-        );
-      const data = await res.json();
-      return data.choices?.[0]?.message?.content?.trim() || "";
-    }
+    case "openai-compatible":
+      return callOpenAICompatible(
+        customEndpoint,
+        apiKey,
+        model,
+        [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        4096,
+        0.3,
+      );
 
     default:
       throw new Error(`Unknown provider: ${provider}`);
@@ -501,8 +469,6 @@ async function callAI(
 }
 
 // ── Main Orchestrator ───────────────────────────────────────────────────────
-
-const LEGAL_DISCLAIMER = `\n\n---\n*Disclaimer: This guidance is provided for informational purposes only and does not constitute legal advice (Rechtsdienstleistung) under the German Legal Services Act (RDG). Consult a licensed German attorney (Rechtsanwalt) for advice specific to your situation.*`;
 
 export async function generateGuidancePaths(
   params: GenerateGuidanceParams,

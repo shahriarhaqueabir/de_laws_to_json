@@ -92,7 +92,7 @@ export default function LawDetailPage() {
         </h2>
         <Link
           href="/"
-          className="text-accent-gold hover:text-accent-gold-bright flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest"
+          className="text-accent-gold-body hover:text-accent-gold-bright flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest"
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </Link>
@@ -119,7 +119,7 @@ export default function LawDetailPage() {
           </div>
           <button
             onClick={toggleBookmark}
-            className={`ml-auto flex items-center gap-3 px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] border transition-all duration-500 active:scale-95 ${
+            className={`ml-auto flex items-center gap-3 px-6 py-2 text-xs font-black uppercase tracking-[0.2em] border transition-all duration-500 active:scale-95 ${
               bookmarked
                 ? "bg-accent-gold text-black border-accent-gold"
                 : "bg-transparent text-zinc-500 border-white/10 hover:text-accent-gold hover:border-accent-gold/40"
@@ -145,7 +145,7 @@ export default function LawDetailPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5 border border-white/5 overflow-hidden rounded-sm mt-16">
           <div className="bg-zinc-950/40 p-8">
-            <span className="text-zinc-500 text-[8px] font-bold uppercase tracking-widest opacity-30 block mb-3">
+            <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-30 block mb-3">
               Status
             </span>
             <span className="font-bold text-zinc-300 tracking-wide">
@@ -153,7 +153,7 @@ export default function LawDetailPage() {
             </span>
           </div>
           <div className="bg-zinc-950/40 p-8">
-            <span className="text-zinc-500 text-[8px] font-bold uppercase tracking-widest opacity-30 block mb-3">
+            <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-30 block mb-3">
               Authority
             </span>
             <span className="font-bold text-zinc-300 tracking-wide">
@@ -161,7 +161,7 @@ export default function LawDetailPage() {
             </span>
           </div>
           <div className="bg-zinc-950/40 p-8">
-            <span className="text-zinc-500 text-[8px] font-bold uppercase tracking-widest opacity-30 block mb-3">
+            <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-30 block mb-3">
               Modified
             </span>
             <span className="font-bold text-zinc-300 tracking-wide">
@@ -169,7 +169,7 @@ export default function LawDetailPage() {
             </span>
           </div>
           <div className="bg-zinc-950/40 p-8">
-            <span className="text-zinc-500 text-[8px] font-bold uppercase tracking-widest opacity-30 block mb-3">
+            <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-30 block mb-3">
               Density
             </span>
             <span className="font-bold text-zinc-300 tracking-wide">

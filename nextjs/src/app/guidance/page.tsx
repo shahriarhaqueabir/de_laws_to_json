@@ -221,7 +221,7 @@ export default function GuidancePage() {
           </div>
           <Link
             href="/guidance/history"
-            className="flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 hover:text-accent-gold transition-colors border border-white/5 hover:border-accent-gold/20"
+            className="flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 hover:text-accent-gold transition-colors border border-white/5 hover:border-accent-gold/20"
           >
             <Clock className="w-3.5 h-3.5" />
             History
@@ -234,7 +234,7 @@ export default function GuidancePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Language Selector */}
           <div>
-            <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
+            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
               <Languages className="w-3.5 h-3.5" />
               Response Language
             </label>
@@ -251,7 +251,7 @@ export default function GuidancePage() {
                 </option>
               ))}
             </select>
-            <p className="text-[9px] text-zinc-700 mt-1">
+            <p className="text-xs text-zinc-700 mt-1">
               Describe your situation in any language. Guidance will be in the
               selected language.
             </p>
@@ -259,7 +259,7 @@ export default function GuidancePage() {
 
           {/* Folder Selector */}
           <div>
-            <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
+            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
               <Bookmark className="w-3.5 h-3.5" />
               Case Folder (Optional)
             </label>
@@ -281,7 +281,7 @@ export default function GuidancePage() {
               </select>
               <button
                 onClick={() => setShowFolderModal(true)}
-                className="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] bg-accent-cobalt/20 text-accent-cobalt hover:bg-accent-cobalt/30 transition-colors border border-accent-cobalt/20"
+                className="px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-cobalt/20 text-accent-cobalt hover:bg-accent-cobalt/30 transition-colors border border-accent-cobalt/20"
                 title="Create new folder"
               >
                 + New
@@ -290,13 +290,13 @@ export default function GuidancePage() {
             {selectedFolderData && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {selectedFolderData.dispute_value > 0 && (
-                  <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 bg-white/5 text-zinc-400">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 bg-white/5 text-zinc-400">
                     <Euro className="w-2.5 h-2.5" />€
                     {selectedFolderData.dispute_value.toLocaleString()}
                   </span>
                 )}
                 <span
-                  className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 border ${getStatusBadgeClass(
+                  className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 border ${getStatusBadgeClass(
                     selectedFolderData.status,
                   )}`}
                 >
@@ -304,7 +304,7 @@ export default function GuidancePage() {
                   {FOLDER_STATUS_LABELS[selectedFolderData.status]}
                 </span>
                 {selectedFolderData.opposing_party && (
-                  <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 bg-white/5 text-zinc-400">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 bg-white/5 text-zinc-400">
                     <Gavel className="w-2.5 h-2.5" />
                     {selectedFolderData.opposing_party}
                   </span>
@@ -316,7 +316,7 @@ export default function GuidancePage() {
 
         {/* Situation Input */}
         <div className="mb-8">
-          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
+          <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
             Describe Your Situation
           </label>
           <textarea
@@ -327,11 +327,11 @@ export default function GuidancePage() {
             className="w-full px-5 py-4 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors resize-vertical"
           />
           <div className="flex justify-between items-center mt-2">
-            <p className="text-[9px] text-zinc-700">
+            <p className="text-xs text-zinc-700">
               The AI cross-references German federal laws with your bookmarks
               and folder context.
             </p>
-            <span className="text-[9px] text-zinc-700">
+            <span className="text-xs text-zinc-700">
               {situation.length} characters
             </span>
           </div>
@@ -341,7 +341,7 @@ export default function GuidancePage() {
         <button
           onClick={handleGetGuidance}
           disabled={loading || !situation.trim()}
-          className="flex items-center gap-3 px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] bg-accent-cobalt text-white hover:bg-accent-cobalt/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:translate-y-[1px]"
+          className="flex items-center gap-3 px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] bg-accent-cobalt text-white hover:bg-accent-cobalt/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:translate-y-[1px]"
         >
           {loading ? (
             <>
@@ -370,7 +370,7 @@ export default function GuidancePage() {
               <p className="text-zinc-400 text-sm">{error}</p>
               <button
                 onClick={handleGetGuidance}
-                className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-accent-cobalt hover:text-white transition-colors"
+                className="mt-4 text-xs font-bold uppercase tracking-[0.2em] text-accent-cobalt hover:text-white transition-colors"
               >
                 Retry
               </button>
@@ -386,7 +386,7 @@ export default function GuidancePage() {
           <p className="text-zinc-400 text-sm mb-2">
             Searching German federal laws...
           </p>
-          <div className="flex items-center justify-center gap-2 text-[9px] text-zinc-700 uppercase tracking-[0.2em] font-bold">
+          <div className="flex items-center justify-center gap-2 text-xs text-zinc-700 uppercase tracking-[0.2em] font-bold">
             <Scale className="w-3 h-3" />
             Cross-referencing 6,000+ laws
           </div>
@@ -426,7 +426,7 @@ export default function GuidancePage() {
             outcome paths with risk assessment, cost estimates, and step-by-step
             next steps.
           </p>
-          <div className="flex justify-center gap-6 text-[9px] text-zinc-700 uppercase tracking-[0.2em] font-bold">
+          <div className="flex justify-center gap-6 text-xs text-zinc-700 uppercase tracking-[0.2em] font-bold">
             <div className="flex items-center gap-2">
               <Check className="w-3 h-3 text-accent-cobalt" />
               Risk Badges

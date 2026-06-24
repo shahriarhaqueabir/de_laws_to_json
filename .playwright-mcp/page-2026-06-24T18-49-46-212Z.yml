@@ -1,0 +1,51 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - link "Vault" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img [ref=e8]
+          - generic [ref=e12]: Vault
+        - generic [ref=e13]:
+          - link "Vault" [ref=e14] [cursor=pointer]:
+            - /url: /
+          - link "Consult" [ref=e15] [cursor=pointer]:
+            - /url: /chat
+          - link "Guidance" [ref=e16] [cursor=pointer]:
+            - /url: /guidance
+          - link "Archives" [ref=e17] [cursor=pointer]:
+            - /url: /bookmarks
+      - generic [ref=e18]:
+        - link "Initialize Session" [ref=e19] [cursor=pointer]:
+          - /url: /auth
+          - generic [ref=e20]: Initialize Session
+        - button "EN" [ref=e22]:
+          - img [ref=e23]
+          - generic [ref=e26]: EN
+          - img [ref=e27]
+        - button "Basic Search" [ref=e30]:
+          - img [ref=e31]
+          - generic [ref=e34]: Basic Search
+          - img [ref=e35]
+  - generic [ref=e39]:
+    - generic [ref=e40]:
+      - img [ref=e42]
+      - heading "Initialize Session" [level=1] [ref=e44]
+      - paragraph [ref=e45]: Establish a secure link to sync bookmarks
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - generic [ref=e48]: Email
+        - textbox "you@example.com" [ref=e49]
+      - generic [ref=e50]:
+        - generic [ref=e51]: Password
+        - textbox "••••••••" [ref=e52]
+      - button "Initialize Session" [ref=e53]:
+        - img [ref=e54]
+        - text: Initialize Session
+    - paragraph [ref=e57]:
+      - text: No account?
+      - button "Create one" [ref=e58]
+    - paragraph [ref=e59]:
+      - link "\\u2190 Back to search" [ref=e60] [cursor=pointer]:
+        - /url: /
+  - alert "Notifications"

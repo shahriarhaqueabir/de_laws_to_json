@@ -22,6 +22,14 @@ vi.mock("../../components/auth-context", () => ({
   }),
 }));
 
+vi.mock("../../components/chat-context", () => ({
+  useChat: () => ({
+    settings: { language: "en" },
+    updateSettings: vi.fn(),
+  }),
+  ChatProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 import AuthPage from "../auth/page";
 
 beforeEach(() => {
@@ -49,7 +57,7 @@ describe("AuthPage", () => {
       screen.getByRole("heading", { name: /Sign In/i }),
     ).toBeInTheDocument();
 
-    const toggleBtn = screen.getByText("Create one");
+    const toggleBtn = screen.getByRole("button", { name: /Create Account/ });
     await user.click(toggleBtn);
 
     expect(
@@ -65,13 +73,13 @@ describe("AuthPage", () => {
     render(<AuthPage />);
 
     // Switch to sign up
-    await user.click(screen.getByText("Create one"));
+    await user.click(screen.getByRole("button", { name: /Create Account/ }));
     expect(
       screen.getByRole("heading", { name: /Create Account/i }),
     ).toBeInTheDocument();
 
     // Switch back
-    await user.click(screen.getByText("Sign in"));
+    await user.click(screen.getByRole("button", { name: /Sign In/ }));
     expect(
       screen.getByRole("heading", { name: /Sign In/i }),
     ).toBeInTheDocument();
@@ -100,7 +108,7 @@ describe("AuthPage", () => {
     render(<AuthPage />);
 
     // Switch to sign up
-    await user.click(screen.getByText("Create one"));
+    await user.click(screen.getByRole("button", { name: /Create Account/ }));
 
     await user.type(
       screen.getByPlaceholderText("you@example.com"),
@@ -172,7 +180,7 @@ describe("AuthPage", () => {
     });
 
     // Toggle mode
-    await user.click(screen.getByText("Create one"));
+    await user.click(screen.getByRole("button", { name: /Create Account/ }));
 
     // Error should be gone
     expect(screen.queryByText("Some error")).not.toBeInTheDocument();

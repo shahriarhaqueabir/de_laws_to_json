@@ -1,8 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Required for Transformers.js and other WASM/Worker based libraries
-  // to enable high-performance shared memory features.
   async headers() {
     return [
       {
@@ -33,7 +31,26 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'wasm-unsafe-eval'",
+              "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https:",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.qdrant.io https://huggingface.co",
+              "worker-src 'self' blob:",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join("; "),
+          },
+        ],
+      },
+      {
+        source: "/api-docs/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.qdrant.io https://huggingface.co",
@@ -47,7 +64,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Suppress warnings from Transformers.js about local models during build
   serverExternalPackages: ["@huggingface/transformers"],
 };
 

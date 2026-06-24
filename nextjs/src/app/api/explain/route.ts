@@ -7,6 +7,12 @@ import { decryptApiKey } from "../../../lib/encryption";
 import type { AppLanguage, CloudProvider } from "../../../lib/types";
 import { LANGUAGE_NAMES } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
+import { sanitizeErrorMessage } from "../../../lib/sanitize";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_AI_RATE_LIMIT,
+} from "../../../lib/rate-limiter";
 
 const ExplainBodySchema = z.object({
   normId: z.string().min(1, "normId is required"),
@@ -16,7 +22,6 @@ const ExplainBodySchema = z.object({
   lawTitle: z.string().optional(),
   mode: z.string().optional(),
   provider: z.string().optional(),
-  apiKey: z.string().optional(),
   model: z.string().optional(),
   customEndpoint: z.string().optional(),
   brokerUrl: z.string().optional(),
@@ -25,20 +30,13 @@ const ExplainBodySchema = z.object({
 });
 
 /**
- * Resolve the API key from either the request body or server-side storage.
- * For cloud modes, prefer server-side encrypted key first to avoid
- * sending keys over the wire unnecessarily.
+ * Resolve the API key from server-side storage only.
+ * Never accepts client-supplied keys directly to prevent
+ * the endpoint from being used as an open AI proxy.
  */
 async function resolveApiKey(
-  bodyApiKey: string | undefined,
   supabase: ReturnType<typeof getServerClient>,
 ): Promise<{ apiKey: string; provider: CloudProvider }> {
-  // If client provided a key, use it directly (backward compatibility)
-  if (bodyApiKey) {
-    return { apiKey: bodyApiKey, provider: "openai" };
-  }
-
-  // Try server-side stored key
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -67,6 +65,23 @@ async function resolveApiKey(
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = checkRateLimit(
+      ip,
+      DEFAULT_AI_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "RATE_LIMITED",
+            message: "Too many requests. Please wait before trying again.",
+          },
+        },
+        { status: 429, headers: rateLimitHeaders },
+      );
+    }
     const body = await req.json();
 
     const parsed = ExplainBodySchema.safeParse(body);
@@ -90,7 +105,6 @@ export async function POST(req: NextRequest) {
       lang,
       mode,
       provider,
-      apiKey,
       model,
       customEndpoint,
       brokerUrl: bodyBrokerUrl,
@@ -203,13 +217,37 @@ Return STRICT JSON with these exact fields:
       });
     }
 
-    // Resolve API key from server-side storage (preferred) or client body
+    // Resolve API key from server-side storage only
     const { apiKey: resolvedKey, provider: resolvedProvider } =
-      await resolveApiKey(apiKey, supabase);
+      await resolveApiKey(supabase);
+
+    // If no API key is available, return a basic response without AI
+    if (!resolvedKey) {
+      const langName = LANGUAGE_NAMES[lang as AppLanguage] || "English";
+      return NextResponse.json({
+        norm_id: normId,
+        law_key: lawKey,
+        law_title: lawTitle || "",
+        lang,
+        translation: `[${content}]`,
+        summary:
+          "Sign in and configure an AI provider in Settings to get an AI-powered explanation of this legal text.",
+        implications:
+          "Configure an API key in Settings → API Key to enable AI-powered legal explanations.",
+        next_steps: [
+          "Sign in to your account",
+          "Go to Settings → API Key",
+          "Add your OpenAI or Anthropic API key",
+          "Return to this page to see the AI explanation",
+        ].join("\n"),
+        disclaimer: "",
+        is_official: false,
+      });
+    }
 
     const explanation = await generateNormExplanation({
       provider: (provider as CloudProvider) || resolvedProvider || "openai",
-      apiKey: resolvedKey || apiKey || "",
+      apiKey: resolvedKey || "",
       model: model || "gpt-4o-mini",
       customEndpoint: customEndpoint || "",
       normId,
@@ -243,7 +281,9 @@ Return STRICT JSON with these exact fields:
   } catch (err: unknown) {
     console.error("Explain API Error:", err);
     const message =
-      err instanceof Error ? err.message : "Failed to generate explanation";
+      err instanceof Error
+        ? sanitizeErrorMessage(err)
+        : "Failed to generate explanation";
     return errorResponse("EXPLAIN_FAILED", message, 500);
   }
 }

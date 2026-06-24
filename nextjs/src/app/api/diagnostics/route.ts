@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getServerClient } from "../../../lib/supabase-server";
 import { searchNorms } from "../../../lib/qdrant";
+import { sanitizeErrorMessage } from "../../../lib/sanitize";
 
 interface CheckResult {
   status: string;
@@ -36,8 +37,7 @@ export async function GET(req: NextRequest) {
       message: "Successfully queried laws table",
     };
   } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Supabase query failed";
+    const message = sanitizeErrorMessage(err);
     checks.supabase = { status: "error", message };
   }
 
@@ -49,8 +49,7 @@ export async function GET(req: NextRequest) {
       message: `Successfully queried Qdrant via Universal Query API. Found ${qdrantResults.length} matches for 'test'.`,
     };
   } catch (err: unknown) {
-    const qdrantMessage =
-      err instanceof Error ? err.message : "Qdrant query failed";
+    const qdrantMessage = sanitizeErrorMessage(err);
     console.error("[Diagnostics] Qdrant check failed:", qdrantMessage);
     checks.qdrant = {
       status: "error",

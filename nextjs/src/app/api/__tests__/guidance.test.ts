@@ -70,6 +70,50 @@ vi.mock("@/lib/encryption", () => ({
   decryptApiKey: vi.fn().mockResolvedValue("sk-mock-key"),
 }));
 
+// Mock translate-server (avoid real env-dependent translation calls)
+vi.mock("@/lib/translate-server", () => ({
+  translateQueryToGerman: vi.fn((text: string) => Promise.resolve(text)),
+  translateFromGerman: vi.fn((text: string) => Promise.resolve(text)),
+}));
+
+// Mock generateGuidancePaths (avoid real AI API calls)
+vi.mock("@/lib/guidance", () => ({
+  generateGuidancePaths: vi.fn().mockResolvedValue([
+    {
+      path_number: 1,
+      title: "Right to Compensation",
+      summary: "You may be entitled to compensation under § 823 BGB",
+      detailed_analysis: "Analysis text here",
+      laws_cited: [
+        {
+          law_key: "BGB",
+          norm_id: "§ 823",
+          law_title: "Bürgerliches Gesetzbuch",
+        },
+      ],
+      risk_level: "medium",
+      cost_estimate: 500,
+      recommended_actions: ["Document everything", "Contact a lawyer"],
+    },
+    {
+      path_number: 2,
+      title: "Traffic Accident Claim",
+      summary: "You can file a claim with the insurance company",
+      detailed_analysis: "Analysis text here",
+      laws_cited: [
+        {
+          law_key: "StVG",
+          norm_id: "§ 7",
+          law_title: "Straßenverkehrsgesetz",
+        },
+      ],
+      risk_level: "low",
+      cost_estimate: 0,
+      recommended_actions: ["File insurance claim", "Gather evidence"],
+    },
+  ]),
+}));
+
 import { POST } from "@/app/api/guidance/route";
 
 // ── Tests ──────────────────────────────────────────────────────────────────

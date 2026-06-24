@@ -132,7 +132,7 @@ export default function SessionDetailPage() {
           </div>
           <Link
             href="/guidance/history"
-            className="inline-block mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-accent-gold hover:text-accent-gold-bright transition-colors"
+            className="inline-block mt-6 text-xs font-bold uppercase tracking-[0.2em] text-accent-gold-body hover:text-accent-gold-bright transition-colors"
           >
             Back to History
           </Link>
@@ -148,12 +148,12 @@ export default function SessionDetailPage() {
               {data.session.title || "Untitled Session"}
             </h2>
 
-            <div className="flex flex-wrap items-center gap-4 text-[10px] text-zinc-500">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
               <span className="flex items-center gap-1.5">
                 <Clock className="w-3 h-3" />
                 {formatDate(data.session.created_at)}
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+              <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                 {data.session.category}
               </span>
               {data.session.dispute_value > 0 && (
@@ -170,7 +170,7 @@ export default function SessionDetailPage() {
             {/* Situation */}
             {data.session.situation_data?.situation && (
               <div className="mt-6 p-4 bg-white/[0.02] border-l-2 border-accent-gold/20">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent-gold/60 mb-2">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-accent-gold/60 mb-2">
                   Your Situation
                 </p>
                 <p className="text-sm text-zinc-400 leading-relaxed whitespace-pre-wrap">
@@ -183,7 +183,7 @@ export default function SessionDetailPage() {
           {/* Guidance Paths */}
           {data.paths.length > 0 ? (
             <div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-gold/60 mb-6">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-gold/60 mb-6">
                 AI-Generated Outcome Paths ({data.paths.length})
               </h3>
               <GuidancePathsDisplay

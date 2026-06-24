@@ -136,10 +136,10 @@ export default function GuidanceHistoryPage() {
 
   const getStatusBadgeClass = (status: string) => {
     const base =
-      "text-[9px] font-black uppercase tracking-[0.2em] px-2 py-1 border";
+      "text-xs font-black uppercase tracking-[0.2em] px-2 py-1 border";
     switch (status) {
       case "active":
-        return `${base} text-accent-gold border-accent-gold/20 bg-accent-gold/10`;
+        return `${base} text-accent-gold-body border-accent-gold/20 bg-accent-gold/10`;
       case "completed":
         return `${base} text-green-400 border-green-400/20 bg-green-900/10`;
       case "archived":
@@ -174,7 +174,7 @@ export default function GuidanceHistoryPage() {
           </h1>
         </div>
         {pagination && (
-          <span className="ml-auto text-[10px] font-black uppercase tracking-[0.3em] text-muted">
+          <span className="ml-auto text-xs font-black uppercase tracking-[0.3em] text-muted">
             {pagination.total} Sessions
           </span>
         )}
@@ -193,7 +193,7 @@ export default function GuidanceHistoryPage() {
           </p>
           <Link
             href="/auth"
-            className="inline-flex items-center gap-2 mt-8 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
+            className="inline-flex items-center gap-2 mt-8 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold-body hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
           >
             Sign In
           </Link>
@@ -217,7 +217,7 @@ export default function GuidanceHistoryPage() {
           </div>
           <button
             onClick={loadSessions}
-            className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-accent-gold hover:text-accent-gold-bright transition-colors"
+            className="mt-4 text-xs font-bold uppercase tracking-[0.2em] text-accent-gold-body hover:text-accent-gold-bright transition-colors"
           >
             Try Again
           </button>
@@ -237,7 +237,7 @@ export default function GuidanceHistoryPage() {
           </p>
           <Link
             href="/guidance"
-            className="inline-flex items-center gap-2 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
+            className="inline-flex items-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold-body hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
           >
             Analyze a Situation
           </Link>
@@ -263,7 +263,7 @@ export default function GuidanceHistoryPage() {
                       <span className={getStatusBadgeClass(session.status)}>
                         {STATUS_LABELS[session.status] || session.status}
                       </span>
-                      <span className="text-[9px] font-mono font-black text-muted uppercase">
+                      <span className="text-xs font-mono font-black text-muted uppercase">
                         {session.category}
                       </span>
                     </div>
@@ -275,7 +275,7 @@ export default function GuidanceHistoryPage() {
                 </div>
 
                 {/* Session Meta */}
-                <div className="flex flex-wrap items-center gap-4 text-[10px] text-muted">
+                <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
                   <span className="flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
                     {formatDate(session.created_at)}
@@ -299,7 +299,7 @@ export default function GuidanceHistoryPage() {
                     {session.guidance_paths.map((path) => (
                       <span
                         key={path.id}
-                        className={`text-[9px] font-bold px-2 py-1 border ${RISK_COLORS[path.risk_level] || "text-zinc-400 border-zinc-700"}`}
+                        className={`text-xs font-bold px-2 py-1 border ${RISK_COLORS[path.risk_level] || "text-zinc-400 border-zinc-700"}`}
                       >
                         Path {path.path_number}: {truncate(path.title, 40)}
                       </span>
@@ -316,7 +316,7 @@ export default function GuidanceHistoryPage() {
                     handleDelete(session.id);
                   }}
                   disabled={deleting === session.id}
-                  className="text-[9px] font-black uppercase tracking-[0.2em] text-muted hover:text-red-500 transition-colors disabled:opacity-50"
+                  className="text-xs font-black uppercase tracking-[0.2em] text-muted hover:text-red-500 transition-colors disabled:opacity-50"
                 >
                   {deleting === session.id ? "Deleting..." : "Delete Session"}
                 </button>
@@ -330,17 +330,17 @@ export default function GuidanceHistoryPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="text-xs font-bold uppercase tracking-[0.2em] text-muted hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
-              <span className="text-[10px] font-mono text-muted">
+              <span className="text-xs font-mono text-muted">
                 Page {page} of {pagination.totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= (pagination?.totalPages || 1)}
-                className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="text-xs font-bold uppercase tracking-[0.2em] text-muted hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Next
               </button>

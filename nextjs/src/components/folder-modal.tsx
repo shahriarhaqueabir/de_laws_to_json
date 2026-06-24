@@ -146,12 +146,12 @@ export default function FolderModal({
 
           {/* Section: Basic Info */}
           <section>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
               Basic Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Folder Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -165,7 +165,7 @@ export default function FolderModal({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Description
                 </label>
                 <input
@@ -178,7 +178,7 @@ export default function FolderModal({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Category
                 </label>
                 <select
@@ -195,7 +195,7 @@ export default function FolderModal({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Status
                 </label>
                 <select
@@ -219,12 +219,12 @@ export default function FolderModal({
 
           {/* Section: Timeline & Value */}
           <section>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
               Timeline & Value
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Incident Date
                 </label>
                 <input
@@ -233,13 +233,13 @@ export default function FolderModal({
                   onChange={(e) => updateField("incident_date", e.target.value)}
                   className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
                 />
-                <p className="text-[9px] text-zinc-700 mt-1">
+                <p className="text-xs text-zinc-700 mt-1">
                   AI calculates deadlines from this date
                 </p>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Deadline Date
                 </label>
                 <input
@@ -248,13 +248,13 @@ export default function FolderModal({
                   onChange={(e) => updateField("deadline_date", e.target.value)}
                   className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
                 />
-                <p className="text-[9px] text-zinc-700 mt-1">
+                <p className="text-xs text-zinc-700 mt-1">
                   AI warns when this deadline approaches
                 </p>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Dispute Value (Streitwert) — EUR
                 </label>
                 <input
@@ -271,7 +271,7 @@ export default function FolderModal({
                   placeholder="0.00"
                   className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
                 />
-                <p className="text-[9px] text-zinc-700 mt-1">
+                <p className="text-xs text-zinc-700 mt-1">
                   Used for cost estimation (RVG/GKG)
                 </p>
               </div>
@@ -280,12 +280,12 @@ export default function FolderModal({
 
           {/* Section: Parties & Court */}
           <section>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
               Parties & Court
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Opposing Party
                 </label>
                 <input
@@ -297,13 +297,13 @@ export default function FolderModal({
                   placeholder="e.g., Employer, Landlord"
                   className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
                 />
-                <p className="text-[9px] text-zinc-700 mt-1">
+                <p className="text-xs text-zinc-700 mt-1">
                   AI checks specific protections (KSchG, BDSG, etc.)
                 </p>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Court Name
                 </label>
                 <input
@@ -316,7 +316,7 @@ export default function FolderModal({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">
                   Case Number (Aktenzeichen)
                 </label>
                 <input
@@ -332,7 +332,7 @@ export default function FolderModal({
 
           {/* Section: Notes */}
           <section>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
               Notes (AI Context)
             </h3>
             <textarea
@@ -342,7 +342,7 @@ export default function FolderModal({
               rows={4}
               className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors resize-vertical"
             />
-            <p className="text-[9px] text-zinc-700 mt-1">
+            <p className="text-xs text-zinc-700 mt-1">
               Free-text context — the AI reads this when generating guidance
               paths
             </p>
@@ -353,14 +353,14 @@ export default function FolderModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 hover:text-white focus-visible:ring-1 focus-visible:ring-accent-gold transition-colors"
+              className="px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 hover:text-white focus-visible:ring-1 focus-visible:ring-accent-gold transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] bg-accent-cobalt text-white hover:bg-accent-cobalt/90 focus-visible:ring-1 focus-visible:ring-accent-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-cobalt text-white hover:bg-accent-cobalt/90 focus-visible:ring-1 focus-visible:ring-accent-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <span className="animate-pulse">Saving...</span>

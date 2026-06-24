@@ -26,51 +26,53 @@ import { useAuth } from "./auth-context";
 import { useChat } from "./chat-context";
 import type { ChatMode, AppLanguage } from "../lib/types";
 import { LANGUAGE_LABELS } from "../lib/types";
+import { useLanguage } from "../hooks/useLanguage";
 
 const MODE_META: Record<
   ChatMode,
-  { icon: typeof Plug; color: string; bg: string; label: string }
+  { icon: typeof Plug; color: string; bg: string; tKey: string }
 > = {
   local: {
     icon: Plug,
     color: "text-zinc-500",
     bg: "bg-white/5",
-    label: "Local AI",
+    tKey: "chat.mode_local",
   },
   cloud: {
     icon: Cloud,
     color: "text-zinc-500",
     bg: "bg-white/5",
-    label: "Cloud AI",
+    tKey: "chat.mode_cloud",
   },
   browser: {
     icon: Brain,
     color: "text-zinc-500",
     bg: "bg-white/5",
-    label: "Browser AI",
+    tKey: "chat.mode_browser",
   },
   basic: {
     icon: FileText,
     color: "text-zinc-500",
     bg: "bg-white/5",
-    label: "Basic Search",
+    tKey: "chat.mode_basic",
   },
 };
-
-const navItems = [
-  { href: "/", label: "Search", icon: Search },
-  { href: "/chat", label: "Chat", icon: MessageSquare },
-  { href: "/guidance", label: "Guidance", icon: Compass },
-  { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
-];
 
 export default function NavBar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const { mode, setMode, settings, updateSettings } = useChat();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navItems = [
+    { href: "/", label: t("nav.search"), icon: Search },
+    { href: "/chat", label: t("nav.chat"), icon: MessageSquare },
+    { href: "/guidance", label: t("nav.guidance"), icon: Compass },
+    { href: "/bookmarks", label: t("nav.bookmarks"), icon: Bookmark },
+  ];
 
   // Global Escape key for mobile drawer
   useEffect(() => {
@@ -118,9 +120,9 @@ export default function NavBar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 active:translate-y-[1px] relative group ${
+                    className={`px-3 py-1.5 text-xs font-bold uppercase tracking-[0.2em] transition-all duration-300 active:translate-y-[1px] relative group ${
                       isActive
-                        ? "text-accent-gold"
+                        ? "text-accent-gold-body"
                         : "text-zinc-500 hover:text-white"
                     }`}
                   >
@@ -216,7 +218,7 @@ export default function NavBar() {
                       className="flex items-center gap-3 text-xs text-zinc-400 hover:text-accent-gold transition-colors duration-300"
                     >
                       <User className="w-4 h-4" />
-                      {user ? user.email?.split("@")[0] : "Sign In"}
+                      {user ? user.email?.split("@")[0] : t("nav.sign_in")}
                     </Link>
                   </div>
                 </div>
@@ -227,7 +229,7 @@ export default function NavBar() {
           <div className="flex items-center gap-2">
             <Link
               href={user ? "/settings" : "/auth"}
-              className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 text-zinc-500 hover:text-white"
+              className="flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-colors duration-300 text-zinc-500 hover:text-white"
               title={user?.email ?? ""}
             >
               {user ? (
@@ -240,7 +242,7 @@ export default function NavBar() {
                   </span>
                 </div>
               ) : (
-                <span className="hidden lg:inline">Sign In</span>
+                <span className="hidden lg:inline">{t("nav.sign_in")}</span>
               )}
             </Link>
 
@@ -248,8 +250,8 @@ export default function NavBar() {
               <button
                 onClick={() => signOut()}
                 className="p-2.5 text-zinc-400 hover:text-white transition-colors duration-300 min-h-[44px] min-w-[44px]"
-                aria-label="Sign out"
-                title="Sign out"
+                aria-label={t("nav.sign_out")}
+                title={t("nav.sign_out")}
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
@@ -262,7 +264,7 @@ export default function NavBar() {
                 onKeyDown={(e) => e.key === "Escape" && setLangOpen(false)}
                 aria-haspopup="true"
                 aria-expanded={langOpen}
-                className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 border border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10"
+                className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 border border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10"
                 title="Language / Sprache"
               >
                 <Globe className="w-3 h-3" />
@@ -284,7 +286,7 @@ export default function NavBar() {
                     aria-label="Select language"
                   >
                     <div className="px-4 pb-2 mb-2 border-b border-white/5">
-                      <p className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400">
+                      <p className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400">
                         Language
                       </p>
                     </div>
@@ -295,7 +297,7 @@ export default function NavBar() {
                           <button
                             key={lang}
                             onClick={() => switchLanguage(lang)}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
                               isActive
                                 ? "bg-accent-gold/10 text-accent-gold-bright"
                                 : "text-zinc-500 hover:bg-white/5 hover:text-white"
@@ -341,10 +343,12 @@ export default function NavBar() {
                 onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
                 aria-haspopup="true"
                 aria-expanded={open}
-                className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 border border-white/5 ${meta.bg} text-zinc-400 hover:bg-white/10 hover:border-white/10`}
+                className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 border border-white/5 ${meta.bg} text-zinc-400 hover:bg-white/10 hover:border-white/10`}
               >
                 <ModeIcon className="w-3 h-3" />
-                <span className="hidden sm:inline md:inline">{meta.label}</span>
+                <span className="hidden sm:inline md:inline">
+                  {t(meta.tKey)}
+                </span>
                 <ChevronDown className="w-2.5 h-2.5 opacity-40" />
               </button>
 
@@ -360,7 +364,7 @@ export default function NavBar() {
                     aria-label="Select mode"
                   >
                     <div className="px-4 pb-2 mb-2 border-b border-white/5">
-                      <p className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400">
+                      <p className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400">
                         Mode
                       </p>
                     </div>
@@ -373,7 +377,7 @@ export default function NavBar() {
                           <button
                             key={m}
                             onClick={() => switchMode(m)}
-                            className={`w-full flex items-center gap-4 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
+                            className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
                               isActive
                                 ? "bg-accent-gold/10 text-accent-gold-bright"
                                 : "text-zinc-500 hover:bg-white/5 hover:text-white"
@@ -382,7 +386,7 @@ export default function NavBar() {
                             <MI
                               className={`w-4 h-4 ${isActive ? "text-accent-gold" : "text-zinc-400"}`}
                             />
-                            <span className="flex-1">{mm.label}</span>
+                            <span className="flex-1">{t(mm.tKey)}</span>
                             {isActive && <Check className="w-3 h-3" />}
                           </button>
                         );
@@ -392,10 +396,10 @@ export default function NavBar() {
                       <Link
                         href="/settings"
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-accent-gold transition-colors duration-300 py-1"
+                        className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-accent-gold transition-colors duration-300 py-1"
                       >
                         <Settings className="w-3 h-3" />
-                        Settings
+                        {t("nav.settings")}
                       </Link>
                     </div>
                   </div>

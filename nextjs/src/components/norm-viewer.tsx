@@ -131,7 +131,7 @@ export default function NormViewer({
         className="w-full flex items-center justify-between p-8 text-left hover:bg-white/[0.01] transition-all duration-500 relative"
       >
         <div className="flex-1">
-          <span className="text-accent-gold font-black mr-6 text-[10px] tracking-[0.3em] uppercase opacity-60">
+          <span className="text-accent-gold-body font-black mr-6 text-xs tracking-[0.3em] uppercase opacity-60">
             Section {normId}
           </span>
           <span className="font-serif font-bold text-white text-xl tracking-tight">
@@ -228,7 +228,7 @@ export default function NormViewer({
 
                 {/* Disclaimer */}
                 <div className="flex justify-center">
-                  <p className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-700 italic border-y border-white/5 py-4 px-10">
+                  <p className="text-xs font-black uppercase tracking-[0.4em] text-zinc-700 italic border-y border-white/5 py-4 px-10">
                     Vault Intelligence — Preliminary Non-Binding Report
                   </p>
                 </div>
