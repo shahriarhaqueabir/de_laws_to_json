@@ -26,14 +26,16 @@ const spec = {
             in: "query",
             required: false,
             schema: { type: "string" },
-            description: "Search query (auto-translated to German for embedding)",
+            description:
+              "Search query (auto-translated to German for embedding)",
           },
           {
             name: "category",
             in: "query",
             required: false,
             schema: { type: "string" },
-            description: "Filter by law category (e.g. labor, housing, consumer)",
+            description:
+              "Filter by law category (e.g. labor, housing, consumer)",
           },
           {
             name: "lang",
@@ -155,7 +157,8 @@ const spec = {
         },
         responses: {
           "200": {
-            description: "Explanation with translation, summary, implications, next steps",
+            description:
+              "Explanation with translation, summary, implications, next steps",
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/ExplainResponse" },
@@ -485,7 +488,6 @@ const spec = {
           lawTitle: { type: "string" },
           mode: { type: "string", enum: ["local"] },
           provider: { type: "string" },
-          apiKey: { type: "string" },
           model: { type: "string" },
         },
       },
@@ -510,7 +512,10 @@ const spec = {
         properties: {
           message: { type: "string" },
           conversationId: { type: "string" },
-          mode: { type: "string", enum: ["basic", "browser", "cloud", "local"] },
+          mode: {
+            type: "string",
+            enum: ["basic", "browser", "cloud", "local"],
+          },
           model: { type: "string" },
           customEndpoint: { type: "string" },
           language: { type: "string" },

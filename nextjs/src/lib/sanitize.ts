@@ -6,17 +6,17 @@
 // Patterns matching common API key formats
 const API_KEY_PATTERNS: RegExp[] = [
   // OpenAI keys: sk-proj-abc..., sk-svcacct-abc..., etc.
-  /sk-[A-Za-z0-9_-]{20,}/g,
+  /sk-[A-Za-z0-9_-]{20,}/,
   // Anthropic keys: sk-ant-abc...
-  /sk-ant-[A-Za-z0-9_-]{20,}/g,
+  /sk-ant-[A-Za-z0-9_-]{20,}/,
   // OpenAI project keys: sk-proj-...
-  /sk-proj-[A-Za-z0-9_-]{20,}/g,
+  /sk-proj-[A-Za-z0-9_-]{20,}/,
   // Bearer tokens in error responses
-  /Bearer\s+[A-Za-z0-9._-]{20,}/gi,
+  /Bearer\s+[A-Za-z0-9._-]{20,}/i,
   // Generic Authorization header values
-  /(?:Authorization|X-API-Key|api[_-]?key):\s*['"]?[A-Za-z0-9_-]{10,}['"]?/gi,
+  /(?:Authorization|X-API-Key|api[_-]?key):\s*['"]?[A-Za-z0-9_-]{10,}['"]?/i,
   // Key-like query params in URLs embedded in errors
-  /[?&](?:api_key|apiKey|key)=\w+/gi,
+  /[?&](?:api_key|apiKey|key)=\w+/i,
 ];
 
 /**

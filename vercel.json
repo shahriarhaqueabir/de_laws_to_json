@@ -1,6 +1,5 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "rootDirectory": "nextjs",
   "regions": ["fra1"]
 }
