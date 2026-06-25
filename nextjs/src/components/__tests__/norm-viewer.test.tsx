@@ -19,6 +19,18 @@ vi.mock("sonner", () => ({
   Toaster: ({ children }: { children: any }) => children ?? null,
 }));
 
+// Mock localStorage with default settings
+beforeEach(() => {
+  vi.spyOn(Storage.prototype, "getItem").mockReturnValue(
+    JSON.stringify({
+      language: "en",
+      mode: "cloud",
+      provider: "openai",
+      model: "gpt-4o-mini",
+    }),
+  );
+});
+
 import NormViewer from "../norm-viewer";
 
 const mockExplanation = {
@@ -52,8 +64,15 @@ describe("NormViewer", () => {
     expect(screen.getByText("Schadensersatzpflicht")).toBeInTheDocument();
   });
 
-  it("clicking expands content", async () => {
+  it("clicking expands content and auto-fetches translation", async () => {
     const user = userEvent.setup();
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockExplanation),
+    });
+    vi.spyOn(global, "fetch").mockImplementation(mockFetch);
+
     render(<NormViewer {...defaultProps} />);
 
     // Content should not be visible initially
@@ -69,27 +88,8 @@ describe("NormViewer", () => {
     expect(
       screen.getByText("Wer vorsätzlich oder fahrlässig das Leben..."),
     ).toBeInTheDocument();
-  });
 
-  it("clicking 'Translate Insight' fires POST to /api/explain", async () => {
-    const user = userEvent.setup();
-
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockExplanation),
-    });
-    vi.spyOn(global, "fetch").mockImplementation(mockFetch);
-
-    render(<NormViewer {...defaultProps} />);
-
-    // Expand first
-    const header = screen.getByText(/Schadensersatzpflicht/).closest("button")!;
-    await user.click(header);
-
-    // Click the Translate Insight button
-    const translateBtn = screen.getByText(/Translate Insight/);
-    await user.click(translateBtn);
-
+    // Auto-fetch should fire POST to /api/explain with correct body
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith("/api/explain", {
         method: "POST",
@@ -102,6 +102,7 @@ describe("NormViewer", () => {
     expect(body.normId).toBe("§ 823");
     expect(body.lawKey).toBe("BGB");
     expect(body.content).toBe("Wer vorsätzlich oder fahrlässig das Leben...");
+    expect(body.lang).toBe("en");
   });
 
   it("explanation renders translation, summary, implications, next_steps when loaded", async () => {
@@ -115,14 +116,11 @@ describe("NormViewer", () => {
 
     render(<NormViewer {...defaultProps} />);
 
-    // Expand
+    // Expand — triggers auto-fetch
     const header = screen.getByText(/Schadensersatzpflicht/).closest("button")!;
     await user.click(header);
 
-    // Click Translate Insight
-    const translateBtn = screen.getByText(/Translate Insight/);
-    await user.click(translateBtn);
-
+    // Wait for translation to appear
     await waitFor(() => {
       expect(
         screen.getByText("Whoever intentionally or negligently injures..."),
@@ -149,13 +147,9 @@ describe("NormViewer", () => {
 
     render(<NormViewer {...defaultProps} />);
 
-    // Expand
+    // Expand — triggers auto-fetch
     const header = screen.getByText(/Schadensersatzpflicht/).closest("button")!;
     await user.click(header);
-
-    // Click Translate Insight
-    const translateBtn = screen.getByText(/Translate Insight/);
-    await user.click(translateBtn);
 
     await waitFor(() => {
       expect(screen.getByText("Decrypting Dialect...")).toBeInTheDocument();
@@ -175,9 +169,6 @@ describe("NormViewer", () => {
     const header = screen.getByText(/Schadensersatzpflicht/).closest("button")!;
     await user.click(header);
 
-    const translateBtn = screen.getByText(/Translate Insight/);
-    await user.click(translateBtn);
-
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(
         "Explanation failed. Check settings.",
@@ -194,14 +185,11 @@ describe("NormViewer", () => {
     });
     vi.spyOn(global, "fetch").mockImplementation(mockFetch);
 
-    render(<NormViewer {...defaultProps} />);
+    const { unmount } = render(<NormViewer {...defaultProps} />);
 
+    // Expand — triggers auto-fetch
     const header = screen.getByText(/Schadensersatzpflicht/).closest("button")!;
     await user.click(header);
-
-    // Click translate once
-    const translateBtn = screen.getByText(/Translate Insight/);
-    await user.click(translateBtn);
 
     // Wait for explanation to load
     await waitFor(() => {
@@ -210,13 +198,15 @@ describe("NormViewer", () => {
       ).toBeInTheDocument();
     });
 
-    // Try clicking translate again (should be no-op)
-    const anyTranslateBtn = screen.queryByText(/Translate Insight/);
-    if (anyTranslateBtn) {
-      await user.click(anyTranslateBtn);
-    }
+    // Collapse and re-expand
+    await user.click(header);
+    expect(
+      screen.queryByText("Whoever intentionally or negligently injures..."),
+    ).not.toBeInTheDocument();
 
-    // fetch should have been called only once
+    await user.click(header);
+
+    // fetch should have been called only once (from the first expand)
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });

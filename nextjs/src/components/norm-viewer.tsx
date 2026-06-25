@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Languages, Loader2, ChevronDown } from "lucide-react";
 import {
   AppLanguage,
@@ -38,9 +38,8 @@ export default function NormViewer({
     } catch {}
     return DEFAULT_CHAT_SETTINGS;
   });
-  const handleExplain = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (explanation) return;
+  const fetchExplanation = useCallback(async () => {
+    if (explanation || explaining) return;
     setExplaining(true);
     try {
       if (settings.mode === "local") {
@@ -118,11 +117,20 @@ export default function NormViewer({
       setExplanation(data);
     } catch (err) {
       console.error("Norm explain failed:", err);
-      toast.error("Explanation failed. Check settings.");
+      if (settings.mode !== "local") {
+        toast.error("Explanation failed. Check settings.");
+      }
     } finally {
       setExplaining(false);
     }
-  };
+  }, [explanation, explaining, settings, normId, lawKey, title, content]);
+
+  // Auto-fetch translation when the norm is expanded
+  useEffect(() => {
+    if (expanded) {
+      fetchExplanation();
+    }
+  }, [expanded, fetchExplanation]);
 
   return (
     <div className="premium-card overflow-hidden mb-6 group/norm border-white/5 bg-zinc-950/20">
@@ -139,15 +147,6 @@ export default function NormViewer({
           </span>
         </div>
         <div className="flex items-center gap-6">
-          {!explanation && !expanded && (
-            <div
-              className="hidden group-hover/norm:flex items-center gap-2 monumental-type opacity-40 animate-pulse"
-              onClick={handleExplain}
-            >
-              <div className="w-1 h-1 rounded-full bg-accent-gold shadow-[0_0_8px_var(--accent-gold-bright)]" />
-              Ready
-            </div>
-          )}
           <div
             className={`p-2 transition-transform duration-500 ${expanded ? "rotate-180" : ""}`}
           >
@@ -167,20 +166,22 @@ export default function NormViewer({
 
           <div className="mt-12">
             {!explanation ? (
-              <button
-                onClick={handleExplain}
-                disabled={explaining}
-                className="flex items-center gap-4 monumental-type opacity-40 hover:opacity-100 hover:text-accent-gold disabled:opacity-10 transition-all duration-500 group/btn active:scale-95"
-              >
+              <div className="flex items-center gap-4 monumental-type opacity-40">
                 {explaining ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-accent-gold" />
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-accent-gold" />
+                    <span>Decrypting Dialect...</span>
+                  </>
                 ) : (
-                  <Languages className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" />
+                  <button
+                    onClick={() => fetchExplanation()}
+                    className="flex items-center gap-4 opacity-40 hover:opacity-100 hover:text-accent-gold transition-all duration-500 group/btn active:scale-95"
+                  >
+                    <Languages className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" />
+                    <span>Retry Translation</span>
+                  </button>
                 )}
-                {explaining
-                  ? "Decrypting Dialect..."
-                  : `Translate Insight (${LANGUAGE_NAMES[settings.language]})`}
-              </button>
+              </div>
             ) : (
               <div className="space-y-10 animate-fade-in">
                 {/* Translation */}
