@@ -4,59 +4,18 @@ import { cookies } from "next/headers";
 import { getServerClient } from "../../../lib/supabase-server";
 import { searchNorms, type SearchResult } from "../../../lib/qdrant";
 import { generateChatResponse } from "../../../lib/chat";
-import type {
-  ChatMode,
-  CloudProvider,
-  AppLanguage,
-  CitedLaw,
-} from "../../../lib/types";
-import { LANGUAGE_NAMES } from "../../../lib/types";
+import type { ChatMode, CloudProvider, CitedLaw } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
 import { decryptApiKey } from "../../../lib/encryption";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
 import { translateQueryToGerman } from "../../../lib/translate-server";
 import { detectCategory } from "../../../lib/category-detect";
+import { extractLawKeys, KNOWN_LAW_KEYS } from "../../../lib/law-keys";
 import {
   checkRateLimit,
   getClientIp,
   DEFAULT_AI_RATE_LIMIT,
 } from "../../../lib/rate-limiter";
-
-// ── German Law Abbreviation Matching (shared with search route) ──
-const KNOWN_LAW_KEYS = new Set([
-  "StVG", "StVO", "StVZO", "FeV", "FZV", "BGB", "StGB", "KSchG",
-  "BetrVG", "TzBfG", "MuSchG", "BUrlG", "EntgFG", "SGB_I", "SGB_III",
-  "SGB_V", "SGB_VI", "SGB_IX", "SGB_XI", "GG", "VwVfG", "VwGO",
-  "OWiG", "StPO", "ZPO", "GVG", "FamFG", "GKG", "RVG", "JGG",
-  "BVerfGG", "BVerwG", "BGH", "AGBG", "UKlaG", "ProdHaftG",
-  "StraBG", "EStG", "KStG", "GewStG", "UStG", "AO", "InsO",
-  "EGInsO", "ZVG", "EnEV", "BImSchG", "KrWG", "WHG", "BNatSchG",
-  "BauGB", "BauNVO", "HOAI", "BGB_InfoV", "PflVG", "VVG",
-  "EGBGB", "BGBL", "BGBl", "HGB", "AktG", "GmbHG",
-  "GenG", "PatG", "MarkenG", "UrhG", "GeschmMG", "UWG",
-  "GWB", "WpHG", "KWG", "VAG", "FMAB", "PAngV", "BDSG",
-  "DSGVO", "TTDSG", "TKG", "MStVG", "LuftVG", "PBefG",
-  "AEG", "GüKG", "SeeArbG", "FlagGR", "BinSchVG",
-  "AufenthG", "AsylG", "StAG", "FreizügG/EU",
-  "BEEG", "Elterngeld", "SGB_II", "SGB_XII", "WoGG",
-  "WEG", "MietR", "HeizkostenV", "BetrKV",
-  "IStGH", "ZAG", "AWG", "KrWaffKontrG",
-]);
-
-function extractLawKeys(query: string): string[] {
-  const pattern = /\b([A-Z][A-Za-z0-9]{1,7}(?:[-/][A-Z][A-Za-z0-9]*)?(?:_[A-Z]+)?)\b/g;
-  const found: string[] = [];
-  const seen = new Set<string>();
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(query)) !== null) {
-    const candidate = match[1];
-    if (KNOWN_LAW_KEYS.has(candidate) && !seen.has(candidate)) {
-      found.push(candidate);
-      seen.add(candidate);
-    }
-  }
-  return found;
-}
 
 // ── SSRF Protection: Broker URL validation ──
 // Only allow localhost/loopback addresses to prevent SSRF attacks
@@ -181,8 +140,8 @@ export async function POST(req: NextRequest) {
             `[Chat API] Pre-search found ${preSearchLaws.length} exact law matches.`,
           );
         }
-      } catch {
-        console.warn("[Chat API] Law abbreviation pre-search failed");
+      } catch (lawErr) {
+        console.error("[Chat API] Law abbreviation pre-search failed:", lawErr);
       }
     }
 
@@ -204,7 +163,11 @@ export async function POST(req: NextRequest) {
 
     if (!skipQdrant) {
       try {
-        const qdrantResults = await searchNorms(searchQuery, detectedCategory, 50);
+        const qdrantResults = await searchNorms(
+          searchQuery,
+          detectedCategory,
+          50,
+        );
         norms.push(...qdrantResults);
 
         if (qdrantResults.length > 0) {
@@ -214,8 +177,12 @@ export async function POST(req: NextRequest) {
           const lawCounts = new Map<string, number>();
           for (const n of qdrantResults)
             lawCounts.set(n.law_key, (lawCounts.get(n.law_key) || 0) + 1);
-          const topLaw = [...lawCounts.entries()].sort((a, b) => b[1] - a[1])[0];
-          const homogeneityRatio = topLaw ? topLaw[1] / qdrantResults.length : 0;
+          const topLaw = [...lawCounts.entries()].sort(
+            (a, b) => b[1] - a[1],
+          )[0];
+          const homogeneityRatio = topLaw
+            ? topLaw[1] / qdrantResults.length
+            : 0;
 
           const needsUnfiltered =
             (!detectedCategory && maxScore < 0.3) ||
@@ -238,8 +205,11 @@ export async function POST(req: NextRequest) {
             }
           }
         }
-      } catch {
-        console.warn("Qdrant search failed, continuing with pre-search context");
+      } catch (qdrantErr) {
+        console.warn(
+          "Qdrant search failed, continuing with pre-search context:",
+          qdrantErr,
+        );
       }
     } else {
       console.log(
@@ -271,7 +241,7 @@ export async function POST(req: NextRequest) {
       case "local": {
         // Mode 1: Local Ollama via broker
         try {
-          const langName = LANGUAGE_NAMES[language as AppLanguage] || "English";
+          const langName = "English";
           const brokerRes = await fetch(`${BROKER_URL}/api/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -297,7 +267,8 @@ export async function POST(req: NextRequest) {
           } else {
             throw new Error("Broker returned error");
           }
-        } catch {
+        } catch (brokerErr) {
+          console.warn("[Chat API] Broker call failed:", brokerErr);
           response =
             `I found ${norms.length} relevant paragraphs, but your local AI broker is offline.\n\n` +
             `To use Local AI mode, start the broker:\n` +
@@ -363,7 +334,7 @@ export async function POST(req: NextRequest) {
             question: message,
             norms: citedLaws,
             context: contextStr,
-            language: (language as AppLanguage) || "en",
+            language: "en",
             temperature: ollamaParams?.temperature as number,
             maxTokens: ollamaParams?.max_tokens as number,
             systemPrompt: ollamaParams?.system_prompt as string,

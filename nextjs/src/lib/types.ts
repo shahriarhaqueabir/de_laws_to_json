@@ -153,7 +153,7 @@ export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
   mode: "basic",
   language: "en",
   brokerUrl: "http://localhost:9000",
-  ollamaModel: "qwen2.5:1.5b",
+  ollamaModel: "qwen3.5:4b",
   ollamaParams: DEFAULT_OLLAMA_PARAMS,
   provider: "openai",
   model: "gpt-4o-mini",

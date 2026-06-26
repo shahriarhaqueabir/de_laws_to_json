@@ -13,7 +13,6 @@ import {
 import { decryptApiKey } from "@/lib/encryption";
 import { sanitizeErrorMessage } from "@/lib/sanitize";
 import { translateFromGerman } from "@/lib/translate-server";
-import { LANGUAGE_NAMES, type AppLanguage } from "@/lib/types";
 import {
   checkRateLimit,
   getClientIp,
@@ -184,7 +183,7 @@ export async function POST(req: NextRequest) {
         .map((n) => `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 1500)}`)
         .join("\n\n");
 
-      const lang = (language || "en") as AppLanguage;
+      const lang = "en";
       const params: GenerateGuidanceParams = {
         situation,
         language: lang,
@@ -215,19 +214,17 @@ export async function POST(req: NextRequest) {
     if (!apiKey) {
       const translatedSituation = await translateQueryToGerman(situation);
       const norms = await searchNorms(translatedSituation, undefined, 10);
-      const appLang = (language || "en") as AppLanguage;
+      const appLang = "en";
 
       // Translate norms from German to user's language
       const translatedPaths = await Promise.all(
         norms.map(async (n, i) => {
           const [translatedTitle, translatedSummary, translatedAnalysis] =
-            appLang !== "de"
-              ? await Promise.all([
-                  translateFromGerman(n.law_title || n.law_key, appLang),
-                  translateFromGerman(n.content.slice(0, 300), appLang),
-                  translateFromGerman(n.content, appLang),
-                ])
-              : [n.law_title || n.law_key, n.content.slice(0, 300), n.content];
+            await Promise.all([
+              translateFromGerman(n.law_title || n.law_key, appLang),
+              translateFromGerman(n.content.slice(0, 300), appLang),
+              translateFromGerman(n.content, appLang),
+            ]);
 
           return {
             path_number: i + 1,
@@ -325,7 +322,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Generate guidance paths
-    const lang = (language || "en") as AppLanguage;
+    const lang = "en";
     const customEndpoint = ""; // Use default for each provider
 
     const params: GenerateGuidanceParams = {

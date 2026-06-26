@@ -5,8 +5,7 @@ import { getServerClient } from "../../../lib/supabase-server";
 import { createAdminClient } from "../../../lib/supabase-admin";
 import { generateNormExplanation } from "../../../lib/chat";
 import { decryptApiKey } from "../../../lib/encryption";
-import type { AppLanguage, CloudProvider } from "../../../lib/types";
-import { LANGUAGE_NAMES } from "../../../lib/types";
+import type { CloudProvider } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
 import {
@@ -16,17 +15,20 @@ import {
 } from "../../../lib/rate-limiter";
 
 const ExplainBodySchema = z.object({
-  normId: z.string().min(1, "normId is required"),
-  lawKey: z.string().min(1, "lawKey is required"),
-  content: z.string().min(1, "content is required"),
-  lang: z.string().min(1, "lang is required"),
-  lawTitle: z.string().optional(),
-  mode: z.string().optional(),
-  provider: z.string().optional(),
-  model: z.string().optional(),
-  customEndpoint: z.string().optional(),
-  brokerUrl: z.string().optional(),
-  ollamaModel: z.string().optional(),
+  normId: z.string().min(1, "normId is required").max(100),
+  lawKey: z.string().min(1, "lawKey is required").max(100),
+  content: z
+    .string()
+    .min(1, "content is required")
+    .max(50000, "Content too large"),
+  lang: z.string().min(1, "lang is required").max(10),
+  lawTitle: z.string().max(500).optional(),
+  mode: z.string().max(20).optional(),
+  provider: z.string().max(30).optional(),
+  model: z.string().max(100).optional(),
+  customEndpoint: z.string().max(500).optional(),
+  brokerUrl: z.string().max(500).optional(),
+  ollamaModel: z.string().max(100).optional(),
   ollamaParams: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -151,7 +153,7 @@ export async function POST(req: NextRequest) {
         bodyBrokerUrl ||
         process.env.NEXT_PUBLIC_BROKER_URL ||
         "http://localhost:9000";
-      const langName = LANGUAGE_NAMES[lang as AppLanguage] || "English";
+      const langName = "English";
 
       const explainPrompt = `Explain this German law section. Respond in ${langName}.
 
@@ -224,7 +226,7 @@ Return STRICT JSON with these exact fields:
 
     // If no API key is available, return a basic response without AI
     if (!resolvedKey) {
-      const langName = LANGUAGE_NAMES[lang as AppLanguage] || "English";
+      const langName = "English";
       return NextResponse.json({
         norm_id: normId,
         law_key: lawKey,
@@ -254,7 +256,7 @@ Return STRICT JSON with these exact fields:
       normId,
       lawKey,
       content,
-      lang: (lang as AppLanguage) || "en",
+      lang: "en",
     });
 
     // 3. Cache in Supabase (admin client — RLS INSERT revoked from anon/authenticated)
@@ -273,9 +275,11 @@ Return STRICT JSON with these exact fields:
           next_steps: explanation.next_steps,
         });
       insertError = err;
-    } catch {
-      // Admin client unavailable (e.g. test env without SERVICE_ROLE_KEY) —
-      // fall back to the regular client (works locally, fails in prod after migration 00010)
+    } catch (adminErr) {
+      console.warn(
+        "[Explain] Admin client unavailable, using regular client:",
+        adminErr,
+      );
       const { error: err } = await supabase.from("norm_explanations").insert({
         norm_id: normCacheId,
         law_key: lawKey,

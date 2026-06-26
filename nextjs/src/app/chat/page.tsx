@@ -30,7 +30,7 @@ interface Message {
 interface ChatRequestBody {
   message: string;
   mode: ChatMode;
-  language: AppLanguage;
+  language: string;
   conversationId?: string;
   provider?: CloudProvider;
   model?: string;

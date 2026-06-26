@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback, startTransition } from "react";
 import { Languages, Loader2, ChevronDown } from "lucide-react";
 import {
-  AppLanguage,
-  LANGUAGE_NAMES,
   NormExplanation,
   ChatSettings,
   DEFAULT_CHAT_SETTINGS,
@@ -45,7 +43,7 @@ export default function NormViewer({
     try {
       if (settings.mode === "local") {
         // CLIENT-SIDE EXPLAIN FOR LOCAL MODE
-        const langName = LANGUAGE_NAMES[settings.language] || "English";
+        const langName = "English";
         const explainPrompt = `Explain this German law section. Respond in ${langName}.\n\nGerman text: ${content}\n\nReturn STRICT JSON with these exact fields:\n{\n  "translation": "accurate legal translation of the German text",\n  "summary": "what this means in simple terms in the user's language",\n  "implications": "what this means practically for the person involved",\n  "next_steps": "concrete recommended actions"\n}`;
 
         const brokerRes = await fetch(`${settings.brokerUrl}/api/chat`, {
@@ -84,7 +82,7 @@ export default function NormViewer({
           norm_id: normId,
           law_key: lawKey,
           law_title: title,
-          lang: settings.language,
+          lang: "en" as const,
           translation: parsed.translation || "",
           summary: parsed.summary || "",
           implications: parsed.implications || "",
@@ -96,13 +94,12 @@ export default function NormViewer({
 
       // BASIC MODE — use client-side translation worker (no API key needed)
       if (settings.mode === "basic") {
-        const langName = LANGUAGE_NAMES[settings.language] || "English";
+        const langName = "English";
         let translation = "";
         try {
           translation = await translateText(content, {
             sourceLang: "de",
-            targetLang:
-              settings.language === "de" ? "en" : settings.language || "en",
+            targetLang: "en",
           });
         } catch {
           translation = content; // fall back to raw German if worker fails
@@ -111,12 +108,9 @@ export default function NormViewer({
           norm_id: normId,
           law_key: lawKey,
           law_title: title,
-          lang: settings.language,
+          lang: "en" as const,
           translation: translation,
-          summary:
-            langName !== "English"
-              ? "Browser AI translation — consult a licensed German attorney."
-              : "Browser AI translation — not legally binding.",
+          summary: "Browser AI translation — not legally binding.",
           implications:
             "See a licensed German attorney (Rechtsanwalt) for legally binding advice on your specific situation.",
           next_steps: "Consult a Rechtsanwalt for your specific situation.",

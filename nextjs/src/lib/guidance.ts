@@ -153,7 +153,7 @@ function buildPlaybookContext(
   const parts: string[] = ["## Remediation Playbooks"];
   for (const playbook of matched) {
     parts.push(
-      `\n### ${playbook.issue_type.replace(/_/g, " ").replace(/\\b\\w/g, (c) => c.toUpperCase())}`,
+      `\n### ${playbook.issue_type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}`,
     );
     for (const step of playbook.steps) {
       parts.push(
@@ -627,4 +627,9 @@ export function getLanguagePrompt(language: AppLanguage): string {
   return languageMap[language] || "English";
 }
 
-export { GUIDANCE_SYSTEM_PROMPT, buildGuidancePrompt, LEGAL_DISCLAIMER };
+export {
+  GUIDANCE_SYSTEM_PROMPT,
+  buildGuidancePrompt,
+  buildPlaybookContext,
+  LEGAL_DISCLAIMER,
+};

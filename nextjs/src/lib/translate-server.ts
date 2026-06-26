@@ -30,6 +30,66 @@ const LIBRE_LANG_CODES: Record<string, string> = {
 const LIBRE_API_URL = "https://libretranslate.com/translate";
 const LIBRE_TIMEOUT_MS = 5000;
 
+// ── Ollama Translation ─────────────────────────────────────────────────────
+// Uses TranslateGemma:4b for high-quality DE↔EN translation
+// when the term map doesn't cover the text.
+
+const OLLAMA_URL = "http://localhost:11434";
+const OLLAMA_TRANSLATE_TIMEOUT_MS = 15000;
+const TRANSLATE_MODEL = "translategemma:4b";
+
+async function callOllamaTranslate(
+  text: string,
+  sourceLang: string,
+  targetLang: string,
+): Promise<string | null> {
+  // Only DE↔EN supported via TranslateGemma
+  const supported = new Set(["de", "en"]);
+  if (!supported.has(sourceLang) || !supported.has(targetLang)) return null;
+  if (sourceLang === targetLang) return text;
+
+  const direction =
+    sourceLang === "de" ? "German to English" : "English to German";
+  const prompt = `Translate the following legal text from ${direction}. Return only the translation, no explanations.
+
+${sourceLang === "de" ? "German" : "English"}: ${text}
+
+${targetLang === "en" ? "English" : "German"}:`;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      OLLAMA_TRANSLATE_TIMEOUT_MS,
+    );
+
+    const res = await fetch(`${OLLAMA_URL}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: TRANSLATE_MODEL,
+        prompt,
+        stream: false,
+        options: {
+          temperature: 0.1,
+          num_predict: 512,
+        },
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = (await res.json()) as { response: string };
+      const translated = data.response?.trim();
+      if (translated && translated !== text) return translated;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ── English→German Legal Term Map ─────────────────────────────────────────
 // Used for fast-path search query translation (no API call needed)
 
@@ -602,6 +662,15 @@ export async function translateQueryToGerman(query: string): Promise<string> {
     return termResult;
   }
 
+  // Ollama TranslateGemma:4b fallback (higher quality than LibreTranslate)
+  const ollamaResult = await callOllamaTranslate(query, "en", "de");
+  if (ollamaResult) {
+    console.log(
+      `[Translate] Ollama TranslateGemma EN→DE: "${query}" → "${ollamaResult}"`,
+    );
+    return ollamaResult;
+  }
+
   // LibreTranslate fallback (auto-detect source language)
   const apiResult = await callLibreTranslate(query, "auto", "de");
   if (apiResult) {
@@ -737,6 +806,15 @@ export async function translateFromGerman(
         `[Translate] Term-mapped DE→EN: "${text.slice(0, 40)}..." → "${termMatch}"`,
       );
       return termMatch;
+    }
+
+    // Ollama TranslateGemma:4b fallback (higher quality than LibreTranslate)
+    const ollamaResult = await callOllamaTranslate(text, "de", "en");
+    if (ollamaResult) {
+      console.log(
+        `[Translate] Ollama TranslateGemma DE→EN: "${text.slice(0, 40)}..."`,
+      );
+      return ollamaResult;
     }
   }
 
