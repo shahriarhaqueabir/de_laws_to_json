@@ -48,12 +48,16 @@ CREATE TRIGGER trg_rate_limits_updated_at
 ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
 
 -- Deny all operations for anon and authenticated roles
+DROP POLICY IF EXISTS "rate_limits_no_anon_select" ON public.rate_limits;
 CREATE POLICY "rate_limits_no_anon_select" ON public.rate_limits
   FOR SELECT USING (false);
+DROP POLICY IF EXISTS "rate_limits_no_anon_insert" ON public.rate_limits;
 CREATE POLICY "rate_limits_no_anon_insert" ON public.rate_limits
   FOR INSERT WITH CHECK (false);
+DROP POLICY IF EXISTS "rate_limits_no_anon_update" ON public.rate_limits;
 CREATE POLICY "rate_limits_no_anon_update" ON public.rate_limits
   FOR UPDATE USING (false);
+DROP POLICY IF EXISTS "rate_limits_no_anon_delete" ON public.rate_limits;
 CREATE POLICY "rate_limits_no_anon_delete" ON public.rate_limits
   FOR DELETE USING (false);
 
