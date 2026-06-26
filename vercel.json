@@ -1,8 +1,0 @@
-{
-  "version": 2,
-  "framework": "nextjs",
-  "regions": ["fra1"],
-  "buildCommand": "cd nextjs && npx next build",
-  "outputDirectory": "nextjs/.next",
-  "installCommand": "cd nextjs && npm install"
-}
