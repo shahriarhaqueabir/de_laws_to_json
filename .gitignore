@@ -179,7 +179,10 @@ examples/
 # Archived legacy code (not part of the app)
 # -----------------------------------------------------------------------------
 _archive/
-assets/
+assets/*.png
+assets/*.jpg
+assets/*.jpeg
+assets/*.gif
 Documentation and AI Instructions/
 
 # Additional backup folders
