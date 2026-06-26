@@ -28,7 +28,7 @@ vi.mock("sonner", () => ({
     error: mockToast,
     warning: mockToast,
   }),
-  Toaster: ({ children }: { children: any }) => children ?? null,
+  Toaster: ({ children }: { children: React.ReactNode }) => children ?? null,
 }));
 
 import LawCard from "../law-card";

@@ -8,6 +8,9 @@ German Law Vault provides a comprehensive search engine and AI-guided legal assi
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
 [![Laws](https://img.shields.io/badge/laws-6000+-green.svg)](https://www.gesetze-im-internet.de/)
 [![Search](https://img.shields.io/badge/search-Semantic-blue.svg)](https://qdrant.tech)
+[![Tests](https://img.shields.io/badge/tests-308%20passing-brightgreen.svg)](nextjs/)
+[![Security](https://img.shields.io/badge/security-RLS%20%7C%20CSP%20%7C%20AES--256--GCM-purple.svg)](docs/security-architecture.md)
+[![TypeScript](https://img.shields.io/badge/typescript-strict-blue.svg)](nextjs/tsconfig.json)
 
 ---
 
@@ -275,7 +278,25 @@ Key test files:
 - `components/__tests__/folder-modal.test.tsx` — Folder modal
 - `app/__tests__/bookmarks-page.test.tsx` — Bookmarks page
 
-## Security & Privacy
+## Security Architecture
+
+See the comprehensive [Security Architecture Document](docs/security-architecture.md) for full details.
+
+### Key Protections
+
+| Threat | Mitigation |
+|--------|-----------|
+| XSS | CSP with restricted script-src + React auto-escaping |
+| CSRF | Supabase SSR SameSite cookies + form-action 'self' CSP |
+| SQL Injection | Parameterized Supabase client — no raw SQL |
+| IDOR | RLS policies + API-level user_id filtering + UUID primary keys |
+| API Key Leakage | AES-256-GCM encryption at rest + error message sanitization |
+| Clickjacking | `frame-ancestors 'none'` CSP directive |
+| Session Hijacking | HSTS + HttpOnly/Secure cookies + refresh token rotation |
+| Spectre/Worker | COOP `same-origin` + COEP `credentialless` headers |
+| Supply Chain | Dependabot + lockfile + gitleaks scanning |
+
+### Privacy
 - **Vector Search**: Queries sent to Qdrant Cloud for semantic matching
 - **Translation**: Local via Transformers.js WASM. No external API calls
 - **AI Chat**: Local via Ollama (data stays on machine) or Cloud via BYO API key

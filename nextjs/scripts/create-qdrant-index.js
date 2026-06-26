@@ -16,15 +16,31 @@ async function main() {
   const client = new QdrantClient({ url, apiKey });
   const collection = process.env.COLLECTION || "german_norms";
 
+  // Index law_key for efficient scroll/lookup
   try {
     await client.createPayloadIndex(collection, {
       field_name: "law_key",
       field_schema: "keyword",
     });
-    console.log(`\u2713 Payload index created on law_key in ${collection}`);
+    console.log(`✓ Payload index created on law_key in ${collection}`);
   } catch (err) {
-    if (err.message?.includes("already exists") || err.message?.includes("already exists")) {
+    if (err.message?.includes("already exists")) {
       console.log(`- Index on law_key already exists in ${collection}`);
+    } else {
+      throw err;
+    }
+  }
+
+  // Index category for filtered search queries
+  try {
+    await client.createPayloadIndex(collection, {
+      field_name: "category",
+      field_schema: "keyword",
+    });
+    console.log(`✓ Payload index created on category in ${collection}`);
+  } catch (err) {
+    if (err.message?.includes("already exists")) {
+      console.log(`- Index on category already exists in ${collection}`);
     } else {
       throw err;
     }

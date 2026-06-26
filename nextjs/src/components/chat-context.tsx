@@ -1,10 +1,33 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  startTransition,
+} from "react";
 import { ChatMode, ChatSettings, DEFAULT_CHAT_SETTINGS } from "../lib/types";
 import { SYSTEM_PROMPT } from "../lib/chat";
 
 const STORAGE_KEY = "glv_chat_settings";
+
+// ── SSRF Protection: Broker URL validation ──
+// Only allow localhost/loopback addresses to prevent SSRF attacks
+const BROKER_URL_REGEX = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
+
+function isValidBrokerUrl(url: string): boolean {
+  return BROKER_URL_REGEX.test(url);
+}
+
+function sanitizeBrokerUrl(url: string, fallback: string = "http://localhost:9000"): string {
+  if (isValidBrokerUrl(url)) return url;
+  // Also allow empty/undefined (use default)
+  if (!url || url.trim() === "") return fallback;
+  // Invalid URL — log warning and return fallback
+  console.warn(`[SSRF] Invalid broker URL rejected: "${url}". Using fallback: ${fallback}`);
+  return fallback;
+}
 
 interface ChatContextType {
   settings: ChatSettings;
@@ -15,49 +38,74 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
+function loadSavedSettings(): ChatSettings | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const loaded = JSON.parse(raw);
+      // Auto-migrate legacy ports to new 9000 standard
+      if (
+        loaded.brokerUrl === "http://localhost:9090" ||
+        loaded.brokerUrl === "http://localhost:11434"
+      ) {
+        loaded.brokerUrl = "http://localhost:9000";
+      }
+      // SSRF mitigation: reject non-localhost broker URLs
+      loaded.brokerUrl = sanitizeBrokerUrl(loaded.brokerUrl);
+      // Ensure system prompt is synced if empty in storage
+      if (!loaded.ollamaParams?.system_prompt) {
+        loaded.ollamaParams = {
+          ...(loaded.ollamaParams || DEFAULT_CHAT_SETTINGS.ollamaParams),
+          system_prompt: SYSTEM_PROMPT,
+        };
+      }
+      return loaded;
+    }
+  } catch {}
+  return null;
+}
+
+function buildDefaultSettings(): ChatSettings {
+  const base = { ...DEFAULT_CHAT_SETTINGS };
+  if (!base.ollamaParams.system_prompt) {
+    base.ollamaParams.system_prompt = SYSTEM_PROMPT;
+  }
+  // Use NEXT_PUBLIC_BROKER_URL if available (with SSRF validation)
+  if (typeof window !== "undefined") {
+    const envBrokerUrl = process.env.NEXT_PUBLIC_BROKER_URL;
+    if (envBrokerUrl) {
+      base.brokerUrl = sanitizeBrokerUrl(envBrokerUrl, base.brokerUrl);
+    }
+  }
+  return base;
+}
+
 export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<ChatSettings>(() => {
-    const base = { ...DEFAULT_CHAT_SETTINGS };
-    if (!base.ollamaParams.system_prompt) {
-      base.ollamaParams.system_prompt = SYSTEM_PROMPT;
-    }
-    // Synchronize with localStorage on initial mount.
-    // During SSR this safely falls back to defaults; on SPA navigation
-    // it picks up saved settings immediately without an effect cycle.
-    if (typeof window !== "undefined") {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const loaded = JSON.parse(raw);
-          // Auto-migrate legacy 9090 port to new 9000 standard
-          if (loaded.brokerUrl === "http://localhost:9090") {
-            loaded.brokerUrl = "http://localhost:9000";
-          }
-          // Ensure system prompt is synced if empty in storage
-          if (!loaded.ollamaParams?.system_prompt) {
-            loaded.ollamaParams = {
-              ...(loaded.ollamaParams || DEFAULT_CHAT_SETTINGS.ollamaParams),
-              system_prompt: SYSTEM_PROMPT,
-            };
-          }
-          const merged = { ...base, ...loaded };
-          return merged;
-        }
-      } catch {}
-    }
-    return base;
-  });
+  // Always initialize with defaults — matches SSR output exactly.
+  // This eliminates hydration mismatches between server and client.
+  const [settings, setSettings] = useState<ChatSettings>(buildDefaultSettings);
   const [mounted, setHydrated] = useState(false);
 
-  // Standard hydration guard: marks the component as client-hydrated
-  // so child content becomes visible only after localStorage state is applied.
+  // On mount: load saved settings from localStorage and apply them.
+  // Uses startTransition to avoid the synchronous setState lint warning.
+  // The cascade (hydrated + settings) is intentional and happens once.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHydrated(true);
+    const saved = loadSavedSettings();
+    startTransition(() => {
+      if (saved) {
+        setSettings((prev) => ({ ...prev, ...saved }));
+      }
+      setHydrated(true);
+    });
   }, []);
 
   const updateSettings = (patch: Partial<ChatSettings>) => {
-    const next = { ...settings, ...patch };
+    // SSRF mitigation: validate broker URL before saving
+    const sanitizedPatch = { ...patch };
+    if (sanitizedPatch.brokerUrl !== undefined) {
+      sanitizedPatch.brokerUrl = sanitizeBrokerUrl(sanitizedPatch.brokerUrl);
+    }
+    const next = { ...settings, ...sanitizedPatch };
     setSettings(next);
     // Persist settings to localStorage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));

@@ -8,6 +8,7 @@ import {
   translateQueryToGerman,
   translateFromGerman,
 } from "../../../lib/translate-server";
+import { detectCategory } from "../../../lib/category-detect";
 import { type AppLanguage, LANGUAGE_NAMES } from "../../../lib/types";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
 import {
@@ -72,7 +73,7 @@ export async function GET(req: NextRequest) {
 
   // Rate limiting
   const ip = getClientIp(req);
-  const { allowed, headers: rateLimitHeaders } = checkRateLimit(
+  const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
     ip,
     DEFAULT_SEARCH_RATE_LIMIT,
   );
@@ -94,12 +95,21 @@ export async function GET(req: NextRequest) {
     if (safeQuery) {
       // Translate non-German queries to German for E5-small compatibility
       const searchQuery = await translateQueryToGerman(safeQuery);
+
+      // Auto-detect category if not explicitly specified
+      const effectiveCategory = category || detectCategory(safeQuery);
+
       console.log(
-        `[API Search] Executing Qdrant query: "${searchQuery}" (original: "${safeQuery}", category: ${category || "none"})`,
+        `[API Search] Executing Qdrant query: "${searchQuery}" (original: "${safeQuery}", category: ${effectiveCategory || "none"})`,
       );
       // 1. Semantic Search via Qdrant
       const offset = (page - 1) * PAGE_SIZE;
-      allResults = await searchNorms(searchQuery, category, 50, offset);
+      allResults = await searchNorms(
+        searchQuery,
+        effectiveCategory,
+        50,
+        offset,
+      );
       console.log(`[API Search] Qdrant returned ${allResults.length} points.`);
 
       // 2. Fallback: if Qdrant returned empty, try Supabase text search

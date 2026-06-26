@@ -153,7 +153,7 @@ export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
   mode: "basic",
   language: "en",
   brokerUrl: "http://localhost:9000",
-  ollamaModel: "",
+  ollamaModel: "qwen2.5:1.5b",
   ollamaParams: DEFAULT_OLLAMA_PARAMS,
   provider: "openai",
   model: "gpt-4o-mini",
@@ -165,6 +165,8 @@ export interface CitedLaw {
   law_key: string;
   norm_id: string;
   law_title: string;
+  /** Truncated norm content for AI context (client-side only). */
+  content?: string;
 }
 
 // ── Norm Explanations ──

@@ -59,7 +59,7 @@ describe("searchNorms", () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].law_key).toBe("BGB");
-    expect(results[0].score).toBe(0.95);
+    expect(results[0].score).toBe(1.045);
   });
 
   it("adds category filter when category is provided", async () => {
@@ -69,7 +69,10 @@ describe("searchNorms", () => {
     await searchNorms("Miete", "housing");
 
     expect(mockQuery).toHaveBeenCalledWith("german_norms", {
-      query: { text: "query: Miete", model: "intfloat/multilingual-e5-small" },
+      query: {
+        text: "query: Mietrecht Wohnung Miete Vermieter Mieter BGB Mietvertrag Nebenkosten Miete",
+        model: "intfloat/multilingual-e5-small",
+      },
       limit: 50,
       offset: 0,
       filter: { must: [{ key: "category", match: { value: "housing" } }] },
@@ -118,10 +121,10 @@ describe("searchNorms", () => {
       norm_id: "§ 123",
       norm_title: "Hausfriedensbruch",
       content: "Wer in die Wohnung eines anderen...",
-      score: 0.88,
+      score: 0.9873600000000001,
     });
     expect(results[1].norm_id).toBe("§ 124");
-    expect(results[1].score).toBe(0.72);
+    expect(results[1].score).toBe(0.80784);
   });
 
   it("passes topK and offset correctly", async () => {

@@ -3,6 +3,12 @@ import { z } from "zod";
 import { cookies } from "next/headers";
 import { getServerClient } from "@/lib/supabase-server";
 import { errorResponse, successResponse } from "@/lib/api-utils";
+import { sanitizeErrorMessage } from "@/lib/sanitize";
+
+function handleError(err: unknown) {
+  const message = sanitizeErrorMessage(err);
+  return errorResponse("DB_ERROR", message, 500);
+}
 
 // ── Validation ─────────────────────────────────────────────────────────────
 
@@ -66,8 +72,7 @@ export async function GET(req: NextRequest) {
 
     return successResponse(data);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Database error";
-    return errorResponse("DB_ERROR", message, 500);
+    return handleError(err);
   }
 }
 
@@ -113,8 +118,7 @@ export async function POST(req: NextRequest) {
 
     return successResponse(data, 201);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Database error";
-    return errorResponse("DB_ERROR", message, 500);
+    return handleError(err);
   }
 }
 
@@ -133,10 +137,12 @@ export async function PATCH(req: NextRequest) {
     }
 
     const url = new URL(req.url);
-    const id = url.searchParams.get("id");
-    if (!id) {
-      return errorResponse("VALIDATION_ERROR", "Folder id is required", 422);
+    const idRaw = url.searchParams.get("id");
+    const idResult = z.string().uuid().safeParse(idRaw);
+    if (!idResult.success) {
+      return errorResponse("VALIDATION_ERROR", "Valid folder id (UUID) is required", 422);
     }
+    const id = idResult.data;
 
     const body = await req.json();
     const parsed = UpdateFolderSchema.safeParse(body);
@@ -168,8 +174,7 @@ export async function PATCH(req: NextRequest) {
 
     return successResponse(data);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Database error";
-    return errorResponse("DB_ERROR", message, 500);
+    return handleError(err);
   }
 }
 
@@ -186,10 +191,12 @@ export async function DELETE(req: NextRequest) {
     }
 
     const url = new URL(req.url);
-    const id = url.searchParams.get("id");
-    if (!id) {
-      return errorResponse("VALIDATION_ERROR", "Folder id is required", 422);
+    const idRaw = url.searchParams.get("id");
+    const idResult = z.string().uuid().safeParse(idRaw);
+    if (!idResult.success) {
+      return errorResponse("VALIDATION_ERROR", "Valid folder id (UUID) is required", 422);
     }
+    const id = idResult.data;
 
     const { error } = await supabase
       .from("bookmark_folders")
@@ -201,7 +208,6 @@ export async function DELETE(req: NextRequest) {
 
     return successResponse({ deleted: true });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Database error";
-    return errorResponse("DB_ERROR", message, 500);
+    return handleError(err);
   }
 }

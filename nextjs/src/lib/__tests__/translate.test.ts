@@ -76,7 +76,7 @@ describe("translateText", () => {
     const { translateText } = await import("../translate");
 
     const onProgress = vi.fn();
-    const resultPromise = translateText("Hello", onProgress);
+    const resultPromise = translateText("Hello", { onProgress });
 
     // Send progress update
     mockWorkerOnmessage!({
@@ -112,6 +112,8 @@ describe("translateText", () => {
     expect(mockPostMessage).toHaveBeenCalledWith({
       id: "test-id-456",
       text: "Guten Morgen",
+      sourceLang: "de",
+      targetLang: "en",
     });
   });
 

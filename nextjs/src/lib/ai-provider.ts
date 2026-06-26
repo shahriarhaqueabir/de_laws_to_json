@@ -67,6 +67,62 @@ export async function callAnthropic(
   return data.content?.[0]?.text?.trim() || "";
 }
 
+/**
+ * Validate a custom endpoint URL to prevent SSRF attacks.
+ *
+ * Rules:
+ * - Must be a valid URL with http or https scheme.
+ * - Must NOT point to private/reserved IP ranges (127.0.0.0/8,
+ *   10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16,
+ *   ::1/128).
+ * - Hostnames that resolve to private IPs at runtime cannot be
+ *   prevented here, but this static check stops the most common
+ *   SSRF vectors (cloud metadata, localhost services).
+ */
+function validateEndpointUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      throw new Error("Endpoint must use http or https");
+    }
+
+    const hostname = parsed.hostname.toLowerCase();
+
+    // Block loopback / localhost
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "[::1]" ||
+      hostname === "0.0.0.0"
+    ) {
+      throw new Error("Endpoint must not point to localhost");
+    }
+
+    // Block private IPv4 ranges
+    const ipv4Match = hostname.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+    if (ipv4Match) {
+      const first = parseInt(ipv4Match[1], 10);
+      const second = parseInt(ipv4Match[2], 10);
+      if (
+        first === 10 ||
+        (first === 172 && second >= 16 && second <= 31) ||
+        (first === 192 && second === 168) ||
+        first === 127 ||
+        first === 0 ||
+        (first === 169 && second === 254)
+      ) {
+        throw new Error("Endpoint must not point to a private IP range");
+      }
+    }
+
+    return parsed.origin;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Invalid URL";
+    throw new Error(`Invalid provider endpoint: ${message}`);
+  }
+}
+
 // ── OpenAI-Compatible ──
 
 export async function callOpenAICompatible(
@@ -77,8 +133,10 @@ export async function callOpenAICompatible(
   maxTokens: number = 1024,
   temperature: number = 0.3,
 ): Promise<string> {
+  // SSRF validation: reject private/internal endpoints
+  const safeEndpoint = validateEndpointUrl(endpoint);
   const res = await fetch(
-    `${endpoint.replace(/\/$/, "")}/v1/chat/completions`,
+    `${safeEndpoint.replace(/\/$/, "")}/v1/chat/completions`,
     {
       method: "POST",
       headers: {

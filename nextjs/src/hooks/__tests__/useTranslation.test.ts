@@ -34,7 +34,9 @@ describe("useTranslation", () => {
     expect(output).toBe("Hello");
     expect(mockTranslateText).toHaveBeenCalledWith(
       "Hallo",
-      expect.any(Function),
+      expect.objectContaining({
+        onProgress: expect.any(Function),
+      }),
     );
   });
 
@@ -94,8 +96,11 @@ describe("useTranslation", () => {
     let progressCallbackRef: ((p: { progress: number }) => void) | undefined;
 
     mockTranslateText.mockImplementation(
-      (_text: string, onProgress?: (p: { progress: number }) => void) => {
-        progressCallbackRef = onProgress;
+      (
+        _text: string,
+        options?: { onProgress?: (p: { progress: number }) => void },
+      ) => {
+        progressCallbackRef = options?.onProgress;
         return new Promise<string>((resolve) => {
           resolvePromise = resolve;
         });

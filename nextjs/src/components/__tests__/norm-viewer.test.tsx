@@ -16,20 +16,24 @@ vi.mock("sonner", () => ({
     error: mockToast,
     warning: mockToast,
   }),
-  Toaster: ({ children }: { children: any }) => children ?? null,
+  Toaster: ({ children }: { children: React.ReactNode }) => children ?? null,
 }));
 
-// Mock localStorage with default settings
-beforeEach(() => {
-  vi.spyOn(Storage.prototype, "getItem").mockReturnValue(
+// Mock localStorage BEFORE importing the component
+const mockLocalStorage = {
+  getItem: vi.fn(() =>
     JSON.stringify({
       language: "en",
       mode: "cloud",
       provider: "openai",
       model: "gpt-4o-mini",
     }),
-  );
-});
+  ),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+vi.stubGlobal("localStorage", mockLocalStorage);
 
 import NormViewer from "../norm-viewer";
 

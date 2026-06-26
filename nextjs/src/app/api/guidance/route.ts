@@ -50,6 +50,9 @@ const GuidanceRequestSchema = z.object({
     .optional(),
   provider: z.string().default("openai"),
   model: z.string().default("gpt-4o-mini"),
+  mode: z.string().optional(),
+  brokerUrl: z.string().optional(),
+  ollamaModel: z.string().optional(),
 });
 
 // ── Execute SQL for guidance_paths insert ──────────────────────────────────
@@ -90,7 +93,7 @@ export async function POST(req: NextRequest) {
   try {
     // Rate limiting
     const ip = getClientIp(req);
-    const { allowed, headers: rateLimitHeaders } = checkRateLimit(
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
       ip,
       DEFAULT_AI_RATE_LIMIT,
     );
@@ -128,8 +131,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { situation, language, folder_context, provider, model } =
-      parsed.data;
+    const {
+      situation,
+      language,
+      folder_context,
+      provider,
+      model,
+      mode,
+      brokerUrl,
+      ollamaModel,
+    } = parsed.data;
 
     // 1. Get API key from Supabase (if user is signed in)
     let apiKey = "";
@@ -152,6 +163,52 @@ export async function POST(req: NextRequest) {
           // Decryption failed — key rotation
         }
       }
+    }
+
+    // LOCAL MODE — skip API key, use local broker
+    if (mode === "local" && brokerUrl) {
+      const translatedSituation = await translateQueryToGerman(situation);
+      const norms = await searchNorms(
+        translatedSituation,
+        folder_context?.category,
+        15,
+      );
+
+      const qdrantResults = norms.map((n) => ({
+        law_key: n.law_key,
+        norm_id: n.norm_id,
+        law_title: n.law_title,
+      }));
+
+      const qdrantContext = norms
+        .map((n) => `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 1500)}`)
+        .join("\n\n");
+
+      const lang = (language || "en") as AppLanguage;
+      const params: GenerateGuidanceParams = {
+        situation,
+        language: lang,
+        folderContext: folder_context as FolderContext | null,
+        bookmarkedLaws: [],
+        qdrantResults,
+        qdrantContext,
+        provider: "local",
+        apiKey: "",
+        model: ollamaModel || "",
+        customEndpoint: "",
+        brokerUrl,
+        ollamaModel,
+      };
+
+      const paths = await generateGuidancePaths(params);
+
+      return successResponse({
+        session_id: null,
+        paths,
+        folder_context,
+        generated_at: new Date().toISOString(),
+        language: lang,
+      });
     }
 
     // If no API key, use basic mode (just search results translated to user's language)

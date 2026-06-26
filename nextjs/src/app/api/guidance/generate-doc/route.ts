@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   try {
     // Rate limiting
     const ip = getClientIp(req);
-    const { allowed, headers: rateLimitHeaders } = checkRateLimit(
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
       ip,
       DEFAULT_AI_RATE_LIMIT,
     );

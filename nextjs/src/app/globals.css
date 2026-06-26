@@ -13,17 +13,17 @@
 
   --text-primary: #ffffff; /* Pure illumination */
   --text-secondary: #a1a1aa; /* Platinum / Cool grey */
-  --text-muted: #52525b; /* Aged iron */
+  --text-muted: #8a8a8a; /* Aged brass — WCAG AA 5.4:1 on #050505 */
 
   --border-glass: rgba(255, 255, 255, 0.04);
   --border-metal: rgba(255, 255, 255, 0.08);
-  --border-gold: rgba(138, 123, 99, 0.2);
+  --border-gold: rgba(158, 141, 114, 0.2);
 
   --accent-silver: #d4d4d8; /* Silver strike */
-  --accent-gold: #8a7b63; /* Muted Bronze */
+  --accent-gold: #9e8d72; /* Muted Bronze — WCAG AA 5.2:1 on #1a1a1a */
   --accent-gold-bright: #c5a059; /* Radiant Gold */
   --accent-gold-body: #a38a4a; /* Body-safe gold (WCAG AA 4.5:1 on #050505) */
-  --accent-gold-glow: rgba(138, 123, 99, 0.2);
+  --accent-gold-glow: rgba(158, 141, 114, 0.2);
 
   --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.8);
   --shadow-gold: 0 0 20px rgba(138, 123, 99, 0.1);

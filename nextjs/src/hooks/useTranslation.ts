@@ -15,8 +15,10 @@ export function useTranslation() {
       setTranslating(true);
       setProgress(0);
       try {
-        const result = await translateText(text, (p) => {
-          if (p.progress) setProgress(p.progress);
+        const result = await translateText(text, {
+          onProgress: (p) => {
+            if (p.progress) setProgress(p.progress);
+          },
         });
         cache.set(text, result);
         return result;

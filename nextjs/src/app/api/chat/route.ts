@@ -14,14 +14,26 @@ import { LANGUAGE_NAMES } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
 import { decryptApiKey } from "../../../lib/encryption";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
+import { translateQueryToGerman } from "../../../lib/translate-server";
+import { detectCategory } from "../../../lib/category-detect";
 import {
   checkRateLimit,
   getClientIp,
   DEFAULT_AI_RATE_LIMIT,
 } from "../../../lib/rate-limiter";
 
+// ── SSRF Protection: Broker URL validation ──
+// Only allow localhost/loopback addresses to prevent SSRF attacks
+const BROKER_URL_REGEX = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
+function isValidBrokerUrl(url: string): boolean {
+  return BROKER_URL_REGEX.test(url);
+}
+
+const envBrokerUrl = process.env.NEXT_PUBLIC_BROKER_URL;
 const BROKER_URL =
-  process.env.NEXT_PUBLIC_BROKER_URL || "http://localhost:9000";
+  envBrokerUrl && isValidBrokerUrl(envBrokerUrl)
+    ? envBrokerUrl
+    : "http://localhost:9000";
 
 const OllamaParamsSchema = z
   .object({
@@ -49,7 +61,7 @@ export async function POST(req: NextRequest) {
   try {
     // Rate limiting
     const ip = getClientIp(req);
-    const { allowed, headers: rateLimitHeaders } = checkRateLimit(
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
       ip,
       DEFAULT_AI_RATE_LIMIT,
     );
@@ -99,25 +111,77 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     // 1. Search Qdrant for relevant norms (always)
-    // Safety: limit context to 10 norms or ~12k characters total for smaller model safety
+    // Search more results for better coverage, then post-process
+    // for relevance and diversity before passing to the AI
 
-    // Check if query needs translation for better Qdrant matching
-    // (Only if not English/German and we have a way to detect/translate)
-    // For now, we use the message directly as the multilingual-e5 model handles many languages.
+    // Translate non-German queries to German for E5-small compatibility
+    const searchQuery = await translateQueryToGerman(message);
+
+    // Auto-detect the legal category to improve search relevance
+    const detectedCategory = detectCategory(message);
 
     let norms: SearchResult[] = [];
     try {
-      norms = await searchNorms(message, undefined, 10);
+      // Strategy: search with broader scope (50 norms) and apply
+      // keyword-based reranking + law diversity boost in qdrant.ts
+      norms = await searchNorms(searchQuery, detectedCategory, 50);
+
+      // ── Fallback strategies ──
+      if (norms.length > 0) {
+        const maxScore = Math.max(...norms.map((n) => n.score));
+
+        // Check homogeneity: does one law dominate the results?
+        const lawCounts = new Map<string, number>();
+        for (const n of norms)
+          lawCounts.set(n.law_key, (lawCounts.get(n.law_key) || 0) + 1);
+        const topLaw = [...lawCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+        const homogeneityRatio = topLaw ? topLaw[1] / norms.length : 0;
+
+        const needsUnfiltered =
+          // Case 1: No category detected AND low max score
+          (!detectedCategory && maxScore < 0.3) ||
+          // Case 2: Category detected BUT one law dominates >60% of results
+          // (happens when substantive laws like BGB/BetrVG are miscategorized as "other")
+          (detectedCategory && homogeneityRatio > 0.6 && maxScore < 0.6);
+
+        if (needsUnfiltered) {
+          console.log(
+            `[Chat API] Homogeneous results detected (top law: ${topLaw?.[0] || "?"} = ${(homogeneityRatio * 100).toFixed(0)}%), ` +
+              `maxScore: ${maxScore.toFixed(3)}, trying unfiltered search for diversity`,
+          );
+          const unfiltered = await searchNorms(searchQuery, undefined, 50);
+          if (unfiltered.length > 0) {
+            // Merge: take top unfiltered as long as they add new laws
+            const existingKeys = new Set(norms.map((n) => n.law_key));
+            for (const n of unfiltered) {
+              if (!existingKeys.has(n.law_key)) {
+                norms.push(n);
+                existingKeys.add(n.law_key);
+              }
+            }
+            console.log(
+              `[Chat API] Merged unfiltered results: ${norms.length} total norms from ${existingKeys.size} laws`,
+            );
+          }
+        }
+      }
     } catch {
       console.warn("Qdrant search failed, continuing with empty context");
     }
-    const contextStr = norms
+
+    // After all search strategies, pick the top 10 most relevant
+    // and diverse results for AI context (limit token usage)
+    norms.sort((a, b) => b.score - a.score);
+    const topNorms = norms.slice(0, 10);
+
+    const contextStr = topNorms
       .map((n) => `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 1200)}`)
       .join("\n\n");
-    const citedLaws: CitedLaw[] = norms.map((n) => ({
+    const citedLaws: CitedLaw[] = topNorms.map((n) => ({
       law_key: n.law_key,
       norm_id: n.norm_id,
       law_title: n.law_title || n.law_key,
+      content: n.content.slice(0, 1200),
     }));
 
     // 2. Generate response based on mode
@@ -269,7 +333,22 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Save to Supabase if we have a conversation
+    // Verify conversation ownership before saving (prevents IDOR)
     if (conversationId && user) {
+      const { data: conv } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("id", conversationId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (!conv) {
+        console.warn(
+          `[Chat] User ${user.id} attempted to save to conversation ${conversationId} (not found or not owned)`,
+        );
+        return errorResponse("NOT_FOUND", "Conversation not found", 404);
+      }
+
       await supabase.from("messages").insert([
         { conversation_id: conversationId, role: "user", content: message },
         {

@@ -214,6 +214,9 @@ worktrees/
 .githooks/
 .memory/
 
+# Secret pattern reference files (gitleaks false positives)
+secret_patterns.txt
+
 # Root-level junk (deployment artifacts, one-off scripts, legacy launchers)
 _check_content.py
 dedupe_processed_data.py

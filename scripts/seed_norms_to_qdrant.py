@@ -10,6 +10,7 @@ Features:
 - Verification at end
 """
 
+import json
 import os
 import sqlite3
 import time
@@ -28,6 +29,20 @@ EMBED_BATCH_SIZE = 32
 MAX_RETRIES = 5
 RETRY_DELAY_SEC = 10
 CACHE_PATH = os.path.join(os.path.dirname(__file__), "norms_vectors.npy")
+STATUS_PATH = os.path.join(os.path.dirname(__file__), "_reindex_status.json")
+
+
+def write_status(phase: str, progress_pct: float, detail: str):
+    """Write current progress to a JSON status file for external monitoring."""
+    status = {
+        "phase": phase,
+        "progress_pct": round(progress_pct, 1),
+        "detail": detail,
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    with open(STATUS_PATH, "w") as f:
+        json.dump(status, f)
+
 
 if not QDRANT_URL or not QDRANT_API_KEY:
     print("Error: QDRANT_URL and QDRANT_API_KEY must be set.")
@@ -76,7 +91,16 @@ def seed_db():
             "content": norm["content"][:16384],
         }
         # E5 requires "passage: " prefix for document-side embeddings
-        passage_text = "passage: " + norm["content"][:4096]
+        # CRITICAL: Include law_title and norm_title so the embedding captures
+        # the legal domain context. Without this, the semantic meaning of
+        # "this norm belongs to Kündigungsschutzgesetz (KSchG)" is lost,
+        # and the search only matches on raw paragraph text.
+        passage_text = (
+            "passage: "
+            + (norm["law_title"] + ". " if norm.get("law_title") else "")
+            + (norm["norm_title"] + ". " if norm.get("norm_title") else "")
+            + norm["content"][:4000]
+        )
         norms.append((point_id, payload))
         content_texts.append(passage_text)
 
@@ -86,22 +110,41 @@ def seed_db():
     if os.path.exists(CACHE_PATH):
         print(f"Loading cached vectors from {CACHE_PATH}...")
         all_vectors = np.load(CACHE_PATH)
+        write_status("cached", 100, f"Loaded {len(all_vectors)} cached vectors")
         print(f"Loaded {len(all_vectors)} cached vectors.")
     else:
         print("Loading intfloat/multilingual-e5-small model...")
+        write_status("loading_model", 0, "Downloading/loading E5-small model")
         t0 = time.time()
         model = SentenceTransformer("intfloat/multilingual-e5-small")
         print(f"Model loaded in {time.time() - t0:.1f}s")
 
-        print(f"Generating {len(content_texts)} embeddings...")
+        total_batches = (len(content_texts) + EMBED_BATCH_SIZE - 1) // EMBED_BATCH_SIZE
+        print(
+            f"Generating {len(content_texts)} embeddings ({total_batches} batches)..."
+        )
         t0 = time.time()
         all_vectors: list[np.ndarray] = []
         for i in tqdm(range(0, len(content_texts), EMBED_BATCH_SIZE)):
             batch_texts = content_texts[i : i + EMBED_BATCH_SIZE]
             vecs = model.encode(batch_texts, show_progress_bar=False)
             all_vectors.extend(vecs)
+            n_encoded = len(all_vectors)
+            pct = n_encoded / len(content_texts) * 100
+            elapsed = time.time() - t0
+            rate = n_encoded / elapsed if elapsed > 0 else 0
+            if i % (max(1, total_batches // 20)) == 0:
+                write_status(
+                    "encoding",
+                    pct,
+                    f"{n_encoded}/{len(content_texts)} texts encoded | "
+                    f"{rate:.0f} texts/s | batch {i // EMBED_BATCH_SIZE}/{total_batches}",
+                )
         all_vectors = np.array(all_vectors)
         gen_time = time.time() - t0
+        write_status(
+            "encoding_done", 100, f"{len(all_vectors)} vectors in {gen_time:.1f}s"
+        )
         print(
             f"Generated {len(all_vectors)} vectors in {gen_time:.1f}s "
             f"({gen_time / len(all_vectors) * 1000:.1f}ms each)"
@@ -109,6 +152,7 @@ def seed_db():
 
         # Save cache
         print(f"Saving vectors to {CACHE_PATH}...")
+        write_status("saving_cache", 99, f"Saving to {CACHE_PATH}")
         np.save(CACHE_PATH, all_vectors)
         print("Cache saved.")
 
@@ -136,7 +180,11 @@ def seed_db():
         existing_count = 0
 
     # ── 5. Upsert in batches with retry ───────────────────────────────────
-    print(f"Uploading {len(points)} points in batches of {BATCH_SIZE}...")
+    total_batches_ul = (len(points) + BATCH_SIZE - 1) // BATCH_SIZE
+    print(
+        f"Uploading {len(points)} points in {total_batches_ul} batches of {BATCH_SIZE}..."
+    )
+    write_status("uploading", 0, f"0/{total_batches_ul} batches uploaded")
     t0 = time.time()
     total_uploaded = 0
     failed_batches = 0
@@ -150,6 +198,15 @@ def seed_db():
                     wait=False,
                 )
                 total_uploaded += len(batch)
+                if (i // BATCH_SIZE) % max(1, total_batches_ul // 30) == 0:
+                    pct = total_uploaded / len(points) * 100
+                    write_status(
+                        "uploading",
+                        pct,
+                        f"{total_uploaded}/{len(points)} points | "
+                        f"{i // BATCH_SIZE}/{total_batches_ul} batches | "
+                        f"{failed_batches} failed batches",
+                    )
                 break
             except Exception as exc:
                 if attempt < MAX_RETRIES:

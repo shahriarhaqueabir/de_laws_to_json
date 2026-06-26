@@ -34,82 +34,343 @@ const LIBRE_TIMEOUT_MS = 5000;
 // Used for fast-path search query translation (no API call needed)
 
 const EN_DE_TERM_MAP: Record<string, string> = {
+  // ── Core Legal ──
   accident: "Unfall",
   "accident on road": "Verkehrsunfall",
   "car accident": "Autounfall",
   "traffic accident": "Verkehrsunfall",
+  "my rights": "Rechte",
+  rights: "Rechte",
+  "what are my rights": "Rechte",
+  help: "Hilfe",
+  "legal advice": "Rechtsberatung",
+  situation: "Sachverhalt",
+  problem: "Problem",
+  question: "Frage",
+  obligation: "Pflicht",
+  responsibility: "Haftung",
+  liability: "Haftung",
+  duty: "Pflicht",
+  claim: "Anspruch",
+  entitled: "Anspruch",
+  entitlement: "Anspruch",
+  contract: "Vertrag",
+  // ── Criminal Law (Strafrecht) ──
+  theft: "Diebstahl",
+  burglary: "Einbruch",
+  robbery: "Raub",
+  assault: "Körperverletzung",
+  "grievous bodily harm": "schwere Körperverletzung",
+  "bodily harm": "Körperverletzung",
+  fraud: "Betrug",
+  embezzlement: "Untreue",
+  "money laundering": "Geldwäsche",
+  "drug offense": "Betäubungsmitteldelikt",
+  drugs: "Betäubungsmittel",
+  "criminal offense": "Straftat",
+  crime: "Straftat",
+  "criminal complaint": "Strafanzeige",
+  "press charges": "Strafanzeige",
+  "criminal proceedings": "Strafverfahren",
+  "criminal defense": "Strafverteidigung",
+  "defense lawyer": "Strafverteidiger",
+  "self-defense": "Notwehr",
+  "self defence": "Notwehr",
+  evidence: "Beweis",
+  witness: "Zeuge",
+  "search warrant": "Durchsuchungsbefehl",
+  arrest: "Festnahme",
+  bail: "Kaution",
+  probation: "Bewährung",
+  fine: "Geldstrafe",
+  prison: "Freiheitsstrafe",
+  imprisonment: "Freiheitsstrafe",
+  "suspended sentence": "Bewährungsstrafe",
+  "prior conviction": "Vorstrafe",
+  "criminal record": "Führungszeugnis",
+  police: "Polizei",
+  investigation: "Ermittlungsverfahren",
+  indictment: "Anklage",
+  verdict: "Urteil",
+  sentence: "Urteil",
+  // ── Family Law (Familienrecht) ──
+  divorce: "Scheidung",
+  separation: "Trennung",
+  custody: "Sorgerecht",
+  "joint custody": "gemeinsames Sorgerecht",
+  "visitation rights": "Umgangsrecht",
+  "child support": "Kindesunterhalt",
+  alimony: "Unterhalt",
+  "spousal support": "Ehegattenunterhalt",
+  maintenance: "Unterhalt",
+  marriage: "Ehe",
+  wedding: "Eheschließung",
+  "civil partnership": "Lebenspartnerschaft",
+  adoption: "Adoption",
+  "foster care": "Pflegekind",
+  "parental leave": "Elternzeit",
+  "parental allowance": "Elterngeld",
+  "child benefit": "Kindergeld",
+  paternity: "Vaterschaft",
+  guardianship: "Vormundschaft",
+  "name change": "Namensänderung",
+  "domestic violence": "häusliche Gewalt",
+  "protection order": "Schutzanordnung",
+  "restraining order": "Schutzanordnung",
+  // ── Social Law / Health (Sozialrecht) ──
+  "social security": "Sozialversicherung",
+  "health insurance": "Krankenversicherung",
+  "statutory health insurance": "gesetzliche Krankenversicherung",
+  "private health insurance": "private Krankenversicherung",
+  "long-term care insurance": "Pflegeversicherung",
+  "nursing care": "Pflege",
+  "care insurance": "Pflegeversicherung",
+  pension: "Rente",
+  retirement: "Rente",
+  "old-age pension": "Altersrente",
+  disability: "Behinderung",
+  disabled: "Behinderung",
+  "sick leave": "Krankschreibung",
+  "sick note": "Krankschreibung",
+  "medical certificate": "ärztliche Bescheinigung",
+  "incapacity to work": "Arbeitsunfähigkeit",
+  rehabilitation: "Rehabilitation",
+  unemployment: "Arbeitslosigkeit",
+  "unemployment benefit": "Arbeitslosengeld",
+  "citizen's benefit": "Bürgergeld",
+  welfare: "Sozialhilfe",
+  "housing benefit": "Wohngeld",
+  "maternity leave": "Mutterschutz",
+  "maternity benefit": "Mutterschaftsgeld",
+  "sick pay": "Krankengeld",
+  "accident insurance": "Unfallversicherung",
+  // ── Employment Law (Arbeitsrecht) ──
+  // Common English labor termination terms
+  fire: "Kündigung",
+  fired: "Kündigung",
+  firing: "Kündigung",
+  fires: "Kündigung",
+  "laid off": "Entlassung",
+  layoff: "Entlassung",
+  sacked: "Entlassung",
   dismissal: "Kündigung",
   "wrongful dismissal": "Kündigungsschutz",
+  "unfair dismissal": "Kündigungsschutz",
+  "unfairly dismissed": "Kündigungsschutz",
+  terminated: "Kündigung",
   termination: "Kündigung",
+  "notice period": "Kündigungsfrist",
+  "labor law": "Arbeitsrecht",
+  "labour law": "Arbeitsrecht",
+  "employment contract": "Arbeitsvertrag",
+  "without notice": "fristlose Kündigung",
+  "without warning": "fristlose Kündigung",
+  "my job": "meine Arbeit",
+  job: "Arbeit",
+  employment: "Arbeitsverhältnis",
+  "employment relationship": "Arbeitsverhältnis",
+  employer: "Arbeitgeber",
+  employee: "Arbeitnehmer",
+  "works council": "Betriebsrat",
+  "collective agreement": "Tarifvertrag",
+  "minimum wage": "Mindestlohn",
+  overtime: "Überstunden",
+  holiday: "Urlaub",
+  vacation: "Urlaub",
+  "annual leave": "Jahresurlaub",
+  "sick day": "Krankheitstag",
+  "part-time": "Teilzeit",
+  "fixed-term": "befristet",
+  "probation period": "Probezeit",
+  severance: "Abfindung",
+  "reference letter": "Arbeitszeugnis",
+  "non-compete": "Wettbewerbsverbot",
+  // ── Housing Law (Mietrecht) ──
   "rent reduction": "Mietminderung",
   "rental agreement": "Mietvertrag",
   landlord: "Vermieter",
   tenant: "Mieter",
   "deposit return": "Kaution Rückzahlung",
+  rent: "Miete",
+  rental: "Miete",
+  "rent increase": "Mieterhöhung",
+  "rent cap": "Mietpreisbremse",
+  "operating costs": "Betriebskosten",
+  utilities: "Nebenkosten",
+  "heating costs": "Heizkosten",
+  "security deposit": "Kaution",
+  "notice of termination": "Kündigung",
+  eviction: "Räumung",
+  "lease agreement": "Mietvertrag",
+  subletting: "Untervermietung",
+  apartment: "Wohnung",
+  condominium: "Eigentumswohnung",
+  renovation: "Renovierung",
+  modernization: "Modernisierung",
+  mold: "Schimmel",
+  "damage deposit": "Kaution",
+  neighbor: "Nachbar",
+  "noise complaint": "Lärmbelästigung",
+  construction: "Bau",
+  "building permit": "Baugenehmigung",
+  // ── Traffic Law (Verkehrsrecht) ──
+  "traffic violation": "Verkehrsverstoß",
+  speeding: "Geschwindigkeitsüberschreitung",
+  "red light": "Rotlichtverstoß",
+  parking: "Parken",
+  "parking ticket": "Knöllchen",
+  "drunk driving": "Trunkenheit am Steuer",
+  DUI: "Trunkenheit am Steuer",
+  "license suspension": "Fahrerlaubnisentzug",
+  "license revocation": "Fahrerlaubnisentzug",
+  points: "Punkte",
   "fine notice": "Bußgeldbescheid",
   "speeding ticket": "Bußgeldbescheid",
-  custody: "Sorgerecht",
-  divorce: "Scheidung",
-  inheritance: "Erbschaft",
-  will: "Testament",
-  contract: "Vertrag",
-  "consumer protection": "Verbraucherschutz",
-  warranty: "Gewährleistung",
+  "driving ban": "Fahrverbot",
+  "driving license": "Führerschein",
+  "driver's license": "Führerschein",
+  insurance: "Versicherung",
+  "liability insurance": "Haftpflichtversicherung",
+  "property damage": "Sachschaden",
   "personal injury": "Personenschaden",
   compensation: "Schadensersatz",
   damages: "Schadensersatz",
-  "health insurance": "Krankenversicherung",
-  "social security": "Sozialversicherung",
-  pension: "Rente",
-  unemployment: "Arbeitslosigkeit",
-  "labor law": "Arbeitsrecht",
-  "employment contract": "Arbeitsvertrag",
+  "hit and run": "Fahrerflucht",
+  "traffic law": "Straßenverkehrsrecht",
+  "road traffic": "Straßenverkehr",
+  "traffic rules": "Straßenverkehrsordnung",
+  highway: "Autobahn",
+  "speed limit": "Geschwindigkeitsbegrenzung",
+  pedestrian: "Fußgänger",
+  cyclist: "Radfahrer",
+  towing: "Abschleppen",
+  breakdown: "Panne",
+  "roadside assistance": "Pannenhilfe",
+  "vehicle registration": "Fahrzeugzulassung",
+  "car tax": "Kfz-Steuer",
+  inspection: "Hauptuntersuchung",
+  TÜV: "Hauptuntersuchung",
+  "comprehensive insurance": "Vollkaskoversicherung",
+  "partial comprehensive": "Teilkaskoversicherung",
+  // ── Consumer Law (Verbraucherschutz) ──
+  "consumer protection": "Verbraucherschutz",
+  warranty: "Gewährleistung",
+  withdrawal: "Widerruf",
+  "right of withdrawal": "Widerrufsrecht",
+  "cancellation policy": "Widerrufsbelehrung",
+  defective: "mangelhaft",
+  defect: "Mangel",
+  "defective product": "Sachmangel",
+  guarantee: "Garantie",
+  "purchase price": "Kaufpreis",
+  "purchase contract": "Kaufvertrag",
+  "sales contract": "Kaufvertrag",
+  "distance selling": "Fernabsatz",
+  "online purchase": "Online-Kauf",
+  "digital content": "digitale Inhalte",
+  "product liability": "Produkthaftung",
+  recall: "Rückruf",
+  refund: "Rückerstattung",
+  return: "Rücksendung",
+  repair: "Nachbesserung",
+  replacement: "Ersatzlieferung",
+  "price reduction": "Minderung",
+  "general terms": "AGB",
+  "terms and conditions": "AGB",
+  consumer: "Verbraucher",
+  "consumer center": "Verbraucherzentrale",
+  "debt collection": "Mahnverfahren",
+  "dunning letter": "Mahnung",
+  "collection agency": "Inkassobüro",
+  insolvency: "Insolvenz",
+  bankruptcy: "Insolvenz",
+  "private insolvency": "Privatinsolvenz",
+  "debt relief": "Restschuldbefreiung",
+  foreclosure: "Zwangsversteigerung",
+  // ── Finance / Tax Law (Steuerrecht) ──
+  tax: "Steuer",
+  "income tax": "Einkommensteuer",
+  "value added tax": "Umsatzsteuer",
+  "sales tax": "Umsatzsteuer",
+  "corporate tax": "Körperschaftsteuer",
+  "trade tax": "Gewerbesteuer",
+  "property tax": "Grundsteuer",
+  "inheritance tax": "Erbschaftsteuer",
+  "gift tax": "Schenkungsteuer",
+  "tax return": "Steuererklärung",
+  "tax assessment": "Steuerbescheid",
+  "tax deduction": "Steuerabzug",
+  allowance: "Freibetrag",
+  "tax-free": "steuerfrei",
+  "tax advisor": "Steuerberater",
+  "tax audit": "Betriebsprüfung",
+  "tax evasion": "Steuerhinterziehung",
+  interest: "Zinsen",
+  loan: "Darlehen",
+  mortgage: "Hypothek",
+  credit: "Kredit",
+  investment: "Kapitalanlage",
+  securities: "Wertpapiere",
+  stock: "Aktie",
+  "capital gains": "Kapitalerträge",
+  // ── Public / Administrative Law (Öffentliches Recht) ──
+  "administrative act": "Verwaltungsakt",
+  "administrative court": "Verwaltungsgericht",
+  authority: "Behörde",
+  "government agency": "Behörde",
+  "public office": "Amt",
+  official: "Amtsträger",
+  citizenship: "Staatsangehörigkeit",
+  naturalization: "Einbürgerung",
+  residence: "Aufenthalt",
+  "residence permit": "Aufenthaltserlaubnis",
+  "settlement permit": "Niederlassungserlaubnis",
+  visa: "Visum",
+  asylum: "Asyl",
+  refugee: "Flüchtling",
+  deportation: "Abschiebung",
+  immigration: "Einwanderung",
+  "integration course": "Integrationskurs",
+  "public service": "öffentlicher Dienst",
+  "civil servant": "Beamter",
+  "freedom of information": "Informationsfreiheit",
+  "data protection": "Datenschutz",
+  privacy: "Datenschutz",
+  // ── Inheritance / Estate ──
+  inheritance: "Erbschaft",
+  "inheritance law": "Erbrecht",
+  will: "Testament",
+  "last will": "Testament",
+  estate: "Nachlass",
+  heir: "Erbe",
+  beneficiary: "Erbe",
+  legatee: "Vermächtnisnehmer",
+  executor: "Testamentsvollstrecker",
+  "probate court": "Nachlassgericht",
+  "right of inheritance": "Erbrecht",
+  "compulsory portion": "Pflichtteil",
+  // ── Procedural / General ──
   notice: "Frist",
   deadline: "Frist",
   "statute of limitations": "Verjährung",
   objection: "Widerspruch",
   appeal: "Berufung",
   lawsuit: "Klage",
+  litigation: "Rechtsstreit",
   court: "Gericht",
   lawyer: "Rechtsanwalt",
   attorney: "Rechtsanwalt",
   judge: "Richter",
   "power of attorney": "Vollmacht",
-  "data protection": "Datenschutz",
-  privacy: "Datenschutz",
-  "general terms": "AGB",
-  "terms and conditions": "AGB",
-  "driving ban": "Fahrverbot",
-  "driving license": "Führerschein",
-  insurance: "Versicherung",
-  "liability insurance": "Haftpflichtversicherung",
-  "property damage": "Sachschaden",
-  theft: "Diebstahl",
-  fraud: "Betrug",
-  assault: "Körperverletzung",
-  "hit and run": "Fahrerflucht",
-  "traffic law": "Straßenverkehrsrecht",
-  "road traffic": "Straßenverkehr",
-  neighbor: "Nachbar",
-  "noise complaint": "Lärmbelästigung",
-  construction: "Bau",
-  "building permit": "Baugenehmigung",
-  residence: "Aufenthalt",
-  "residence permit": "Aufenthaltserlaubnis",
-  citizenship: "Staatsangehörigkeit",
-  asylum: "Asyl",
-  immigration: "Einwanderung",
-  marriage: "Ehe",
-  "registered partnership": "Lebenspartnerschaft",
-  adoption: "Adoption",
-  "parental leave": "Elternzeit",
-  "child support": "Kindesunterhalt",
-  alimony: "Unterhalt",
-  insolvency: "Insolvenz",
-  bankruptcy: "Insolvenz",
-  "debt collection": "Mahnverfahren",
-  "dunning letter": "Mahnung",
-  foreclosure: "Zwangsversteigerung",
+  "legal fees": "Rechtsanwaltskosten",
+  "court fees": "Gerichtskosten",
+  "legal aid": "Prozesskostenhilfe",
+  mediation: "Mediation",
+  arbitration: "Schiedsverfahren",
+  settlement: "Vergleich",
+  injunction: "Einstweilige Verfügung",
+  enforcement: "Zwangsvollstreckung",
+  garnishment: "Pfändung",
 };
 
 // ── German→English Legal Term Map (reverse lookup) ────────────────────────
@@ -218,11 +479,59 @@ function isLikelyGerman(query: string): boolean {
 
 function findEnDeTermMatch(query: string): string | null {
   const lower = query.toLowerCase().trim();
+  // Exact match first
   if (EN_DE_TERM_MAP[lower]) return EN_DE_TERM_MAP[lower];
+  // Collect ALL matching terms, preferring longer (more specific) ones
+  const matches: Array<{
+    en: string;
+    de: string;
+    length: number;
+    pos: number;
+  }> = [];
   for (const [en, de] of Object.entries(EN_DE_TERM_MAP)) {
-    if (lower.includes(en)) return de;
+    const idx = lower.indexOf(en);
+    if (idx !== -1) {
+      matches.push({ en, de, length: en.length, pos: idx });
+    }
   }
-  return null;
+  if (matches.length === 0) return null;
+  // Sort by match position (earlier = better), then by length (longer = more specific)
+  matches.sort((a, b) => a.pos - b.pos || b.length - a.length);
+  // Remove overlaps: if a match is contained within another, keep the longer one
+  const filtered: typeof matches = [];
+  for (const m of matches) {
+    const isContained = filtered.some(
+      (f) => m.pos >= f.pos && m.pos + m.length <= f.pos + f.length,
+    );
+    if (!isContained) filtered.push(m);
+  }
+  // Return all top non-overlapping terms joined
+  return [...new Set(filtered.map((m) => m.de))].slice(0, 3).join(" ");
+}
+
+/**
+ * Collect ALL non-overlapping English→German term matches from a query.
+ * Used to build a richer German search query when term-mapping is the only option.
+ */
+function findAllEnDeMatches(query: string): string[] {
+  const lower = query.toLowerCase().trim();
+  const matches: Array<{ en: string; de: string; pos: number; end: number }> =
+    [];
+  for (const [en, de] of Object.entries(EN_DE_TERM_MAP)) {
+    const idx = lower.indexOf(en);
+    if (idx !== -1) {
+      matches.push({ en, de, pos: idx, end: idx + en.length });
+    }
+  }
+  // Sort by position, then by length descending (prefer longer match at same position)
+  matches.sort((a, b) => a.pos - b.pos || b.end - b.pos - (a.end - a.pos));
+  // Remove overlapping matches, keeping the longer one
+  const filtered: typeof matches = [];
+  for (const m of matches) {
+    const overlaps = filtered.some((f) => m.pos < f.end && m.end > f.pos);
+    if (!overlaps) filtered.push(m);
+  }
+  return [...new Set(filtered.map((m) => m.de))];
 }
 
 function findDeEnTermMatch(query: string): string | null {
@@ -285,20 +594,123 @@ export async function translateQueryToGerman(query: string): Promise<string> {
     return query;
   }
 
-  // Fast path: term mapping
-  const termMatch = findEnDeTermMatch(query);
-  if (termMatch) {
-    console.log(`[Translate] Term-mapped EN→DE: "${query}" → "${termMatch}"`);
-    return termMatch;
+  // Fast path: term mapping (collect ALL matching terms, not just first)
+  const allTerms = findAllEnDeMatches(query);
+  if (allTerms.length > 0) {
+    const termResult = allTerms.join(" ");
+    console.log(`[Translate] Term-mapped EN→DE: "${query}" → "${termResult}"`);
+    return termResult;
   }
 
-  // LibreTranslate fallback
-  const apiResult = await callLibreTranslate(query, "en", "de");
+  // LibreTranslate fallback (auto-detect source language)
+  const apiResult = await callLibreTranslate(query, "auto", "de");
   if (apiResult) {
-    console.log(
-      `[Translate] LibreTranslate EN→DE: "${query}" → "${apiResult}"`,
-    );
+    console.log(`[Translate] LibreTranslate →DE: "${query}" → "${apiResult}"`);
     return apiResult;
+  }
+
+  // Final fallback: strip stop words and keep key English terms
+  const STOP_WORDS = new Set([
+    "a",
+    "an",
+    "the",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "shall",
+    "should",
+    "may",
+    "might",
+    "must",
+    "can",
+    "could",
+    "i",
+    "me",
+    "my",
+    "we",
+    "our",
+    "you",
+    "your",
+    "he",
+    "she",
+    "it",
+    "they",
+    "them",
+    "their",
+    "this",
+    "that",
+    "these",
+    "those",
+    "in",
+    "on",
+    "at",
+    "by",
+    "to",
+    "for",
+    "of",
+    "with",
+    "from",
+    "into",
+    "about",
+    "and",
+    "or",
+    "but",
+    "not",
+    "what",
+    "which",
+    "who",
+    "whom",
+    "how",
+    "when",
+    "where",
+    "why",
+    "if",
+    "then",
+    "else",
+    "so",
+    "no",
+    "off",
+    "out",
+    "up",
+    "down",
+    "just",
+    "very",
+    "too",
+    "really",
+    "already",
+    "also",
+    "get",
+    "got",
+    "need",
+    "want",
+    "ask",
+    "tell",
+    "know",
+    "think",
+  ]);
+  const keyTerms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w))
+    .slice(0, 6)
+    .join(" ");
+  if (keyTerms) {
+    console.log(
+      `[Translate] No translation available, using key terms: "${query}" → "${keyTerms}"`,
+    );
+    return keyTerms;
   }
 
   console.log(

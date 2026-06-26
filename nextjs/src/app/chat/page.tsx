@@ -111,9 +111,20 @@ function ChatContent() {
   const modeMeta = MODE_META[mode];
   const ModeIcon = modeMeta.icon;
 
+  // ── SSRF Protection: Broker URL validation ──
+  // Only allow localhost/loopback addresses to prevent SSRF attacks
+  const BROKER_URL_REGEX = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
+  function isValidBrokerUrl(url: string): boolean {
+    return BROKER_URL_REGEX.test(url);
+  }
+
   // Check broker health in local mode
   useEffect(() => {
     if (mode !== "local") return;
+    if (!isValidBrokerUrl(settings.brokerUrl)) {
+      setBrokerOnline(false);
+      return;
+    }
     const check = () => {
       fetch(`${settings.brokerUrl}/health`)
         .then((r) => setBrokerOnline(r.ok))
@@ -221,6 +232,21 @@ function ChatContent() {
           // Mode 1: Local Ollama via broker (CLIENT SIDE)
           const langName = LANGUAGE_NAMES[settings.language] || "English";
 
+          // SSRF guard: validate broker URL before making any request
+          if (!isValidBrokerUrl(settings.brokerUrl)) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: "assistant",
+                content:
+                  "⚠️ **Local AI Broker configuration rejected.**\n\nThe broker URL must be a localhost address (e.g., http://localhost:9000). Please update your settings.",
+              },
+            ]);
+            setBrokerOnline(false);
+            setLoading(false);
+            return;
+          }
+
           // Quick Win 2: Pre-flight health check before the full request
           let healthOk = brokerOnline;
           if (healthOk === null || healthOk === undefined) {
@@ -254,8 +280,13 @@ function ChatContent() {
             body: JSON.stringify({ ...body, mode: "basic" }),
           });
           const searchData = await searchRes.json();
+          // Build context with full norm content so the AI can reason about actual statutes
           const contextStr = (searchData.citedLaws || [])
-            .map((l: CitedLaw) => `[${l.law_key} ${l.norm_id}] ${l.law_title}`)
+            .map((l: CitedLaw) =>
+              l.content
+                ? `[${l.law_key} ${l.norm_id}] ${l.law_title}\n${l.content}`
+                : `[${l.law_key} ${l.norm_id}] ${l.law_title}`,
+            )
             .join("\n\n");
 
           // Quick Win 1: Timeout on broker fetch (30s)

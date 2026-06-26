@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getServerClient } from "../../../../../lib/supabase-server";
 import { errorResponse } from "../../../../../lib/api-utils";
+import { sanitizeErrorMessage } from "../../../../../lib/sanitize";
 
 export async function GET(
   _req: NextRequest,
@@ -43,7 +44,7 @@ export async function GET(
 
     return NextResponse.json({ conversation, messages });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Database error";
+    const message = sanitizeErrorMessage(err);
     return errorResponse("DB_ERROR", message, 500);
   }
 }
@@ -65,7 +66,19 @@ export async function DELETE(
       return errorResponse("UNAUTHORIZED", "User must be signed in", 401);
     }
 
-    // Delete all messages first, then the conversation
+    // Verify conversation ownership first
+    const { data: conv } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (!conv) {
+      return errorResponse("NOT_FOUND", "Conversation not found", 404);
+    }
+
+    // Delete all messages (safe because we verified conversation ownership)
     const { error: msgError } = await supabase
       .from("messages")
       .delete()
@@ -83,7 +96,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Database error";
+    const message = sanitizeErrorMessage(err);
     return errorResponse("DB_ERROR", message, 500);
   }
 }

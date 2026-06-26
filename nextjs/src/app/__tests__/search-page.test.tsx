@@ -72,7 +72,7 @@ describe("SearchPage", () => {
   it("renders SearchBar component", () => {
     renderWithProviders(<SearchPage />);
     expect(
-      screen.getByPlaceholderText(/Search German laws/i),
+      screen.getByPlaceholderText(/Describe your legal situation/i),
     ).toBeInTheDocument();
   });
 

@@ -43,7 +43,7 @@ export default function SearchBar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search laws"
-            placeholder="Search German laws... (e.g., Mietrecht, BGB § 823)"
+            placeholder="Describe your legal situation in detail... (e.g., 'my landlord won\'t return my deposit')"
             className="w-full px-8 py-6 pr-40 text-xl glass-panel-heavy border-white/5
                                 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/30 focus:bg-white/[0.04]
                                 text-white placeholder:text-zinc-600 transition-all duration-500 font-bold tracking-widest uppercase"
@@ -76,6 +76,13 @@ export default function SearchBar({
         </div>
       </form>
 
+      {!query && (
+        <p className="text-xs text-zinc-500 font-medium text-center animate-fade-in leading-relaxed">
+          Describe your situation in detail — specific facts help identify the
+          most relevant laws.
+        </p>
+      )}
+
       {query.length > 5 && (
         <p
           className="text-xs text-zinc-600 font-black uppercase tracking-[0.4em] text-center animate-fade-in"
@@ -83,7 +90,7 @@ export default function SearchBar({
           aria-live="polite"
         >
           {/how|what|why|my|landlord|rent/i.test(query)
-            ? "AI analysis available"
+            ? "AI analysis available — more details = better results"
             : "Searching statutes..."}
         </p>
       )}

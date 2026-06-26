@@ -106,8 +106,10 @@ async def stream_ollama(
                     chunk = json.loads(line)
                     content = chunk.get("message", {}).get("content", "")
                     if content:
-                        yield content
+                        # SSE format: data: {"response": "..."}
+                        yield f"data: {json.dumps({'response': content})}\n\n"
                     if chunk.get("done"):
+                        yield f"data: {json.dumps({'done': True})}\n\n"
                         return
                 except json.JSONDecodeError:
                     continue

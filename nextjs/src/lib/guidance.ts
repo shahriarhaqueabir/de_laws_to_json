@@ -70,10 +70,12 @@ export interface GenerateGuidanceParams {
   bookmarkedLaws: CitedLaw[];
   qdrantResults: CitedLaw[];
   qdrantContext: string;
-  provider: CloudProvider;
+  provider: CloudProvider | "local";
   apiKey: string;
   model: string;
   customEndpoint: string;
+  brokerUrl?: string;
+  ollamaModel?: string;
 }
 
 export interface DocumentGenerationParams {
@@ -419,15 +421,63 @@ export function calculateDeadlineWarnings(
 
 // ── AI Provider Calls ──────────────────────────────────────────────────────
 
+async function callLocalBroker(
+  brokerUrl: string,
+  ollamaModel: string | undefined,
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<string> {
+  try {
+    const res = await fetch(`${brokerUrl}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: userPrompt,
+        context: systemPrompt,
+        model: ollamaModel || undefined,
+        language: "English",
+        temperature: 0.3,
+        top_p: 0.9,
+        max_tokens: 4096,
+        system_prompt: systemPrompt,
+      }),
+      signal: AbortSignal.timeout(120000),
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        `Local broker returned error: ${errorData.error || "Unknown error"}`,
+      );
+    }
+    const data = await res.json();
+    return data.response;
+  } catch (error) {
+    console.error("Local broker connection failed:", error);
+    throw new Error(
+      "Local AI broker is unavailable. Check if Ollama is running and the broker URL is correct.",
+    );
+  }
+}
+
 async function callAI(
-  provider: CloudProvider,
+  provider: CloudProvider | "local",
   apiKey: string,
   model: string,
   customEndpoint: string,
   systemPrompt: string,
   userPrompt: string,
+  brokerUrl?: string,
+  ollamaModel?: string,
 ): Promise<string> {
   switch (provider) {
+    case "local":
+      return callLocalBroker(
+        brokerUrl || "http://localhost:9000",
+        ollamaModel,
+        systemPrompt,
+        userPrompt,
+      );
+
     case "openai":
       return callOpenAI(
         apiKey,
@@ -489,6 +539,8 @@ export async function generateGuidancePaths(
     params.customEndpoint,
     systemPrompt,
     userPrompt,
+    params.brokerUrl,
+    params.ollamaModel,
   );
 
   const paths = parseGuidanceResponse(raw);

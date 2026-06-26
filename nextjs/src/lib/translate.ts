@@ -1,5 +1,7 @@
 /**
- * Client-side German↔English translation via Transformers.js Web Worker.
+ * Client-side German↔translation via Transformers.js Web Worker.
+ * Supports all 9 app languages using opus-mt-de-en (de→en fast path)
+ * and NLLB-200-distilled-600M (all other language pairs).
  */
 
 let worker: Worker | null = null;
@@ -47,13 +49,28 @@ function getWorker(): Worker {
   return worker!;
 }
 
+export interface TranslateOptions {
+  sourceLang?: string;
+  targetLang?: string;
+  onProgress?: (p: TranslationProgress) => void;
+}
+
 export async function translateText(
   text: string,
-  onProgress?: (p: TranslationProgress) => void,
+  options?: TranslateOptions,
 ): Promise<string> {
   const id = crypto.randomUUID();
   return new Promise((resolve, reject) => {
-    pending.set(id, { resolve, reject, onProgress });
-    getWorker().postMessage({ id, text });
+    pending.set(id, {
+      resolve,
+      reject,
+      onProgress: options?.onProgress,
+    });
+    getWorker().postMessage({
+      id,
+      text,
+      sourceLang: options?.sourceLang || "de",
+      targetLang: options?.targetLang || "en",
+    });
   });
 }
