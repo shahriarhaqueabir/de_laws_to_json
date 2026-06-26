@@ -18,13 +18,7 @@ import {
   Menu,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  ChatMode,
-  CitedLaw,
-  CloudProvider,
-  AppLanguage,
-  LANGUAGE_NAMES,
-} from "../../lib/types";
+import { ChatMode, CitedLaw, CloudProvider } from "../../lib/types";
 import { useLanguage } from "../../hooks/useLanguage";
 
 interface Message {
@@ -113,7 +107,8 @@ function ChatContent() {
 
   // ── SSRF Protection: Broker URL validation ──
   // Only allow localhost/loopback addresses to prevent SSRF attacks
-  const BROKER_URL_REGEX = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
+  const BROKER_URL_REGEX =
+    /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
   function isValidBrokerUrl(url: string): boolean {
     return BROKER_URL_REGEX.test(url);
   }
@@ -230,7 +225,7 @@ function ChatContent() {
 
         if (mode === "local") {
           // Mode 1: Local Ollama via broker (CLIENT SIDE)
-          const langName = LANGUAGE_NAMES[settings.language] || "English";
+          const langName = "English";
 
           // SSRF guard: validate broker URL before making any request
           if (!isValidBrokerUrl(settings.brokerUrl)) {
@@ -380,7 +375,7 @@ function ChatContent() {
             body: JSON.stringify({ ...body, mode: "basic" }),
           });
           const data = await res.json();
-          const langName = LANGUAGE_NAMES[settings.language] || "English";
+          const langName = "English";
           const baseSystem = settings.ollamaParams?.system_prompt || "";
 
           // Build a ChatML-formatted prompt so SmolLM2 properly distinguishes

@@ -24,8 +24,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "./auth-context";
 import { useChat } from "./chat-context";
-import type { ChatMode, AppLanguage } from "../lib/types";
-import { LANGUAGE_LABELS } from "../lib/types";
+import type { ChatMode } from "../lib/types";
 import { useLanguage } from "../hooks/useLanguage";
 
 const MODE_META: Record<
@@ -64,7 +63,6 @@ export default function NavBar() {
   const { mode, setMode, settings, updateSettings } = useChat();
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
@@ -84,12 +82,7 @@ export default function NavBar() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [mobileOpen]);
 
-  const currentLang = settings.language || "en";
-
-  const switchLanguage = (lang: AppLanguage) => {
-    updateSettings({ language: lang });
-    setLangOpen(false);
-  };
+  const currentLang = "en";
 
   const switchMode = (m: ChatMode) => {
     setMode(m);
@@ -257,84 +250,10 @@ export default function NavBar() {
               </button>
             )}
 
-            {/* ── Language Selector ── */}
-            <div className="relative ml-1">
-              <button
-                onClick={() => setLangOpen(!langOpen)}
-                onKeyDown={(e) => e.key === "Escape" && setLangOpen(false)}
-                aria-haspopup="true"
-                aria-expanded={langOpen}
-                className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 border border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10"
-                title="Language / Sprache"
-              >
-                <Globe className="w-3 h-3" />
-                <span className="hidden md:inline">
-                  {currentLang.toUpperCase()}
-                </span>
-                <ChevronDown className="w-2 h-2 opacity-40" />
-              </button>
-
-              {langOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setLangOpen(false)}
-                  />
-                  <div
-                    className="absolute right-0 mt-3 w-52 glass-panel-heavy border-white/10 z-20 py-3 shadow-2xl animate-fade-in"
-                    role="dialog"
-                    aria-label="Select language"
-                  >
-                    <div className="px-4 pb-2 mb-2 border-b border-white/5">
-                      <p className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400">
-                        Language
-                      </p>
-                    </div>
-                    {(Object.keys(LANGUAGE_LABELS) as AppLanguage[]).map(
-                      (lang) => {
-                        const isActive = lang === currentLang;
-                        return (
-                          <button
-                            key={lang}
-                            onClick={() => switchLanguage(lang)}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
-                              isActive
-                                ? "bg-accent-gold/10 text-accent-gold-bright"
-                                : "text-zinc-500 hover:bg-white/5 hover:text-white"
-                            }`}
-                          >
-                            <span className="text-xs w-6 text-center font-mono">
-                              {lang === "de"
-                                ? "DE"
-                                : lang === "en"
-                                  ? "EN"
-                                  : lang === "tr"
-                                    ? "TR"
-                                    : lang === "ar"
-                                      ? "AR"
-                                      : lang === "fr"
-                                        ? "FR"
-                                        : lang === "es"
-                                          ? "ES"
-                                          : lang === "pl"
-                                            ? "PL"
-                                            : lang === "uk"
-                                              ? "UK"
-                                              : lang === "ru"
-                                                ? "RU"
-                                                : ""}
-                            </span>
-                            <span className="flex-1">
-                              {LANGUAGE_LABELS[lang]}
-                            </span>
-                            {isActive && <Check className="w-3 h-3" />}
-                          </button>
-                        );
-                      },
-                    )}
-                  </div>
-                </>
-              )}
+            {/* ── Language Indicator (English only) ── */}
+            <div className="ml-1 px-3 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-zinc-600 border border-transparent select-none">
+              <Globe className="w-3 h-3 inline-block mr-1.5" />
+              EN
             </div>
 
             <div className="relative ml-1">

@@ -23,23 +23,110 @@ import {
 // like "StVG" or "car accident StVO" immediately find the right law.
 // Extended list covers all major German federal law abbreviations.
 const KNOWN_LAW_KEYS = new Set([
-  "StVG", "StVO", "StVZO", "FeV", "FZV", "BGB", "StGB", "KSchG",
-  "BetrVG", "TzBfG", "MuSchG", "BUrlG", "EntgFG", "SGB_I", "SGB_III",
-  "SGB_V", "SGB_VI", "SGB_IX", "SGB_XI", "GG", "VwVfG", "VwGO",
-  "OWiG", "StPO", "ZPO", "GVG", "FamFG", "GKG", "RVG", "JGG",
-  "BVerfGG", "BVerwG", "BGH", "AGBG", "UKlaG", "ProdHaftG",
-  "StraBG", "EStG", "KStG", "GewStG", "UStG", "AO", "InsO",
-  "EGInsO", "ZVG", "EnEV", "BImSchG", "KrWG", "WHG", "BNatSchG",
-  "BauGB", "BauNVO", "HOAI", "BGB_InfoV", "PflVG", "VVG",
-  "EGBGB", "EGBGB", "BGBL", "BGBl", "HGB", "AktG", "GmbHG",
-  "GenG", "PatG", "MarkenG", "UrhG", "GeschmMG", "UWG",
-  "GWB", "WpHG", "KWG", "VAG", "FMAB", "PAngV", "BDSG",
-  "DSGVO", "TTDSG", "TKG", "MStVG", "LuftVG", "PBefG",
-  "AEG", "GüKG", "SeeArbG", "FlagGR", "BinSchVG",
-  "AufenthG", "AsylG", "StAG", "FreizügG/EU",
-  "BEEG", "Elterngeld", "SGB_II", "SGB_XII", "WoGG",
-  "WEG", "MietR", "HeizkostenV", "BetrKV",
-  "IStGH", "ZAG", "AWG", "KrWaffKontrG",
+  "StVG",
+  "StVO",
+  "StVZO",
+  "FeV",
+  "FZV",
+  "BGB",
+  "StGB",
+  "KSchG",
+  "BetrVG",
+  "TzBfG",
+  "MuSchG",
+  "BUrlG",
+  "EntgFG",
+  "SGB_I",
+  "SGB_III",
+  "SGB_V",
+  "SGB_VI",
+  "SGB_IX",
+  "SGB_XI",
+  "GG",
+  "VwVfG",
+  "VwGO",
+  "OWiG",
+  "StPO",
+  "ZPO",
+  "GVG",
+  "FamFG",
+  "GKG",
+  "RVG",
+  "JGG",
+  "BVerfGG",
+  "BVerwG",
+  "BGH",
+  "AGBG",
+  "UKlaG",
+  "ProdHaftG",
+  "StraBG",
+  "EStG",
+  "KStG",
+  "GewStG",
+  "UStG",
+  "AO",
+  "InsO",
+  "EGInsO",
+  "ZVG",
+  "EnEV",
+  "BImSchG",
+  "KrWG",
+  "WHG",
+  "BNatSchG",
+  "BauGB",
+  "BauNVO",
+  "HOAI",
+  "BGB_InfoV",
+  "PflVG",
+  "VVG",
+  "EGBGB",
+  "EGBGB",
+  "BGBL",
+  "BGBl",
+  "HGB",
+  "AktG",
+  "GmbHG",
+  "GenG",
+  "PatG",
+  "MarkenG",
+  "UrhG",
+  "GeschmMG",
+  "UWG",
+  "GWB",
+  "WpHG",
+  "KWG",
+  "VAG",
+  "FMAB",
+  "PAngV",
+  "BDSG",
+  "DSGVO",
+  "TTDSG",
+  "TKG",
+  "MStVG",
+  "LuftVG",
+  "PBefG",
+  "AEG",
+  "GüKG",
+  "SeeArbG",
+  "FlagGR",
+  "BinSchVG",
+  "AufenthG",
+  "AsylG",
+  "StAG",
+  "FreizügG/EU",
+  "BEEG",
+  "Elterngeld",
+  "SGB_II",
+  "SGB_XII",
+  "WoGG",
+  "WEG",
+  "MietR",
+  "HeizkostenV",
+  "BetrKV",
+  "IStGH",
+  "ZAG",
+  "AWG",
+  "KrWaffKontrG",
 ]);
 
 /**
@@ -49,7 +136,8 @@ const KNOWN_LAW_KEYS = new Set([
 function extractLawKeys(query: string): string[] {
   // Match patterns: standalone uppercase abbreviations with 2-8 chars
   // Optionally with hyphen, slash, or underscore
-  const pattern = /\b([A-Z][A-Za-z0-9]{1,7}(?:[-/][A-Z][A-Za-z0-9]*)?(?:_[A-Z]+)?)\b/g;
+  const pattern =
+    /\b([A-Z][A-Za-z0-9]{1,7}(?:[-/][A-Z][A-Za-z0-9]*)?(?:_[A-Z]+)?)\b/g;
   const found: string[] = [];
   const seen = new Set<string>();
   let match: RegExpExecArray | null;
@@ -184,22 +272,60 @@ export async function GET(req: NextRequest) {
       // Auto-detect category if not explicitly specified
       const effectiveCategory = category || detectCategory(safeQuery);
 
-      // Only skip Qdrant if we already have strong keyword matches
+      // Only skip semantic search if we already have strong keyword matches
       // and user explicitly searched for a specific law abbreviation
       if (matchedLawKeys.length === 0 || safeQuery.length > 20) {
         console.log(
-          `[API Search] Executing Qdrant query: "${searchQuery}" (original: "${safeQuery}", category: ${effectiveCategory || "none"})`,
+          `[API Search] Executing semantic and full-text search: "${searchQuery}" (original: "${safeQuery}", category: ${effectiveCategory || "none"})`,
         );
-        // 1. Semantic Search via Qdrant
         const offset = (page - 1) * PAGE_SIZE;
+
         const qdrantResults = await searchNorms(
           searchQuery,
           effectiveCategory,
           50,
           offset,
         );
-        console.log(`[API Search] Qdrant returned ${qdrantResults.length} points.`);
+
+        console.log(
+          `[API Search] Qdrant returned ${qdrantResults.length} points.`,
+        );
         allResults.push(...qdrantResults);
+
+        // Full-text search via Supabase (non-fatal — skipped if unavailable)
+        try {
+          const ftResponse = await (supabase
+            .from("laws")
+            .select("key, title, category")
+            .textSearch("search_vector", searchQuery, {
+              type: "websearch",
+              config: "german",
+            })
+            .limit(10) as unknown as Promise<{
+            data: { key: string; title: string; category: string }[] | null;
+            error: any;
+          }>);
+
+          if (ftResponse.data && ftResponse.data.length > 0) {
+            console.log(
+              `[API Search] Full-text returned ${ftResponse.data.length} law matches.`,
+            );
+            const ftLawResults: SearchResult[] = ftResponse.data.map(
+              (l: { key: string; title: string; category: string }) => ({
+                law_key: l.key,
+                law_title: l.title,
+                category: l.category,
+                norm_id: "",
+                norm_title: "",
+                content: `Full-text match: ${l.title}`,
+                score: 0.9,
+              }),
+            );
+            allResults.push(...ftLawResults);
+          }
+        } catch {
+          console.warn(`[API Search] Full-text search unavailable — skipping.`);
+        }
       } else {
         console.log(
           `[API Search] Skipping Qdrant — keyword pre-search sufficient for abbreviation query.`,

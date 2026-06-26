@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { getServerClient } from "../../../lib/supabase-server";
+import { createAdminClient } from "../../../lib/supabase-admin";
 import { generateNormExplanation } from "../../../lib/chat";
 import { decryptApiKey } from "../../../lib/encryption";
 import type { AppLanguage, CloudProvider } from "../../../lib/types";
@@ -256,10 +257,26 @@ Return STRICT JSON with these exact fields:
       lang: (lang as AppLanguage) || "en",
     });
 
-    // 3. Cache in Supabase
-    const { error: insertError } = await supabase
-      .from("norm_explanations")
-      .insert({
+    // 3. Cache in Supabase (admin client — RLS INSERT revoked from anon/authenticated)
+    let insertError: any = null;
+    try {
+      const adminSupabase = createAdminClient();
+      const { error: err } = await adminSupabase
+        .from("norm_explanations")
+        .insert({
+          norm_id: normCacheId,
+          law_key: lawKey,
+          lang,
+          translation: explanation.translation,
+          summary: explanation.summary,
+          implications: explanation.implications,
+          next_steps: explanation.next_steps,
+        });
+      insertError = err;
+    } catch {
+      // Admin client unavailable (e.g. test env without SERVICE_ROLE_KEY) —
+      // fall back to the regular client (works locally, fails in prod after migration 00010)
+      const { error: err } = await supabase.from("norm_explanations").insert({
         norm_id: normCacheId,
         law_key: lawKey,
         lang,
@@ -268,6 +285,8 @@ Return STRICT JSON with these exact fields:
         implications: explanation.implications,
         next_steps: explanation.next_steps,
       });
+      insertError = err;
+    }
 
     if (insertError) {
       console.error("Failed to cache norm_explanation:", insertError);

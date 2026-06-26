@@ -72,3 +72,6 @@ temp/
 
 # Local override configs
 *.local
+
+# Supabase CLI local working directory (machine-local config)
+supabase/

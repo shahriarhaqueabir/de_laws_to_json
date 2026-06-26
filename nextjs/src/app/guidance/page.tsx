@@ -8,7 +8,6 @@ import {
   Clock,
   Check,
   Loader2,
-  Languages,
   Bookmark,
   ArrowRight,
   Scale,
@@ -20,34 +19,14 @@ import FolderModal from "../../components/folder-modal";
 import type { FolderFormData } from "../../components/folder-modal";
 import type { GuidancePath, FolderContext } from "../../lib/guidance-types";
 import { FOLDER_STATUS_LABELS } from "../../lib/guidance-types";
-import type { AppLanguage } from "../../lib/types";
 import { getFolders, createFolder } from "../../lib/bookmarks-v2";
 import { useLanguage } from "../../hooks/useLanguage";
-
-// ── Language Options ───────────────────────────────────────────────────────
-
-const LANGUAGES: { value: AppLanguage; label: string }[] = [
-  { value: "de", label: "Deutsch" },
-  { value: "en", label: "English" },
-  { value: "tr", label: "Türkçe" },
-  { value: "ar", label: "العربية" },
-  { value: "fr", label: "Français" },
-  { value: "es", label: "Español" },
-  { value: "pl", label: "Polski" },
-  { value: "uk", label: "Українська" },
-  { value: "ru", label: "Русский" },
-];
 
 // ── Page Component ─────────────────────────────────────────────────────────
 
 export default function GuidancePage() {
   const [situation, setSituation] = useState("");
-  const {
-    language: globalLanguage,
-    setLanguage: setGlobalLanguage,
-    t,
-  } = useLanguage();
-  const [language, setLanguage] = useState<AppLanguage>(globalLanguage);
+  const { language, t } = useLanguage();
   const [selectedFolder, setSelectedFolder] = useState<string>("");
   const [paths, setPaths] = useState<GuidancePath[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -89,19 +68,6 @@ export default function GuidancePage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadFolders();
   }, [loadFolders]);
-
-  // Sync local language when global language changes
-  useEffect(() => {
-    if (globalLanguage !== language) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLanguage(globalLanguage);
-    }
-  }, [globalLanguage, language]);
-
-  const handleLanguageChange = (lang: AppLanguage) => {
-    setLanguage(lang);
-    setGlobalLanguage(lang);
-  };
 
   const handleGetGuidance = async () => {
     if (!situation.trim()) return;
@@ -231,32 +197,7 @@ export default function GuidancePage() {
 
       {/* Input Section */}
       <div className="glass-panel p-8 border-white/5 mb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Language Selector */}
-          <div>
-            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
-              <Languages className="w-3.5 h-3.5" />
-              Response Language
-            </label>
-            <select
-              value={language}
-              onChange={(e) =>
-                handleLanguageChange(e.target.value as AppLanguage)
-              }
-              className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors appearance-none"
-            >
-              {LANGUAGES.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-zinc-700 mt-1">
-              Describe your situation in any language. Guidance will be in the
-              selected language.
-            </p>
-          </div>
-
+        <div className="grid grid-cols-1 gap-6 mb-8">
           {/* Folder Selector */}
           <div>
             <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
