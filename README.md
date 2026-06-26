@@ -4,13 +4,49 @@
 
 German Law Vault provides a comprehensive search engine and AI-guided legal assistant for all German federal laws from [gesetze-im-internet.de](https://www.gesetze-im-internet.de/). Users can search in any of 9 languages, bookmark laws into case folders with uniform AI-guidance properties, run AI-powered legal analysis to get 3–5 structured outcome paths with risk/cost estimates, and generate German legal documents from templates.
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
-[![Laws](https://img.shields.io/badge/laws-6000+-green.svg)](https://www.gesetze-im-internet.de/)
-[![Search](https://img.shields.io/badge/search-Semantic-blue.svg)](https://qdrant.tech)
-[![Tests](https://img.shields.io/badge/tests-308%20passing-brightgreen.svg)](nextjs/)
-[![Security](https://img.shields.io/badge/security-RLS%20%7C%20CSP%20%7C%20AES--256--GCM-purple.svg)](docs/security-architecture.md)
-[![TypeScript](https://img.shields.io/badge/typescript-strict-blue.svg)](nextjs/tsconfig.json)
+<div align="center">
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](LICENSE)
+[![Website](https://img.shields.io/badge/website-live-brightgreen?style=flat-square)](https://ai-assisted-german-law-shahriarhaqueabir.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg?style=flat-square)](https://nextjs.org)
+[![Laws](https://img.shields.io/badge/laws-6,000+-gold.svg?style=flat-square)](https://www.gesetze-im-internet.de/)
+[![Tests](https://img.shields.io/badge/tests-308%20passing-brightgreen.svg?style=flat-square)](nextjs/)
+[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](.github/pull_request_template.md)
+[![Security](https://img.shields.io/badge/security-RLS%20%7C%20CSP%20%7C%20AES--256--GCM-purple.svg?style=flat-square)](docs/security-architecture.md)
+[![TypeScript](https://img.shields.io/badge/typescript-strict-blue.svg?style=flat-square)](nextjs/tsconfig.json)
+
+</div>
+
+---
+
+## Screenshots
+
+| Search | AI Chat | Bookmark Folders |
+|--------|---------|-----------------|
+| ![Search](assets/Screenshot%201.png) | ![Chat](assets/Screenshot%202.png) | ![Folders](assets/Screenshot%204.png) |
+| **Guidance** | **Law Viewer** | **Mobile** |
+| ![Guidance](assets/Screenshot%203.png) | ![Laws](assets/Screenshot%205.png) | ![Mobile](assets/Screenshot%201.png) |
+
+---
+
+## Quick Demo
+
+### 🔍 Semantic Search
+Search across all 6,000+ German federal laws by meaning — results ranked by semantic relevance, not keywords.
+
+### 🤖 AI Guidance Engine
+Describe your legal situation in plain language (any of 9 languages). The engine finds relevant laws, generates 3–5 outcome paths with risk/cost analysis, and can produce filled legal documents.
+
+### 📚 Bookmark System
+Create case folders with 8 uniform properties (dispute value, opposing party, deadlines, court info) that feed into the AI guidance engine for context-aware analysis.
+
+### 💬 4 Chat Modes
+| Mode | How It Works | Privacy |
+|------|-------------|---------|
+| **Basic** | Server-side Qdrant vector search — no AI. Fast & free | ✅ No data leaves server |
+| **Browser** | Transformers.js model runs in your browser (~1GB ONNX). Fully offline | ✅ Everything stays local |
+| **Cloud** | Bring your own API key (OpenAI / Anthropic) — encrypted with AES-256-GCM | 🔒 Encrypted at rest |
+| **Local** | Ollama via broker.py — your machine, your model | ✅ 100% offline |
 
 ---
 
@@ -304,9 +340,24 @@ See the comprehensive [Security Architecture Document](docs/security-architectur
 - **All user data**: Protected by Row Level Security
 - **Anonymous mode**: Full functionality without account, data stored in localStorage
 
+## Contributing
+
+Contributions are welcome! See the [contribution guidelines](.github/pull_request_template.md) and [security policy](.github/SECURITY.md) before getting started.
+
+- **Bug reports**: Open an [issue](.github/ISSUE_TEMPLATE/bug_report.md)
+- **Feature requests**: Open an [issue](.github/ISSUE_TEMPLATE/feature_request.md)
+- **Security vulnerabilities**: Report via [GitHub Advisories](https://github.com/shahriarhaqueabir/AI-Assisted-German-Law/security/advisories/new)
+- **Dependencies**: Managed via [Dependabot](.github/dependabot.yml)
+
 ## License
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+
 Apache License 2.0 — See [LICENSE](LICENSE) for details.
 
 ---
 
-**Built with ❤️ for accessible German legal information**
+<div align="center">
+  <sub>Built with ❤️ for accessible German legal information</sub><br>
+  <sub>⚖️ <em>Sub lege libertas</em> — Under the law, freedom</sub>
+</div>

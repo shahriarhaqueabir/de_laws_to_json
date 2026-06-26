@@ -1,0 +1,33 @@
+# Auto-detect text files and set LF line endings
+* text=auto eol=lf
+
+# Source files
+*.ts text
+*.tsx text
+*.js text
+*.jsx text
+*.json text
+*.css text
+*.sql text
+*.md text
+*.yml text
+*.yaml text
+*.toml text
+*.sh text eol=lf
+*.ps1 text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.woff binary
+*.woff2 binary
+*.wasm binary
+*.onnx binary
+
+# Git files
+.gitattributes text
+.gitignore text
