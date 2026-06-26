@@ -188,7 +188,7 @@ Authentication uses **Supabase SSR** (`@supabase/ssr` v0.12+), which implements 
 |-----------|------|------|
 | Browser Client | `lib/supabase.ts` | `createBrowserClient()` — used in client components |
 | Server Client | `lib/supabase-server.ts` | `createServerClient()` with per-request cookie store |
-| Proxy/Middleware | `src/proxy.ts` | Session refresh via `supabase.auth.getUser()` on every navigation |
+| Server Client | `lib/supabase-server.ts` | Session refresh via `createServerClient()` + per-request cookie store in API routes |
 
 ### Session Flow
 
@@ -214,7 +214,7 @@ Authentication uses **Supabase SSR** (`@supabase/ssr` v0.12+), which implements 
 
 - **Browser client:** `createBrowserClient()` handles cookie read/write automatically via `@supabase/ssr`.
 - **Server client:** Created per-request with the current `cookieStore` (from `next/headers`). The `setAll` callback silently handles Server Component calls where cookie writes are unavailable.
-- **Proxy (src/proxy.ts):** Runs on every route match, calls `supabase.auth.getUser()` to refresh the session, and propagates cookie changes via `supabaseResponse.cookies.set()`.
+- **API routes (lib/supabase-server.ts):** Each API route creates its own `createServerClient()` with the request cookie store. Session refresh happens inline via the Supabase client, which reads and sets cookies automatically through `@supabase/ssr`.
 
 ### Session Configuration (Supabase Cloud)
 
@@ -400,23 +400,24 @@ The static `setInterval()` approach was replaced by two mechanisms:
 | `POST /api/explain` | 10 requests | 1 minute | `explain/route.ts` |
 | `GET /api/search` | 60 requests | 1 minute | `search/route.ts` |
 
-### Middleware Rate Limiter (src/proxy.ts)
+### API Route Rate Limiting
 
-The proxy/middleware now **delegates** to the shared `checkRateLimit()` from `lib/rate-limiter.ts` instead of maintaining its own in-memory store:
+The proxy/middleware (`src/proxy.ts`) was **removed** in the security sweep (2026-06-26). Rate limiting now happens **inline** in each API route via the shared `checkRateLimit()` from `lib/rate-limiter.ts`:
 
 ```ts
-import { checkRateLimit, getClientIp } from "./lib/rate-limiter";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
-// Rate limit API chat and explain routes
-if (
-  request.nextUrl.pathname.startsWith("/api/chat") ||
-  request.nextUrl.pathname.startsWith("/api/explain")
-) {
-  const ip = getClientIp(request);
-  const { allowed } = await checkRateLimit(ip);
-  if (!allowed) { return 429 response; }
+const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+  || request.headers.get("x-real-ip")
+  || "127.0.0.1";
+const { allowed, error } = await checkRateLimit(ip, endpoint, maxReqs, windowMs);
+if (!allowed) {
+  return Response.json({ error: "Too many requests" }, { status: 429 });
 }
 ```
+
+Each route imports and calls `checkRateLimit()` independently with endpoint-specific thresholds (see table above).
+
 
 The API routes (`/api/chat`, `/api/explain`, `/api/guidance`, `/api/search`) also call `checkRateLimit()` independently. For `/api/chat` and `/api/explain`, the middleware rate-limit check applies **in addition to** the route-level check — meaning both must pass. This is intentional defense-in-depth: the middleware catches uncaught requests before they reach the handler, and the handler validates within its own context.
 
@@ -572,7 +573,7 @@ This is an honest assessment of limitations and areas for improvement.
 - A `check_rate_limit()` SECURITY DEFINER stored procedure performs atomic upsert + count in a single query, bypassing RLS.
 - `src/lib/rate-limiter.ts` now calls `supabase.rpc('check_rate_limit', ...)` with SHA-256 hashed IPs (first 16 hex chars) for privacy.
 - Falls back to in-memory when Supabase is unavailable (local dev, tests).
-- Legacy duplicate limiter in `src/proxy.ts` replaced with a delegate to the shared `checkRateLimit()` function.
+- `src/proxy.ts` was deleted entirely. Each API route now calls `checkRateLimit()` directly from `lib/rate-limiter.ts`.
 
 **Residual risk:**
 - If the Supabase database is unreachable, the in-memory fallback kicks in (per-instance).
@@ -768,7 +769,7 @@ This is an honest assessment of limitations and areas for improvement.
 | Rate limit migration | `supabase/migrations/00009_rate_limits.sql` |
 | SSRF broker validation | `nextjs/src/components/chat-context.tsx` |
 | SSRF endpoint validation | `nextjs/src/lib/ai-provider.ts` (validateEndpointUrl) |
-| Auth proxy/middleware + rate limit | `nextjs/src/proxy.ts` |
+| Auth — server client | `nextjs/src/lib/supabase-server.ts` |
 | AI provider implementations | `nextjs/src/lib/ai-provider.ts` |
 | Supabase browser client | `nextjs/src/lib/supabase.ts` |
 | Supabase server client | `nextjs/src/lib/supabase-server.ts` |
