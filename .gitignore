@@ -85,7 +85,9 @@ logs/
 *.env
 .envrc
 
-# Recovery and temporary scripts
+# Recovery, temporary scripts, and indexing artifacts
+scripts/_reindex_status.json
+scripts/reindex.log
 extract_*.py
 app_from_pyc.py
 app_recovered*.py

@@ -1,0 +1,13 @@
+# Large local files — not needed for Vercel deployment
+laws.db
+scripts/norms_vectors.npy
+scripts/_reindex_status.json
+scripts/reindex.log
+scripts/*.py
+scripts/*.npy
+**/*.ipynb
+*.npy
+*.db
+.specstory/
+plans/
+docs/adr/

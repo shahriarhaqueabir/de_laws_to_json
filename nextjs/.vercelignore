@@ -1,0 +1,4 @@
+# Exclude large/dev files
+*.npy
+*.db
+*.ipynb

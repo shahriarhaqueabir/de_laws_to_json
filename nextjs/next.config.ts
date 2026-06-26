@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -70,6 +71,9 @@ const nextConfig: NextConfig = {
     ];
   },
   serverExternalPackages: ["@huggingface/transformers"],
+  turbopack: {
+    root: path.resolve("."),
+  },
 };
 
 export default nextConfig;
