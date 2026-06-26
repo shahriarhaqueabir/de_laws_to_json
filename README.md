@@ -340,12 +340,21 @@ See the comprehensive [Security Architecture Document](docs/security-architectur
 - **All user data**: Protected by Row Level Security
 - **Anonymous mode**: Full functionality without account, data stored in localStorage
 
+## Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [Security Architecture](docs/security-architecture.md) | CSP, SSRF, rate limiting, encryption, RLS |
+| [Project Retrospective](docs/retrospective.md) | Architecture decisions, what worked/didn't, roadmap |
+| [Open Issues](docs/issues/) | Tracked backlog with acceptance criteria |
+| [Sprint Plans](plans/) | Past and upcoming sprint plans |
+
 ## Contributing
 
 Contributions are welcome! See the [contribution guidelines](.github/pull_request_template.md) and [security policy](.github/SECURITY.md) before getting started.
 
-- **Bug reports**: Open an [issue](.github/ISSUE_TEMPLATE/bug_report.md)
-- **Feature requests**: Open an [issue](.github/ISSUE_TEMPLATE/feature_request.md)
+- **Bug reports**: Open an [issue](.github/ISSUE_TEMPLATE/bug_report.yml)
+- **Feature requests**: Open an [issue](.github/ISSUE_TEMPLATE/feature_request.yml)
 - **Security vulnerabilities**: Report via [GitHub Advisories](https://github.com/shahriarhaqueabir/AI-Assisted-German-Law/security/advisories/new)
 - **Dependencies**: Managed via [Dependabot](.github/dependabot.yml)
 

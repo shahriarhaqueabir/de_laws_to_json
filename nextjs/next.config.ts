@@ -36,31 +36,13 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net https://huggingface.co",
+              "script-src-elem 'self' 'unsafe-inline' blob: https://cdn.jsdelivr.net https://huggingface.co",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "connect-src 'self' http://localhost:9000 http://localhost:* https://cdn.jsdelivr.net https://*.supabase.co wss://*.supabase.co https://*.qdrant.io https://huggingface.co https://us.aws.cdn.hf.co",
               "worker-src 'self' blob: https://cdn.jsdelivr.net https://huggingface.co https://us.aws.cdn.hf.co",
               "child-src 'self' blob:",
-              "frame-ancestors 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-            ].join("; "),
-          },
-        ],
-      },
-      {
-        source: "/api-docs/:path*",
-        headers: [
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
-              "connect-src 'self' http://localhost:9000 http://localhost:* https://*.supabase.co wss://*.supabase.co https://*.qdrant.io https://huggingface.co https://us.aws.cdn.hf.co",
-              "worker-src 'self' blob: https://cdn.jsdelivr.net https://huggingface.co https://us.aws.cdn.hf.co",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

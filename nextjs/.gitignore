@@ -47,3 +47,28 @@ analyze/
 
 # prettier
 node_modules/
+
+# =============================================================================
+# Safety Patterns
+# =============================================================================
+
+# Agent output / debugging artifacts
+agent-output*
+notes*
+todo*
+
+# Heap snapshots from Chrome DevTools
+*.heapsnapshot
+
+# Screenshots during testing
+*.screenshot.*
+
+# Generic temp directories
+tmp/
+temp/
+
+# pnpm debug logs (if pnpm is used)
+.pnpm-debug.log*
+
+# Local override configs
+*.local

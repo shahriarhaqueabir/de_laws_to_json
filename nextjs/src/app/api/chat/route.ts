@@ -22,6 +22,42 @@ import {
   DEFAULT_AI_RATE_LIMIT,
 } from "../../../lib/rate-limiter";
 
+// ── German Law Abbreviation Matching (shared with search route) ──
+const KNOWN_LAW_KEYS = new Set([
+  "StVG", "StVO", "StVZO", "FeV", "FZV", "BGB", "StGB", "KSchG",
+  "BetrVG", "TzBfG", "MuSchG", "BUrlG", "EntgFG", "SGB_I", "SGB_III",
+  "SGB_V", "SGB_VI", "SGB_IX", "SGB_XI", "GG", "VwVfG", "VwGO",
+  "OWiG", "StPO", "ZPO", "GVG", "FamFG", "GKG", "RVG", "JGG",
+  "BVerfGG", "BVerwG", "BGH", "AGBG", "UKlaG", "ProdHaftG",
+  "StraBG", "EStG", "KStG", "GewStG", "UStG", "AO", "InsO",
+  "EGInsO", "ZVG", "EnEV", "BImSchG", "KrWG", "WHG", "BNatSchG",
+  "BauGB", "BauNVO", "HOAI", "BGB_InfoV", "PflVG", "VVG",
+  "EGBGB", "BGBL", "BGBl", "HGB", "AktG", "GmbHG",
+  "GenG", "PatG", "MarkenG", "UrhG", "GeschmMG", "UWG",
+  "GWB", "WpHG", "KWG", "VAG", "FMAB", "PAngV", "BDSG",
+  "DSGVO", "TTDSG", "TKG", "MStVG", "LuftVG", "PBefG",
+  "AEG", "GüKG", "SeeArbG", "FlagGR", "BinSchVG",
+  "AufenthG", "AsylG", "StAG", "FreizügG/EU",
+  "BEEG", "Elterngeld", "SGB_II", "SGB_XII", "WoGG",
+  "WEG", "MietR", "HeizkostenV", "BetrKV",
+  "IStGH", "ZAG", "AWG", "KrWaffKontrG",
+]);
+
+function extractLawKeys(query: string): string[] {
+  const pattern = /\b([A-Z][A-Za-z0-9]{1,7}(?:[-/][A-Z][A-Za-z0-9]*)?(?:_[A-Z]+)?)\b/g;
+  const found: string[] = [];
+  const seen = new Set<string>();
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(query)) !== null) {
+    const candidate = match[1];
+    if (KNOWN_LAW_KEYS.has(candidate) && !seen.has(candidate)) {
+      found.push(candidate);
+      seen.add(candidate);
+    }
+  }
+  return found;
+}
+
 // ── SSRF Protection: Broker URL validation ──
 // Only allow localhost/loopback addresses to prevent SSRF attacks
 const BROKER_URL_REGEX = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
@@ -110,63 +146,105 @@ export async function POST(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // 1. Search Qdrant for relevant norms (always)
-    // Search more results for better coverage, then post-process
-    // for relevance and diversity before passing to the AI
+    // ── PHASE 0: Law Abbreviation Pre-Search ──
+    // Before Qdrant, check for known German law abbreviations in the query.
+    // This ensures queries like "StVG" or "car accident StVO" immediately
+    // find the right law regardless of embedding quality.
+    const matchedLawKeys = extractLawKeys(message);
+    const preSearchLaws: SearchResult[] = [];
 
-    // Translate non-German queries to German for E5-small compatibility
+    if (matchedLawKeys.length > 0) {
+      console.log(
+        `[Chat API] Law abbreviation(s) detected: ${matchedLawKeys.join(", ")}`,
+      );
+      const supabase = getServerClient(cookieStore);
+      try {
+        const { data: laws, error: dbError } = await supabase
+          .from("laws")
+          .select("*")
+          .in("key", matchedLawKeys)
+          .limit(10);
+
+        if (!dbError && laws && laws.length > 0) {
+          for (const l of laws) {
+            preSearchLaws.push({
+              law_key: l.key,
+              law_title: l.title,
+              category: l.category,
+              norm_id: "",
+              norm_title: "",
+              content: `${l.title} — ${l.alt_title || ""}`.trim(),
+              score: 0.99, // Highest priority
+            });
+          }
+          console.log(
+            `[Chat API] Pre-search found ${preSearchLaws.length} exact law matches.`,
+          );
+        }
+      } catch {
+        console.warn("[Chat API] Law abbreviation pre-search failed");
+      }
+    }
+
+    // 1. Search Qdrant for relevant norms (always, unless strong abbreviation match)
     const searchQuery = await translateQueryToGerman(message);
-
-    // Auto-detect the legal category to improve search relevance
     const detectedCategory = detectCategory(message);
 
-    let norms: SearchResult[] = [];
-    try {
-      // Strategy: search with broader scope (50 norms) and apply
-      // keyword-based reranking + law diversity boost in qdrant.ts
-      norms = await searchNorms(searchQuery, detectedCategory, 50);
+    let norms: SearchResult[] = [...preSearchLaws];
 
-      // ── Fallback strategies ──
-      if (norms.length > 0) {
-        const maxScore = Math.max(...norms.map((n) => n.score));
+    // Skip Qdrant only if the query is purely an abbreviation (≤3 chars)
+    // or is just a single law abbreviation
+    const words = message.trim().split(/\s+/);
+    const skipQdrant =
+      words.length <= 3 &&
+      matchedLawKeys.length > 0 &&
+      words.every((w) =>
+        KNOWN_LAW_KEYS.has(w.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, "")),
+      );
 
-        // Check homogeneity: does one law dominate the results?
-        const lawCounts = new Map<string, number>();
-        for (const n of norms)
-          lawCounts.set(n.law_key, (lawCounts.get(n.law_key) || 0) + 1);
-        const topLaw = [...lawCounts.entries()].sort((a, b) => b[1] - a[1])[0];
-        const homogeneityRatio = topLaw ? topLaw[1] / norms.length : 0;
+    if (!skipQdrant) {
+      try {
+        const qdrantResults = await searchNorms(searchQuery, detectedCategory, 50);
+        norms.push(...qdrantResults);
 
-        const needsUnfiltered =
-          // Case 1: No category detected AND low max score
-          (!detectedCategory && maxScore < 0.3) ||
-          // Case 2: Category detected BUT one law dominates >60% of results
-          // (happens when substantive laws like BGB/BetrVG are miscategorized as "other")
-          (detectedCategory && homogeneityRatio > 0.6 && maxScore < 0.6);
+        if (qdrantResults.length > 0) {
+          const maxScore = Math.max(...qdrantResults.map((n) => n.score));
 
-        if (needsUnfiltered) {
-          console.log(
-            `[Chat API] Homogeneous results detected (top law: ${topLaw?.[0] || "?"} = ${(homogeneityRatio * 100).toFixed(0)}%), ` +
-              `maxScore: ${maxScore.toFixed(3)}, trying unfiltered search for diversity`,
-          );
-          const unfiltered = await searchNorms(searchQuery, undefined, 50);
-          if (unfiltered.length > 0) {
-            // Merge: take top unfiltered as long as they add new laws
-            const existingKeys = new Set(norms.map((n) => n.law_key));
-            for (const n of unfiltered) {
-              if (!existingKeys.has(n.law_key)) {
-                norms.push(n);
-                existingKeys.add(n.law_key);
+          // Check homogeneity: does one law dominate the results?
+          const lawCounts = new Map<string, number>();
+          for (const n of qdrantResults)
+            lawCounts.set(n.law_key, (lawCounts.get(n.law_key) || 0) + 1);
+          const topLaw = [...lawCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+          const homogeneityRatio = topLaw ? topLaw[1] / qdrantResults.length : 0;
+
+          const needsUnfiltered =
+            (!detectedCategory && maxScore < 0.3) ||
+            (detectedCategory && homogeneityRatio > 0.6 && maxScore < 0.6);
+
+          if (needsUnfiltered) {
+            console.log(
+              `[Chat API] Homogeneous results (top: ${topLaw?.[0] || "?"} = ${(homogeneityRatio * 100).toFixed(0)}%), ` +
+                `trying unfiltered search`,
+            );
+            const unfiltered = await searchNorms(searchQuery, undefined, 50);
+            if (unfiltered.length > 0) {
+              const existingKeys = new Set(norms.map((n) => n.law_key));
+              for (const n of unfiltered) {
+                if (!existingKeys.has(n.law_key)) {
+                  norms.push(n);
+                  existingKeys.add(n.law_key);
+                }
               }
             }
-            console.log(
-              `[Chat API] Merged unfiltered results: ${norms.length} total norms from ${existingKeys.size} laws`,
-            );
           }
         }
+      } catch {
+        console.warn("Qdrant search failed, continuing with pre-search context");
       }
-    } catch {
-      console.warn("Qdrant search failed, continuing with empty context");
+    } else {
+      console.log(
+        `[Chat API] Skipping Qdrant — abbreviation-only query. Using pre-search context.`,
+      );
     }
 
     // After all search strategies, pick the top 10 most relevant

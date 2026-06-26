@@ -17,6 +17,52 @@ import {
   DEFAULT_SEARCH_RATE_LIMIT,
 } from "../../../lib/rate-limiter";
 
+// ── German Law Abbreviation Matching ──
+// Common German law abbreviations matched against laws.key in Supabase.
+// This provides exact-match lookup BEFORE the vector search, so queries
+// like "StVG" or "car accident StVO" immediately find the right law.
+// Extended list covers all major German federal law abbreviations.
+const KNOWN_LAW_KEYS = new Set([
+  "StVG", "StVO", "StVZO", "FeV", "FZV", "BGB", "StGB", "KSchG",
+  "BetrVG", "TzBfG", "MuSchG", "BUrlG", "EntgFG", "SGB_I", "SGB_III",
+  "SGB_V", "SGB_VI", "SGB_IX", "SGB_XI", "GG", "VwVfG", "VwGO",
+  "OWiG", "StPO", "ZPO", "GVG", "FamFG", "GKG", "RVG", "JGG",
+  "BVerfGG", "BVerwG", "BGH", "AGBG", "UKlaG", "ProdHaftG",
+  "StraBG", "EStG", "KStG", "GewStG", "UStG", "AO", "InsO",
+  "EGInsO", "ZVG", "EnEV", "BImSchG", "KrWG", "WHG", "BNatSchG",
+  "BauGB", "BauNVO", "HOAI", "BGB_InfoV", "PflVG", "VVG",
+  "EGBGB", "EGBGB", "BGBL", "BGBl", "HGB", "AktG", "GmbHG",
+  "GenG", "PatG", "MarkenG", "UrhG", "GeschmMG", "UWG",
+  "GWB", "WpHG", "KWG", "VAG", "FMAB", "PAngV", "BDSG",
+  "DSGVO", "TTDSG", "TKG", "MStVG", "LuftVG", "PBefG",
+  "AEG", "GüKG", "SeeArbG", "FlagGR", "BinSchVG",
+  "AufenthG", "AsylG", "StAG", "FreizügG/EU",
+  "BEEG", "Elterngeld", "SGB_II", "SGB_XII", "WoGG",
+  "WEG", "MietR", "HeizkostenV", "BetrKV",
+  "IStGH", "ZAG", "AWG", "KrWaffKontrG",
+]);
+
+/**
+ * Extract potential law keys from a query string.
+ * Matches uppercase abbreviations like StVG, StVO, BGB, etc.
+ */
+function extractLawKeys(query: string): string[] {
+  // Match patterns: standalone uppercase abbreviations with 2-8 chars
+  // Optionally with hyphen, slash, or underscore
+  const pattern = /\b([A-Z][A-Za-z0-9]{1,7}(?:[-/][A-Z][A-Za-z0-9]*)?(?:_[A-Z]+)?)\b/g;
+  const found: string[] = [];
+  const seen = new Set<string>();
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(query)) !== null) {
+    const candidate = match[1];
+    if (KNOWN_LAW_KEYS.has(candidate) && !seen.has(candidate)) {
+      found.push(candidate);
+      seen.add(candidate);
+    }
+  }
+  return found;
+}
+
 interface SearchResult {
   law_key: string;
   law_title: string;
@@ -93,33 +139,79 @@ export async function GET(req: NextRequest) {
     let allResults: SearchResult[] = [];
 
     if (safeQuery) {
+      // ── PHASE 0: Law Abbreviation Pre-Search ──
+      // Before hitting Qdrant, check if the query mentions known German law
+      // abbreviations (StVG, StVO, BGB, etc.) via exact key match.
+      // This catches the most common short queries and ensures exact law hits.
+      const cookieStore = await cookies();
+      const supabase = getServerClient(cookieStore);
+      const matchedLawKeys = extractLawKeys(safeQuery);
+
+      if (matchedLawKeys.length > 0) {
+        console.log(
+          `[API Search] Found law abbreviation(s) in query: ${matchedLawKeys.join(", ")}`,
+        );
+        try {
+          const { data: laws, error: dbError } = await supabase
+            .from("laws")
+            .select("*")
+            .in("key", matchedLawKeys)
+            .limit(20);
+
+          if (!dbError && laws && laws.length > 0) {
+            const exactMatches = laws.map((l) => ({
+              law_key: l.key,
+              law_title: l.title,
+              category: l.category,
+              norm_id: "",
+              norm_title: "",
+              content: `${l.title} — ${l.alt_title || ""}`.trim(),
+              score: 0.95, // High score ensures these appear above vector results
+            }));
+            allResults.push(...exactMatches);
+            console.log(
+              `[API Search] Keyword pre-search returned ${exactMatches.length} exact law matches.`,
+            );
+          }
+        } catch (kwErr) {
+          console.warn(`[API Search] Keyword pre-search failed:`, kwErr);
+        }
+      }
+
       // Translate non-German queries to German for E5-small compatibility
       const searchQuery = await translateQueryToGerman(safeQuery);
 
       // Auto-detect category if not explicitly specified
       const effectiveCategory = category || detectCategory(safeQuery);
 
-      console.log(
-        `[API Search] Executing Qdrant query: "${searchQuery}" (original: "${safeQuery}", category: ${effectiveCategory || "none"})`,
-      );
-      // 1. Semantic Search via Qdrant
-      const offset = (page - 1) * PAGE_SIZE;
-      allResults = await searchNorms(
-        searchQuery,
-        effectiveCategory,
-        50,
-        offset,
-      );
-      console.log(`[API Search] Qdrant returned ${allResults.length} points.`);
+      // Only skip Qdrant if we already have strong keyword matches
+      // and user explicitly searched for a specific law abbreviation
+      if (matchedLawKeys.length === 0 || safeQuery.length > 20) {
+        console.log(
+          `[API Search] Executing Qdrant query: "${searchQuery}" (original: "${safeQuery}", category: ${effectiveCategory || "none"})`,
+        );
+        // 1. Semantic Search via Qdrant
+        const offset = (page - 1) * PAGE_SIZE;
+        const qdrantResults = await searchNorms(
+          searchQuery,
+          effectiveCategory,
+          50,
+          offset,
+        );
+        console.log(`[API Search] Qdrant returned ${qdrantResults.length} points.`);
+        allResults.push(...qdrantResults);
+      } else {
+        console.log(
+          `[API Search] Skipping Qdrant — keyword pre-search sufficient for abbreviation query.`,
+        );
+      }
 
-      // 2. Fallback: if Qdrant returned empty, try Supabase text search
+      // 2. Fallback: if both searches returned empty, try Supabase text search
       if (allResults.length === 0) {
         console.log(
-          `[API Search] Qdrant returned 0 results — falling back to Supabase text search.`,
+          `[API Search] All searches returned 0 results — falling back to Supabase ilike text search.`,
         );
         try {
-          const cookieStore = await cookies();
-          const supabase = getServerClient(cookieStore);
           const { data: laws, error: dbError } = await supabase
             .from("laws")
             .select("*")
@@ -129,7 +221,7 @@ export async function GET(req: NextRequest) {
             .limit(20);
 
           if (!dbError && laws && laws.length > 0) {
-            allResults = laws.map((l) => ({
+            const fallbackResults = laws.map((l) => ({
               law_key: l.key,
               law_title: l.title,
               category: l.category,
@@ -138,12 +230,12 @@ export async function GET(req: NextRequest) {
               content: `Fallback match: ${l.title} — ${l.alt_title || l.key}`,
               score: 0.5,
             }));
+            allResults.push(...fallbackResults);
             console.log(
-              `[API Search] Supabase fallback returned ${allResults.length} laws.`,
+              `[API Search] Supabase fallback returned ${fallbackResults.length} laws.`,
             );
           }
         } catch (fallbackErr) {
-          // Fallback failed silently — return what we have
           console.warn(`[API Search] Supabase fallback also failed.`);
         }
       }
