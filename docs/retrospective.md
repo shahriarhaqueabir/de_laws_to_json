@@ -1,8 +1,8 @@
 # German Law Vault — Project Retrospective
 
 > **Date:** 2026-06-26
-> **Phase:** Post-security-sweep + showcase polish
-> **Branch:** `main` (SHA `85e3a2b`)
+> **Phase:** Post-security-sweep + re-indexing
+> **Branch:** `main` (SHA `d6e40ed`)
 
 ---
 
@@ -18,7 +18,7 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 |----------|-----------|------------|
 | **Next.js 16 App Router** | Full-stack React with RSC, API routes, middleware | SSR hydration complexity; CSP conflicts with client-side WASM |
 | **Supabase (PostgreSQL)** | Managed Postgres with built-in Auth, RLS, real-time | Free plan limits; no pg_cron on free tier |
-| **Qdrant Cloud (managed inference)** | No self-hosting vector infrastructure; E5-small built-in | 384d embeddings too weak for 100K+ legal norms; vendor lock-in |
+| Qdrant Cloud (managed inference) | No self-hosting vector infrastructure; E5-small built-in | 384d embeddings weak for 100K+ legal norms; vendor lock-in |
 | **Dual-storage bookmarks** | Offline-first with localStorage + Supabase sync | Complex conflict resolution on reconnect |
 | **BYO API Key (Cloud AI)** | No server-side API costs; user brings their own key | Key rotation breaks encryption; user friction |
 | **Local AI via broker** | Fully offline capable; user controls model | Requires Python + Ollama setup |
@@ -38,7 +38,7 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 | **Basic** | Server returns search results only (no AI) | ✅ Working |
 | **Browser** | Transformers.js runs models client-side | ⚠️ CSP issues, WASM blocked |
 | **Cloud** | BYO API key → OpenAI/Anthropic/Ollama-compatible | ✅ Working (needs user API key) |
-| **Local** | Broker → Ollama on local machine | ✅ Working (qwen2.5:1.5b) |
+| **Local** | Broker → Ollama on local machine | ✅ Working (qwen2.5:1.5b, confirmed 26 Jun) |
 
 ### 3.2 Security Features (Sprint 5)
 
@@ -98,7 +98,7 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 - **E5-small 384d embeddings** are fundamentally inadequate for 100K+ fine-grained legal norms. A 768d+ model (e5-base, e5-large, or a legal-domain fine-tuned model) would improve results significantly — but requires re-indexing the entire collection.
 - **pg_cron** not available on Supabase Free Plan, so rate limit cleanup is called inline.
 - **Edge Functions** (`legal-cases`, `file-case`) exist in Supabase but have no corresponding code. Origin unknown — likely from a different project.
-- **`authdbsupabase` connection error** in Supabase logs — not from app code; likely Supabase Cloud internal health probe.
+- **authdbsupabase connection error** — investigated via `postgres_logs` warehouse. Two connection attempts from IPv6 Supabase infra within 10s. Not recurring. Benign Supabase health probe for a database that doesn't exist in older projects. **Closed.**
 - **Hydration mismatch** on `ChatProvider` — fixed with `opacity-0` wrapper during SSR, but the NavBar plug icon vs file-text icon mismatch may still appear intermittently.
 - **Sequential thinking tool** crashes with "server shut down" on this Windows machine.
 - **`execute_sql` tool** consistently fails with "server shut down" — requires manual SQL execution via Supabase Dashboard.
@@ -179,7 +179,7 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 | `nextjs/src/hooks/` | React hooks | ✅ Active |
 | `nextjs/src/workers/` | Web workers | ✅ Active |
 | `broker/broker.py` | Local AI broker | ✅ Active |
-| `supabase/migrations/` | 9 migrations | ✅ Active |
+| `supabase/migrations/` | 11 migrations | ✅ Active |
 | `scripts/` | Setup + seed scripts | ✅ Active |
 | `docs/security-architecture.md` | Security docs | ✅ Active |
 | `docs/retrospective.md` | This file | ✅ Active |
@@ -199,8 +199,8 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 | AI chat modes | 4 |
 | Bookmark folders properties | 8 (uniform) |
 | Migrations | 9 |
-| Tests | ~30 unit tests (Vitest) |
-| CSP directives | 8 |
+| Tests | 42 files, 392 tests (Vitest) |
+| CSP directives | 8 (plus script-src-elem, worker-src) |
 | API endpoints | ~25 |
 | GitHub stars | N/A (new project) |
 
