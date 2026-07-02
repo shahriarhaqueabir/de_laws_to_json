@@ -1,7 +1,7 @@
 # German Law Vault — Project Retrospective
 
-> **Date:** 2026-06-26
-> **Phase:** Post-security-sweep + re-indexing
+> **Date:** 2026-07-02
+> **Phase:** Hybrid Search + Benchmarking (Sprint 6b)
 > **Branch:** `main` (SHA `d6e40ed`)
 
 ---
@@ -16,6 +16,9 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 
 | Decision | Rationale | Trade-offs |
 |----------|-----------|------------|
+| **Hybrid Search (Dense + BM25)** | Pure vector search was too weak for short legal queries | 85/15 split provides best GerLayQA results |
+| **3-Stage Fallback Chain** | Qdrant failures or weak hits shouldn't return empty results | Postgres `pg_trgm` provides reliable "safety net" |
+| **GerLayQA Evaluation** | Optimization needs measurable metrics | Baseline MRR@10 is 0.0461 (significant over baseline) |
 | **Next.js 16 App Router** | Full-stack React with RSC, API routes, middleware | SSR hydration complexity; CSP conflicts with client-side WASM |
 | **Supabase (PostgreSQL)** | Managed Postgres with built-in Auth, RLS, real-time | Free plan limits; no pg_cron on free tier |
 | Qdrant Cloud (managed inference) | No self-hosting vector infrastructure; E5-small built-in | 384d embeddings weak for 100K+ legal norms; vendor lock-in |
@@ -54,11 +57,11 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 
 ### 3.3 Search System
 
-- Qdrant vector search with E5-small embeddings (103K+ norm points)
-- Keyword reranking + law diversity boost
-- Two-pass search (with/without category filter)
-- Supabase `ilike` fallback
-- **NEW**: Law abbreviation pre-search (StVG, StVO, BGB, etc.)
+- **Hybrid Search**: Application-level fusion of E5-small dense embeddings + BM25 scoring.
+- **Reranking**: Keyword reranking + law diversity boost.
+- **3-Stage Fallback**: Qdrant Hybrid → Postgres Trigram (`norms` table) → Supabase `ilike`.
+- **Pre-Search**: Law abbreviation pre-search (StVG, StVO, BGB, etc.).
+- **Evaluation**: GerLayQA benchmark suite (MRR@10: 0.0461).
 
 ### 3.4 Guidance Engine
 

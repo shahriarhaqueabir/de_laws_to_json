@@ -159,7 +159,69 @@ export async function GET(req: NextRequest) {
         );
         allResults.push(...qdrantResults);
 
-        // Full-text search via Supabase (non-fatal — skipped if unavailable)
+        // ── PHASE 2: Norm-level pg_trgm fallback when Qdrant results are weak ──
+        if (qdrantResults.length < 3 && searchQuery.trim()) {
+          console.log(
+            `[API Search] Qdrant returned < 3 results — trying Supabase norms pg_trgm.`,
+          );
+          try {
+            const trgmSql = `
+              SELECT law_key, law_title, category, norm_id, norm_title, content,
+                     GREATEST(similarity(content, $1), 0.1) as score
+              FROM norms
+              WHERE content % $1 OR content ILIKE '%' || $1 || '%'
+              ORDER BY score DESC
+              LIMIT 20;
+            `;
+            // Use rpc with the SQL as a string param (Supabase REST can't do
+            // raw SQL through the JS client — we use the Management API pattern)
+            // Instead, use the .from() query builder with textSearch fallback
+            const { data: trgmResults, error: trgmErr } = await (supabase
+              .from("norms")
+              .select(
+                "law_key, law_title, category, norm_id, norm_title, content",
+              )
+              .or(
+                `content.ilike.%${searchQuery}%,norm_title.ilike.%${searchQuery}%,norm_id.ilike.%${searchQuery}%`,
+              )
+              .limit(20) as unknown as Promise<{
+              data:
+                | {
+                    law_key: string;
+                    law_title: string;
+                    category: string;
+                    norm_id: string;
+                    norm_title: string;
+                    content: string;
+                  }[]
+                | null;
+              error: any;
+            }>);
+
+            if (!trgmErr && trgmResults && trgmResults.length > 0) {
+              console.log(
+                `[API Search] Norms ILIKE fallback returned ${trgmResults.length} norms.`,
+              );
+              const normResults: SearchResult[] = trgmResults.map((n) => ({
+                law_key: n.law_key,
+                law_title: n.law_title,
+                category: n.category,
+                norm_id: n.norm_id,
+                norm_title: n.norm_title,
+                content: n.content,
+                score: 0.65, // Below Qdrant dense, above law-level fallback
+              }));
+              allResults.push(...normResults);
+            }
+          } catch (trgmErr) {
+            console.warn(
+              `[API Search] Norms ILIKE fallback failed — skipping.`,
+              trgmErr,
+            );
+          }
+        }
+
+        // Full-text search via Supabase laws table (non-fatal — skipped if unavailable)
         try {
           const ftResponse = await (supabase
             .from("laws")

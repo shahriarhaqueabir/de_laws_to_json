@@ -217,7 +217,6 @@ worktrees/
 
 # Local-only agent config (not pushed to GitHub)
 .githooks/
-.memory/
 
 # Secret pattern reference files (gitleaks false positives)
 secret_patterns.txt

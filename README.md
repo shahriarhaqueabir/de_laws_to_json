@@ -31,8 +31,15 @@ German Law Vault provides a comprehensive search engine and AI-guided legal assi
 
 ## Quick Demo
 
-### 🔍 Semantic Search
-Search across all 6,000+ German federal laws by meaning — results ranked by semantic relevance, not keywords.
+### 🔍 Hybrid Semantic Search
+Search across all 6,000+ German federal laws using a hybrid BM25 + Dense vector approach. Results are ranked by combining multilingual embeddings (`intfloat/multilingual-e5-small`) with keyword relevance, ensuring both conceptual and exact matches.
+
+### 📊 Performance Benchmarks (GerLayQA)
+Measured against the GerLayQA legal benchmark:
+- **MRR@10**: 0.0461
+- **Recall@10**: 0.0633
+- **Avg Latency**: ~200ms
+- **Fallback Chain**: 3-stage (Qdrant Hybrid → Postgres Trigram → Postgres ILIKE)
 
 ### 🤖 AI Guidance Engine
 Describe your legal situation in plain language (any of 9 languages). The engine finds relevant laws, generates 3–5 outcome paths with risk/cost analysis, and can produce filled legal documents.
@@ -73,8 +80,13 @@ Create case folders with 8 uniform properties (dispute value, opposing party, de
 
 ## Features
 
-### 🔍 Semantic Search
-- Search 6,000+ German federal laws by meaning using Qdrant Cloud with `intfloat/multilingual-e5-small` (managed inference)
+### 🔍 Hybrid Search (v2)
+- Search 6,000+ German federal laws using **Hybrid Search** (Dense + Sparse/BM25)
+- Multilingual support via `intfloat/multilingual-e5-small` with application-level BM25 reranking
+- **3-Stage Fallback Chain**:
+    1. **Qdrant Hybrid**: 85% Dense / 15% BM25 reranking
+    2. **Postgres Trigram**: Fuzzy matching via `pg_trgm` on `norms` table
+    3. **Postgres ILIKE**: Keyword fallback on `laws` table
 - 9 language support: DE / EN / TR / AR / FR / ES / PL / UK / RU
 - Category browsing and pagination
 

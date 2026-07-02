@@ -473,6 +473,12 @@ All user-owned tables have Row Level Security enabled. Below is the complete pol
 |--------|-----------|------|
 | `users own guidance paths` | ALL | `USING (case_file_id IN (SELECT id FROM case_files WHERE user_id = auth.uid()))`<br>`WITH CHECK (case_file_id IN (SELECT id FROM case_files WHERE user_id = auth.uid()))` |
 
+### Table: `norms` — Public Read
+
+| Policy | Operation | Rule |
+|--------|-----------|------|
+| `Norms are publicly readable` | SELECT | `USING (true)` |
+
 ### Table: `user_api_keys` — User-Owned
 
 | Policy | Operation | Rule |

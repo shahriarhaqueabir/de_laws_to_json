@@ -9,7 +9,30 @@
  */
 import { pipeline, env } from "@huggingface/transformers";
 
+// ── WASM Configuration for CSP Compatibility ──
+// Transformers.js downloads ONNX WASM binaries at runtime.
+// The CSP in next.config.ts allows these CDN origins:
+//   - cdn.jsdelivr.net (preferred, fast worldwide CDN)
+//   - unpkg.com (fallback)
+//
+// We configure wasmPaths explicitly so the runtime picks a CSP-compatible
+// origin instead of guessing. Single-threaded mode (numThreads: 1) avoids
+// SharedArrayBuffer requirements that would need COOP/COEP headers.
 env.allowLocalModels = false;
+
+const WASM_CDNS = [
+  "https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest/dist/",
+  "https://unpkg.com/@huggingface/transformers@latest/dist/",
+];
+
+env.backends = {
+  onnx: {
+    wasm: {
+      wasmPaths: WASM_CDNS[0],
+      numThreads: 1,
+    },
+  },
+};
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- Transformers.js pipeline API is dynamic */
 

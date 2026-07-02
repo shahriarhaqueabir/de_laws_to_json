@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { ChatMode, CitedLaw, CloudProvider } from "../../lib/types";
 import { useLanguage } from "../../hooks/useLanguage";
+import { useBrowserAI } from "../../hooks/useBrowserAI";
 
 interface Message {
   role: "user" | "assistant";
@@ -67,16 +68,12 @@ function ChatContent() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [brokerOnline, setBrokerOnline] = useState<boolean | null>(null);
-  const [workerStatus, setWorkerStatus] = useState<string | null>(null);
+
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
 
-  const workerRef = useRef<Worker | null>(null);
-  const pendingRef = useRef<{
-    resolve: (v: string) => void;
-    reject: (e: unknown) => void;
-  } | null>(null);
+  const browserAI = useBrowserAI(mode === "browser");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
 
@@ -134,50 +131,6 @@ function ChatContent() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // ── Browser AI: Initialize worker ──
-  useEffect(() => {
-    if (mode !== "browser") {
-      workerRef.current?.terminate();
-      workerRef.current = null;
-      return;
-    }
-    if (workerRef.current) return;
-
-    const worker = new Worker(
-      new URL("../../workers/chat.worker.ts", import.meta.url),
-      { type: "module" },
-    );
-
-    worker.onmessage = (event) => {
-      const { status, output, error } = event.data;
-      if (status === "progress") {
-        if (event.data.status === "download") {
-          setWorkerStatus(
-            `Downloading core... ${Math.round((event.data.loaded / event.data.total) * 100)}%`,
-          );
-        } else {
-          setWorkerStatus(`Generating...`);
-        }
-      } else if (status === "complete") {
-        setWorkerStatus(null);
-        pendingRef.current?.resolve(output);
-        pendingRef.current = null;
-      } else if (status === "error") {
-        setWorkerStatus(`Error: ${error}`);
-        pendingRef.current?.reject(new Error(error));
-        pendingRef.current = null;
-      }
-    };
-
-    workerRef.current = worker;
-    setWorkerStatus("AI model ready");
-
-    return () => {
-      worker.terminate();
-      workerRef.current = null;
-    };
-  }, [mode]);
 
   const handleSend = useCallback(
     async (e: React.FormEvent | null, overrideInput?: string) => {
@@ -384,20 +337,10 @@ function ChatContent() {
           const userContent = `Context from German laws:\n${(data.citedLaws || []).map((l: CitedLaw) => `[${l.law_key} ${l.norm_id}] ${l.law_title}`).join("\n")}\n\nUser situation:\n${userMsg}\n\nProvide guidance based on the relevant laws above. Include citations.`;
           const prompt = `<|im_start|>system\n${systemContent}<|im_end|>\n<|im_start|>user\n${userContent}<|im_end|>\n<|im_start|>assistant\n`;
 
-          let workerResponse: string;
-          if (workerRef.current) {
-            workerResponse = await new Promise<string>((resolve, reject) => {
-              const id = crypto.randomUUID();
-              pendingRef.current = { resolve, reject };
-              workerRef.current?.postMessage({
-                id,
-                prompt,
-                model: settings.browserModel,
-              });
-            });
-          } else {
-            workerResponse = "Browser AI worker not available.";
-          }
+          const workerResponse = await browserAI.generate(
+            prompt,
+            settings.browserModel,
+          );
 
           setMessages((prev) => [
             ...prev,
@@ -610,9 +553,9 @@ function ChatContent() {
                     <Loader2 className="absolute inset-0 w-5 h-5 text-accent-gold animate-spin" />
                     <Loader2 className="absolute inset-0 w-5 h-5 text-accent-gold animate-ping opacity-20" />
                   </div>
-                  {mode === "browser" && workerStatus ? (
+                  {mode === "browser" && browserAI.status ? (
                     <span className="text-xs font-bold uppercase tracking-widest text-accent-gold-body">
-                      {workerStatus}
+                      {browserAI.status}
                     </span>
                   ) : (
                     <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">

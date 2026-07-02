@@ -12,14 +12,17 @@ Features:
 
 import json
 import os
+import re
 import sqlite3
 import time
 import uuid
+from collections import Counter
 
 import numpy as np
 from qdrant_client import QdrantClient
-from qdrant_client.models import PointStruct
+from qdrant_client.models import PointStruct, SparseVector
 from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
 
 QDRANT_URL = os.environ.get("QDRANT_URL")
@@ -156,28 +159,58 @@ def seed_db():
         np.save(CACHE_PATH, all_vectors)
         print("Cache saved.")
 
-    # ── 3. Build PointStructs with actual vectors ──────────────────────────
-    print("Building PointStructs...")
+    # ── 3. Build PointStructs with dual vectors (dense + sparse BM25) ──
+    print("Building PointStructs with dual vectors (dense + sparse BM25)...")
     points = []
     for (point_id, payload), vector in zip(norms, all_vectors):
+        # Compute BM25 sparse vector from combined text
+        combined_text = " ".join(
+            filter(
+                None,
+                [
+                    payload.get("law_title", ""),
+                    payload.get("norm_title", ""),
+                    payload.get("content", ""),
+                ],
+            )
+        )
+        tokens = re.findall(r"\w+", combined_text.lower())
+        # Aggregate by index to ensure unique indices (Qdrant requirement)
+        index_values: dict[int, float] = {}
+        for token, count in Counter(tokens).items():
+            idx = hash(token) % (2**20)
+            index_values[idx] = index_values.get(idx, 0) + float(count)
+        indices = list(index_values.keys())
+        values = list(index_values.values())
+
         points.append(
             PointStruct(
                 id=point_id,
                 payload=payload,
-                vector=vector.tolist(),  # 384-dim float32 list
+                vector={
+                    "": vector.tolist(),  # dense E5-small 384d
+                    "bm25": SparseVector(  # sparse BM25
+                        indices=indices,
+                        values=[float(v) for v in values],
+                    ),
+                },
             )
         )
 
     # Free memory before upload
     del norms, all_vectors, content_texts
 
-    # ── 4. Check how many points already exist ─────────────────────────────
+    # ── 4. Check if collection already has all points ─────────────────────
     try:
         existing = client.get_collection("german_norms")
         existing_count = existing.points_count
-        print(f"Collection currently has {existing_count} points.")
+        print(f"Collection currently has {existing_count} points (need {len(points)}).")
+        if existing_count >= len(points):
+            print("✓ Collection already fully seeded. Skipping upload.")
+            return
     except Exception:
         existing_count = 0
+        print("Could not get collection info, will attempt upload.")
 
     # ── 5. Upsert in batches with retry ───────────────────────────────────
     total_batches_ul = (len(points) + BATCH_SIZE - 1) // BATCH_SIZE
@@ -195,7 +228,7 @@ def seed_db():
                 client.upsert(
                     collection_name="german_norms",
                     points=batch,
-                    wait=False,
+                    wait=True,
                 )
                 total_uploaded += len(batch)
                 if (i // BATCH_SIZE) % max(1, total_batches_ul // 30) == 0:

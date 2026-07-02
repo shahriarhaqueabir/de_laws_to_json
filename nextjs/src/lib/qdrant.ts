@@ -34,6 +34,33 @@ export interface SearchResult {
 }
 
 /**
+ * Tokenize text for BM25 scoring (like Python's re.findall(r'\w+', text.lower())).
+ */
+function tokenizeForBM25(text: string): string[] {
+  return (text.toLowerCase().match(/[\wäöüß]+/g) || []).filter(
+    (t) => t.length >= 1,
+  );
+}
+
+/**
+ * Extract search terms from a query for BM25 scoring.
+ * Returns set of lowercase terms (at least 2 chars).
+ */
+function extractQueryTerms(query: string): Set<string> {
+  const terms = new Set<string>();
+  for (const word of query.toLowerCase().split(/\s+/)) {
+    const clean = word.replace(
+      /^[^a-zA-ZäöüßÄÖÜ0-9]+|[^a-zA-ZäöüßÄÖÜ0-9]+$/g,
+      "",
+    );
+    if (clean.length >= 2) {
+      terms.add(clean);
+    }
+  }
+  return terms;
+}
+
+/**
  * Extract significant keywords from a query for reranking purposes.
  * Strips common stop words and short terms, returns unique lowercase terms.
  */
@@ -188,6 +215,53 @@ function extractQueryKeywords(query: string): Set<string> {
 }
 
 /**
+ * Compute BM25 score for a single document given a set of query terms.
+ * Uses smoothed IDF + term frequency with length normalization.
+ */
+function computeBM25(
+  queryTerms: Set<string>,
+  docText: string,
+  docLen: number,
+  avgdl: number,
+  totalDocs: number,
+  docFrequency: Map<string, number>,
+): number {
+  const k1 = 1.2;
+  const b = 0.75;
+  const tokens = tokenizeForBM25(docText);
+  const tfMap = new Map<string, number>();
+  for (const t of tokens) {
+    tfMap.set(t, (tfMap.get(t) || 0) + 1);
+  }
+
+  let score = 0;
+  for (const term of Array.from(queryTerms)) {
+    const tf = tfMap.get(term) || 0;
+    if (tf === 0) continue;
+
+    // Smoothed IDF from result-set frequencies
+    const df = Math.max(1, docFrequency.get(term) || 1);
+    const idf = Math.log(1 + (totalDocs - df + 0.5) / (df + 0.5));
+
+    // BM25 term frequency normalization
+    const numerator = tf * (k1 + 1);
+    const denominator = tf + k1 * (1 - b + b * (docLen / avgdl));
+    score += idf * (numerator / denominator);
+  }
+  return score;
+}
+
+/**
+ * Normalize an array of scores to [0, 1] range.
+ */
+function normalizeScores(scores: number[]): number[] {
+  const max = Math.max(...scores, 1e-10);
+  const min = Math.min(...scores, 0);
+  const range = max - min || 1;
+  return scores.map((s) => (s - min) / range);
+}
+
+/**
  * Rerank search results by boosting results whose norm_title or law_title
  * contains keywords from the search query, and preferring laws with
  * multiple matching norms.
@@ -214,7 +288,7 @@ function rerankByKeywords(
       (r.norm_id || "")
     ).toLowerCase();
 
-    for (const kw of keywords) {
+    for (const kw of Array.from(keywords)) {
       if (searchText.includes(kw)) {
         boost += 0.1;
       }
@@ -342,29 +416,48 @@ export async function searchNorms(
     return [];
   }
 
-  // Qdrant Universal Query API with Managed Inference
   // E5-small requires "query: " prefix on search queries
   // The indexed documents use "passage: " prefix
   // Without this prefix, embeddings don't match — results are random
   const prefixedQuery = `query: ${expandedQuery}`;
 
+  // ── Application-Level Hybrid (Dense + Client-Side BM25) ──
+  // Strategy:
+  //   1. Query dense vectors from Qdrant via managed inference (E5-small)
+  //   2. Compute BM25 scores for results client-side
+  //   3. Normalize scores, fuse with alpha, re-sort
+  //
+  // Why not Qdrant prefetch? The managed inference API doesn't support
+  // sparse vector queries from TypeScript because Python's hash() function
+  // (used during indexing) is non-deterministic across runtimes. An
+  // application-level BM25 gives us the same benefit without requiring
+  // cross-runtime hash compatibility.
+  const HYBRID_ALPHA = 0.85; // Weight toward dense (0.85) vs sparse (0.15)
+  const BM25_K1 = 1.2;
+  const BM25_B = 0.75;
+  const AVG_DOC_LENGTH = 600; // Estimated avg German norm length in tokens
+
   try {
-    const results = await client.query(COLLECTION, {
+    // Step 1: Query dense vectors
+    const denseResults = await client.query(COLLECTION, {
       query: {
         text: prefixedQuery,
         model: INFERENCE_MODEL,
       },
-      limit: topK,
+      limit: topK * 2, // Request more for BM25 re-ranking pool
       offset,
       filter: queryFilter,
       with_payload: true,
     });
 
     console.log(
-      `[Qdrant lib] Search success. Points found: ${results.points.length}`,
+      `[Qdrant lib] Dense search returned ${denseResults.points.length} points`,
     );
 
-    let parsed = results.points
+    if (denseResults.points.length === 0) return [];
+
+    // Step 2: Parse results
+    let parsed = denseResults.points
       .map((r) => {
         const payload = r.payload as Record<string, unknown> | undefined;
         return {
@@ -386,12 +479,72 @@ export async function searchNorms(
           !r.norm_title.includes("(weggefallen)"),
       );
 
-    // Apply keyword-based reranking to boost results whose title matches the query
-    if (parsed.length > 0) {
-      parsed = rerankByKeywords(parsed, query);
-      // Apply law-level diversity boost
-      parsed = boostLawDiversity(parsed, topK);
+    if (parsed.length === 0) return [];
+
+    // Step 3: Compute BM25 scores
+    const queryTerms = extractQueryTerms(expandedQuery);
+    if (queryTerms.size > 0) {
+      // Compute BM25 score for each result
+      const docTermFreqs = parsed.map((doc) => {
+        const terms = tokenizeForBM25(
+          `${doc.law_title} ${doc.norm_title} ${doc.content}`,
+        );
+        const tf = new Map<string, number>();
+        for (const t of terms) {
+          tf.set(t, (tf.get(t) || 0) + 1);
+        }
+        return { docLength: terms.length, tf };
+      });
+
+      const numDocs = parsed.length;
+
+      // IDF: use log(1 + (N - df + 0.5) / (df + 0.5))
+      const queryTermsArr = Array.from(queryTerms);
+      const df = new Map<string, number>();
+      for (const term of queryTermsArr) {
+        let count = 0;
+        for (const d of docTermFreqs) {
+          if (d.tf.has(term)) count++;
+        }
+        df.set(term, count);
+      }
+
+      // Compute BM25 scores inline (no temp property)
+      const bm25Scores = parsed.map((doc, i) => {
+        const { docLength, tf } = docTermFreqs[i];
+        let score = 0;
+        for (const term of queryTermsArr) {
+          const termFreq = tf.get(term) || 0;
+          if (termFreq === 0) continue;
+          const docFreq = df.get(term) || 1;
+          const idf = Math.log(1 + (numDocs - docFreq + 0.5) / (docFreq + 0.5));
+          const numerator = termFreq * (BM25_K1 + 1);
+          const denominator =
+            termFreq +
+            BM25_K1 * (1 - BM25_B + BM25_B * (docLength / AVG_DOC_LENGTH));
+          score += idf * (numerator / denominator);
+        }
+        return score;
+      });
+
+      // Step 4: Normalize and fuse scores
+      const denseScores = parsed.map((r) => r.score);
+      const maxDense = Math.max(...denseScores, 0.001);
+      const maxBM25 = Math.max(...bm25Scores, 0.001);
+
+      parsed = parsed.map((r, i) => {
+        const normDense = r.score / maxDense;
+        const normBM25 = bm25Scores[i] / maxBM25;
+        return {
+          ...r,
+          score: HYBRID_ALPHA * normDense + (1 - HYBRID_ALPHA) * normBM25,
+        };
+      });
     }
+
+    // Step 5: Apply keyword reranking + law diversity
+    parsed = rerankByKeywords(parsed, query);
+    parsed = boostLawDiversity(parsed, topK);
 
     return parsed;
   } catch (err: unknown) {

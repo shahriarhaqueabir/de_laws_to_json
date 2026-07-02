@@ -14,14 +14,17 @@ Requires env vars:
 
 import json
 import os
+import re
 import sys
 import time
 import uuid
+from collections import Counter
 
 import numpy as np
 from qdrant_client import QdrantClient
-from qdrant_client.models import PointStruct
+from qdrant_client.models import PointStruct, SparseVector
 from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
 
 # ── Configuration ──────────────────────────────────────────────────────────────
@@ -29,9 +32,9 @@ from tqdm import tqdm
 QDRANT_URL = os.environ.get("QDRANT_URL")
 QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
 COLLECTION = os.environ.get("COLLECTION", "german_norms")
-SCROLL_BATCH = 100        # points per scroll request
-UPSERT_BATCH = 20         # points per upsert (free tier timeouts)
-EMBED_BATCH = 32          # texts per model.encode() call
+SCROLL_BATCH = 100  # points per scroll request
+UPSERT_BATCH = 20  # points per upsert (free tier timeouts)
+EMBED_BATCH = 32  # texts per model.encode() call
 MAX_RETRIES = 5
 RETRY_DELAY_SEC = 10
 CACHE_PATH = os.path.join(os.path.dirname(__file__), "norms_vectors.npy")
@@ -49,6 +52,37 @@ def write_status(phase: str, progress_pct: float, detail: str):
     with open(STATUS_PATH, "w") as f:
         json.dump(status, f)
     print(f"  [{phase}] {detail}")
+
+
+def compute_bm25_vector(
+    text: str, vocabulary: dict[str, int] | None = None
+) -> dict[str, list]:
+    """Compute a simple BM25-like sparse vector from text.
+
+    Tokenizes by word boundaries and returns {indices, values} for Qdrant
+    SparseVector. When vocabulary is provided, only known token indices
+    are emitted (cross-document consistency).
+    """
+    tokens = re.findall(r"\w+", text.lower())
+    counts = Counter(tokens)
+
+    indices: list[int] = []
+    values: list[float] = []
+    for token, count in counts.items():
+        if vocabulary:
+            idx = vocabulary.get(token)
+            if idx is not None:
+                indices.append(idx)
+                values.append(float(count))
+        else:
+            # Without a global vocabulary, use a simple hash-based index.
+            # This is lossy but works for a first pass. For production,
+            # build a vocabulary from all tokens first.
+            idx = hash(token) % (2**20)  # 1M bucket space
+            indices.append(idx)
+            values.append(float(count))
+
+    return {"indices": indices, "values": values}
 
 
 def main():
@@ -102,7 +136,7 @@ def main():
         point_id = str(
             uuid.uuid5(
                 uuid.NAMESPACE_DNS,
-                f"german-norm:{payload.get('law_key','')}:{payload.get('norm_id','')}",
+                f"german-norm:{payload.get('law_key', '')}:{payload.get('norm_id', '')}",
             )
         )
         # Build passage text with law context (matching E5-small "passage:" prefix)
@@ -165,7 +199,9 @@ def main():
         all_vectors = []
         for i in tqdm(range(0, total, EMBED_BATCH)):
             batch_texts = content_texts[i : i + EMBED_BATCH]
-            vecs = model.encode(batch_texts, show_progress_bar=False, normalize_embeddings=True)
+            vecs = model.encode(
+                batch_texts, show_progress_bar=False, normalize_embeddings=True
+            )
             all_vectors.extend(vecs)
             n_enc = len(all_vectors)
             pct = n_enc / total * 100
@@ -181,9 +217,13 @@ def main():
 
         all_vectors = np.array(all_vectors, dtype=np.float32)
         gen_time = time.time() - t0
-        write_status("encoding_done", 100, f"{len(all_vectors)} vectors in {gen_time:.1f}s")
-        print(f"\nGenerated {len(all_vectors)} vectors in {gen_time:.1f}s "
-              f"({gen_time / total * 1000:.1f}ms each)")
+        write_status(
+            "encoding_done", 100, f"{len(all_vectors)} vectors in {gen_time:.1f}s"
+        )
+        print(
+            f"\nGenerated {len(all_vectors)} vectors in {gen_time:.1f}s "
+            f"({gen_time / total * 1000:.1f}ms each)"
+        )
 
         # Save cache
         print(f"\nSaving vectors to {CACHE_PATH}...")
@@ -195,15 +235,35 @@ def main():
     print("Phase 4/5: Building PointStructs for upload...")
     print("=" * 60)
 
-    points = []
-    for (point_id, payload), vector in zip(norms, all_vectors):
-        points.append(
-            PointStruct(
-                id=point_id,
-                payload=payload,
-                vector=vector.tolist(),
-            )
+
+points = []
+for (point_id, payload), vector in zip(norms, all_vectors):
+    # Build combined text for BM25 sparse vector
+    combined_text = " ".join(
+        filter(
+            None,
+            [
+                payload.get("law_title", ""),
+                payload.get("norm_title", ""),
+                payload.get("content", ""),
+            ],
         )
+    )
+    sparse = compute_bm25_vector(combined_text)
+
+    points.append(
+        PointStruct(
+            id=point_id,
+            payload=payload,
+            vector={
+                "": vector.tolist(),
+                "bm25": SparseVector(
+                    indices=sparse["indices"],
+                    values=sparse["values"],
+                ),
+            },
+        )
+    )
 
     # Free memory
     del norms, all_vectors, content_texts
@@ -220,7 +280,9 @@ def main():
         pass
 
     total_batches = (len(points) + UPSERT_BATCH - 1) // UPSERT_BATCH
-    print(f"Uploading {len(points)} points in {total_batches} batches of {UPSERT_BATCH}...")
+    print(
+        f"Uploading {len(points)} points in {total_batches} batches of {UPSERT_BATCH}..."
+    )
 
     t0 = time.time()
     total_uploaded = 0
@@ -261,8 +323,10 @@ def main():
                     failed_batches += 1
 
     upload_time = time.time() - t0
-    print(f"\nUploaded {total_uploaded}/{len(points)} points "
-          f"({failed_batches} failed batches) in {upload_time:.1f}s.")
+    print(
+        f"\nUploaded {total_uploaded}/{len(points)} points "
+        f"({failed_batches} failed batches) in {upload_time:.1f}s."
+    )
 
     # ── Verify ──────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)
