@@ -6,6 +6,9 @@
 |-------|------|-------------|--------|
 | Sprint 6b Handoff | `topics/sprint-6b-handoff.md` | 2026-07-02 | Active |
 | Sprint Plan (Kanban) | `plans/2026-07-02-sprint-6b-kanban.md` | 2026-07-02 | Active |
+	| Qwen3 Browser LLM Switch | `topics/qwen3-model-switch.md` | 2026-07-03 | Complete |
+	| Turbopack Crash Fix | `topics/qwen3-model-switch.md` | 2026-07-03 | Complete |
+	| Frontend Polish (transition-all) | `topics/frontend-polish-transition-fix.md` | 2026-07-03 | Complete |
 
 ## Key Context
 
@@ -20,6 +23,12 @@
 - ✅ Qdrant collection seeded with wait=True + dedup fix
 - ✅ Norms Postgres table + GIN trigram index (migration 00008)
 - ✅ Backfill script fixed (accepts status 200 or 201)
+- ✅ Qwen3-0.6B-ONNX as default browser LLM (replaced SmolLM2)
+- ✅ Removed LaMini-Flan-T5-783M from BROWSER_MODELS (encoder-decoder, ChatML incompatible)
+- ✅ Turbopack crash on Windows fixed (removed `@plugin "@tailwindcss/typography"` — v3 plugin with Tailwind v4)
+- ✅ Search page performance: removed `language` from useEffect deps to prevent duplicate fetches
+- ✅ Fixed `auth-context.tsx` bug: `supabase` → `getClient()` (bare identifier instead of lazy getter)
+- ✅ Fixed `category-detect.ts` syntax error: stray `sav;` at file start
 
 ## What's In Progress
 - 🔶 C2: Backfill norms from Qdrant → Supabase (interrupted at ~60%)

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import {
   Search,
   MessageSquare,
@@ -113,7 +114,7 @@ export default function NavBar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-3 py-1.5 text-xs font-bold uppercase tracking-[0.2em] transition-all duration-300 active:translate-y-[1px] relative group ${
+                    className={`px-3 py-1.5 text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-300 active:translate-y-[1px] relative group ${
                       isActive
                         ? "text-accent-gold-body"
                         : "text-zinc-500 hover:text-white"
@@ -150,7 +151,7 @@ export default function NavBar() {
             {mobileOpen && (
               <>
                 <div
-                  className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden"
+                  className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden animate-fade-in"
                   onClick={() => setMobileOpen(false)}
                   aria-hidden="true"
                 />
@@ -189,7 +190,7 @@ export default function NavBar() {
                           key={item.href}
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
-                          className={`flex items-center gap-4 px-4 py-3.5 text-sm font-medium rounded-lg transition-all duration-300 ${
+                          className={`flex items-center gap-4 px-4 py-3.5 text-sm font-medium rounded-lg transition-colors duration-300 ${
                             isActive
                               ? "bg-accent-gold/10 text-accent-gold-bright"
                               : "text-zinc-500 hover:bg-white/5 hover:text-white"
@@ -262,7 +263,7 @@ export default function NavBar() {
                 onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
                 aria-haspopup="true"
                 aria-expanded={open}
-                className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 border border-white/5 ${meta.bg} text-zinc-400 hover:bg-white/10 hover:border-white/10`}
+                className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs font-black uppercase tracking-[0.2em] transition-colors duration-300 border border-white/5 ${meta.bg} text-zinc-400 hover:bg-white/10 hover:border-white/10`}
               >
                 <ModeIcon className="w-3 h-3" />
                 <span className="hidden sm:inline md:inline">
@@ -296,7 +297,7 @@ export default function NavBar() {
                           <button
                             key={m}
                             onClick={() => switchMode(m)}
-                            className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
+                            className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-colors duration-300 ${
                               isActive
                                 ? "bg-accent-gold/10 text-accent-gold-bright"
                                 : "text-zinc-500 hover:bg-white/5 hover:text-white"

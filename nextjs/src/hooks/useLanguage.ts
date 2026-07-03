@@ -5,6 +5,7 @@
  * All strings are English. No language selection is exposed.
  */
 
+import { useCallback } from "react";
 import { useChat } from "../components/chat-context";
 
 // ── English UI Strings ────────────────────────────────────────────────────
@@ -88,16 +89,19 @@ export function useLanguage() {
    * @example
    *   t("search.results_count", { n: 12 }) // → "12 Statutes Retrieved"
    */
-  const t = (key: string, vars?: Record<string, string | number>): string => {
-    let text = UI_STRINGS[key];
-    if (!text) return key;
-    if (vars) {
-      for (const [k, v] of Object.entries(vars)) {
-        text = text.replace(`{${k}}`, String(v));
+  const t = useCallback(
+    (key: string, vars?: Record<string, string | number>): string => {
+      let text = UI_STRINGS[key];
+      if (!text) return key;
+      if (vars) {
+        for (const [k, v] of Object.entries(vars)) {
+          text = text.replace(`{${k}}`, String(v));
+        }
       }
-    }
-    return text;
-  };
+      return text;
+    },
+    [],
+  );
 
   return { language, t };
 }

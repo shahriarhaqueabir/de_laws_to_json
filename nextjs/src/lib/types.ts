@@ -115,7 +115,7 @@ export const DEFAULT_OLLAMA_PARAMS: OllamaParams = {
   temperature: 0.3,
   top_p: 0.9,
   top_k: 40,
-  max_tokens: 1024,
+  max_tokens: 2048,
   system_prompt: "", // Will be populated from SYSTEM_PROMPT in chat.ts if empty
 };
 
@@ -136,16 +136,16 @@ export interface ChatSettings {
 
 export const BROWSER_MODELS = [
   {
+    id: "onnx-community/Qwen3-0.6B-ONNX",
+    name: "Qwen3 (0.6B)",
+    size: "~1GB",
+    description: "Best quality multilingual model (recommended).",
+  },
+  {
     id: "HuggingFaceTB/SmolLM2-360M-Instruct",
     name: "SmolLM2 (360M)",
     size: "~800MB",
-    description: "Fast, efficient on-device model (recommended).",
-  },
-  {
-    id: "Xenova/LaMini-Flan-T5-783M",
-    name: "LaMini Flan T5 (783M)",
-    size: "~1.5GB",
-    description: "Good for general legal reasoning.",
+    description: "Fast, efficient on-device inference (lightweight fallback).",
   },
 ];
 
@@ -153,12 +153,12 @@ export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
   mode: "basic",
   language: "en",
   brokerUrl: "http://localhost:9000",
-  ollamaModel: "qwen3.5:4b",
+  ollamaModel: "ministral-3:8b",
   ollamaParams: DEFAULT_OLLAMA_PARAMS,
   provider: "openai",
   model: "gpt-4o-mini",
   customEndpoint: "",
-  browserModel: "HuggingFaceTB/SmolLM2-360M-Instruct",
+  browserModel: "onnx-community/Qwen3-0.6B-ONNX",
 };
 
 export interface CitedLaw {

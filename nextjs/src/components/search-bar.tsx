@@ -46,14 +46,14 @@ export default function SearchBar({
             placeholder="Describe your legal situation in detail... (e.g., 'my landlord won\'t return my deposit')"
             className="w-full px-8 py-6 pr-40 text-xl glass-panel-heavy border-white/5
                                 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/30 focus:bg-white/[0.04]
-                                text-white placeholder:text-zinc-600 transition-all duration-500 font-bold tracking-widest uppercase"
+                                text-white placeholder:text-zinc-600 transition-colors duration-500 font-bold tracking-widest uppercase"
           />
           <div className="absolute right-2 top-2 bottom-2 flex gap-1">
             <button
               type="submit"
               disabled={submitting}
               aria-label="Search"
-              className="aspect-square bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white transition-all duration-500 active:scale-95 flex items-center justify-center border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+              className="aspect-square bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white transition-colors duration-500 transition-transform duration-300 active:scale-95 flex items-center justify-center border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
             >
               {submitting ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
@@ -67,7 +67,7 @@ export default function SearchBar({
               onClick={(e) =>
                 handleSearch(e as unknown as React.FormEvent, true)
               }
-              className="px-6 bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright transition-all duration-500 active:scale-95 flex items-center gap-3 border border-accent-gold/20 font-black uppercase tracking-widest text-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+              className="px-6 bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright transition-colors duration-500 transition-transform duration-300 active:scale-95 flex items-center gap-3 border border-accent-gold/20 font-black uppercase tracking-widest text-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
             >
               <Brain className="w-4 h-4" />
               Analyze via AI

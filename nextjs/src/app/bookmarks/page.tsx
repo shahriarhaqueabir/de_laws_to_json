@@ -426,7 +426,7 @@ export default function BookmarksPage() {
 
                       <button
                         onClick={() => handleRemoveBookmark(bm)}
-                        className="p-2 text-zinc-800 hover:text-red-900 transition-all duration-500 active:scale-90 group-hover/item:text-zinc-600 flex-shrink-0"
+                        className="p-2 text-zinc-800 hover:text-red-900 transition-colors duration-500 transition-transform duration-300 active:scale-90 group-hover/item:text-zinc-600 flex-shrink-0"
                         aria-label="Remove bookmark"
                         title="Remove bookmark"
                       >

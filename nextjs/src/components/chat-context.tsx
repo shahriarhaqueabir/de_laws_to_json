@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  startTransition,
-} from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { ChatMode, ChatSettings, DEFAULT_CHAT_SETTINGS } from "../lib/types";
 import { SYSTEM_PROMPT } from "../lib/chat";
 
@@ -20,12 +14,17 @@ function isValidBrokerUrl(url: string): boolean {
   return BROKER_URL_REGEX.test(url);
 }
 
-function sanitizeBrokerUrl(url: string, fallback: string = "http://localhost:9000"): string {
+function sanitizeBrokerUrl(
+  url: string,
+  fallback: string = "http://localhost:9000",
+): string {
   if (isValidBrokerUrl(url)) return url;
   // Also allow empty/undefined (use default)
   if (!url || url.trim() === "") return fallback;
   // Invalid URL — log warning and return fallback
-  console.warn(`[SSRF] Invalid broker URL rejected: "${url}". Using fallback: ${fallback}`);
+  console.warn(
+    `[SSRF] Invalid broker URL rejected: "${url}". Using fallback: ${fallback}`,
+  );
   return fallback;
 }
 
@@ -84,19 +83,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   // Always initialize with defaults — matches SSR output exactly.
   // This eliminates hydration mismatches between server and client.
   const [settings, setSettings] = useState<ChatSettings>(buildDefaultSettings);
-  const [mounted, setHydrated] = useState(false);
 
   // On mount: load saved settings from localStorage and apply them.
-  // Uses startTransition to avoid the synchronous setState lint warning.
-  // The cascade (hydrated + settings) is intentional and happens once.
+  // This runs after hydration, so no SSR mismatch.
   useEffect(() => {
     const saved = loadSavedSettings();
-    startTransition(() => {
-      if (saved) {
-        setSettings((prev) => ({ ...prev, ...saved }));
-      }
-      setHydrated(true);
-    });
+    if (saved) {
+      setSettings((prev) => ({ ...prev, ...saved }));
+    }
   }, []);
 
   const updateSettings = (patch: Partial<ChatSettings>) => {
@@ -123,7 +117,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         setMode,
       }}
     >
-      {mounted ? children : <div className="opacity-0">{children}</div>}
+      {children}
     </ChatContext.Provider>
   );
 }

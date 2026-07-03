@@ -30,7 +30,7 @@ const MODE_LIMITATIONS: Record<ChatMode, string[]> = {
   local: [
     "Requires Ollama + broker.py running on your machine",
     "Not available on the live site (Vercel)",
-    "Model limited to what Ollama can run locally (default: qwen2.5:1.5b)",
+    "Model limited to what Ollama can run locally (default: ministral-3:8b)",
   ],
   cloud: [
     "You are billed directly by your AI provider (OpenAI, Anthropic, etc.)",
@@ -62,6 +62,7 @@ export default function SettingsPage() {
   const { settings, updateSettings } = useChat();
   const [brokerOk, setBrokerOk] = useState<boolean | null>(null);
   const [testing, setTesting] = useState(false);
+  const [brokerStarting, setBrokerStarting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [hasStoredKey, setHasStoredKey] = useState(false);
@@ -71,6 +72,7 @@ export default function SettingsPage() {
   const [savingKey, setSavingKey] = useState(false);
   const [keyMessage, setKeyMessage] = useState<string | null>(null);
   const [keyDecryptable, setKeyDecryptable] = useState(true);
+  const [availableModels, setAvailableModels] = useState<string[] | null>(null);
 
   // Check stored API key status when in cloud mode
   useEffect(() => {
@@ -85,18 +87,38 @@ export default function SettingsPage() {
       .catch(() => {});
   }, [settings.mode, settings.provider]);
 
-  // Check broker health when in local mode
+  // Check broker health + fetch available Ollama models when in local mode
   useEffect(() => {
     if (settings.mode !== "local") return;
     const check = () => {
       fetch(`${settings.brokerUrl}/health`)
-        .then((r) => setBrokerOk(r.ok))
-        .catch(() => setBrokerOk(false));
+        .then(async (r) => {
+          if (r.ok) {
+            setBrokerOk(true);
+            const data = await r.json();
+            if (data.models?.length) {
+              setAvailableModels(data.models);
+              // Auto-select first model if current one isn't available
+              if (
+                settings.ollamaModel &&
+                !data.models.includes(settings.ollamaModel)
+              ) {
+                updateSettings({ ollamaModel: data.models[0] });
+              }
+            }
+          } else {
+            setBrokerOk(false);
+          }
+        })
+        .catch(() => {
+          setBrokerOk(false);
+          setAvailableModels(null);
+        });
     };
     check();
     const interval = setInterval(check, 10000);
     return () => clearInterval(interval);
-  }, [settings.mode, settings.brokerUrl]);
+  }, [settings.mode, settings.brokerUrl, settings.ollamaModel]);
 
   const update = (patch: Partial<ChatSettings>) => {
     updateSettings(patch);
@@ -109,7 +131,39 @@ export default function SettingsPage() {
     setTestResult(null);
     try {
       if (settings.mode === "local") {
+        setBrokerStarting(true);
+        setTestResult("Starting broker...");
+
+        // Step 1: Try starting the broker if it's not running
+        try {
+          const startRes = await fetch("/api/broker/manage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "start" }),
+          });
+          const startData = await startRes.json();
+          if (startData.status === "error") {
+            // Non-fatal: broker might already be running or managed externally
+            console.warn(
+              "[Settings] Broker auto-start note:",
+              startData.message,
+            );
+          }
+        } catch (startErr) {
+          console.warn("[Settings] Broker auto-start failed:", startErr);
+        }
+
+        // Step 2: Wait briefly for broker to boot
+        await new Promise((r) => setTimeout(r, 2000));
+        setBrokerStarting(false);
+
+        // Step 3: Test the connection
         const res = await fetch(`${settings.brokerUrl}/health`);
+        if (res.ok) {
+          setBrokerOk(true);
+        } else {
+          setBrokerOk(false);
+        }
         setTestResult(res.ok ? "Connected ✓" : `Error: ${res.status}`);
       } else if (settings.mode === "cloud") {
         if (!hasStoredKey && !newApiKey) {
@@ -230,7 +284,7 @@ export default function SettingsPage() {
               <button
                 key={mode}
                 onClick={() => update({ mode })}
-                className={`flex items-start gap-6 p-6 border text-left transition-all duration-500 relative overflow-hidden group ${
+                className={`flex items-start gap-6 p-6 border text-left transition-colors duration-500 relative overflow-hidden group ${
                   isActive
                     ? "border-accent-gold/40 bg-white/[0.03] shadow-premium"
                     : "border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]"
@@ -348,7 +402,7 @@ export default function SettingsPage() {
                       },
                     })
                   }
-                  className="w-full px-4 py-2 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 transition-all font-mono text-sm"
+                  className="w-full px-4 py-2 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 transition-colors font-mono text-sm"
                 />
               </div>
             </div>
@@ -368,7 +422,7 @@ export default function SettingsPage() {
                     },
                   })
                 }
-                className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-sans text-xs leading-relaxed"
+                className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-colors font-sans text-xs leading-relaxed"
               />
               <p className="text-xs text-zinc-400 font-bold mt-3 italic">
                 These guidelines ensure all AI modes (Local & Cloud) maintain
@@ -399,7 +453,7 @@ export default function SettingsPage() {
                   type="text"
                   value={settings.brokerUrl}
                   onChange={(e) => update({ brokerUrl: e.target.value })}
-                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-colors font-mono text-sm"
                 />
               </div>
 
@@ -407,13 +461,52 @@ export default function SettingsPage() {
                 <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
                   Ollama Model
                 </label>
-                <input
-                  type="text"
-                  value={settings.ollamaModel}
-                  onChange={(e) => update({ ollamaModel: e.target.value })}
-                  placeholder="e.g. qwen2.5:1.5b"
-                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
-                />
+                {availableModels ? (
+                  <div className="relative">
+                    <select
+                      value={settings.ollamaModel}
+                      onChange={(e) => update({ ollamaModel: e.target.value })}
+                      className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm appearance-none cursor-pointer"
+                    >
+                      {availableModels.map((m) => (
+                        <option
+                          key={m}
+                          value={m}
+                          className="bg-[#0a0a0a] text-white"
+                        >
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                ) : brokerOk === false ? (
+                  <input
+                    type="text"
+                    value={settings.ollamaModel}
+                    onChange={(e) => update({ ollamaModel: e.target.value })}
+                    placeholder="e.g. qwen2.5:1.5b"
+                    className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
+                  />
+                ) : (
+                  <div className="w-full px-4 py-3 border border-white/10 bg-white/5 text-zinc-500 font-mono text-sm animate-pulse">
+                    Loading models...
+                  </div>
+                )}
               </div>
             </div>
 
@@ -421,22 +514,25 @@ export default function SettingsPage() {
               <ShieldAlert className="w-5 h-5 text-accent-gold mt-0.5" />
               <div>
                 <p className="text-xs font-black text-accent-gold-body uppercase tracking-[0.2em] mb-1">
-                  Requirement
+                  Auto-Managed
                 </p>
                 <p className="text-xs text-zinc-400 font-bold leading-relaxed">
-                  Ensure you have <span className="text-white">Ollama</span>{" "}
-                  running on your machine and have started the{" "}
-                  <span className="text-white">local broker</span> script:
-                  <code className="block mt-2 p-2 bg-black/40 border border-white/5 text-accent-gold-body">
-                    cd broker && python broker.py
-                  </code>
+                  The broker starts automatically when you click{" "}
+                  <span className="text-white">Test Connection</span>. Ensure
+                  you have <span className="text-white">Ollama</span> running on
+                  your machine before connecting.
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 text-xs font-black uppercase tracking-widest">
               <span className="text-zinc-400">Status:</span>
-              {brokerOk === null ? (
+              {brokerStarting ? (
+                <span className="text-zinc-500 flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-zinc-600 animate-pulse" />
+                  Starting broker...
+                </span>
+              ) : brokerOk === null ? (
                 <span className="text-zinc-500 flex items-center gap-2">
                   <div className="w-1 h-1 rounded-full bg-zinc-600 animate-pulse" />
                   Checking...
@@ -451,6 +547,24 @@ export default function SettingsPage() {
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                   Offline
                 </span>
+              )}
+              {brokerOk && (
+                <button
+                  onClick={async () => {
+                    try {
+                      await fetch("/api/broker/manage", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "stop" }),
+                      });
+                    } catch {}
+                    setBrokerOk(false);
+                    setTestResult("Stopped");
+                  }}
+                  className="ml-4 px-4 py-1.5 border border-red-900/40 text-red-400 hover:bg-red-950/20 transition-colors text-[11px] font-black uppercase tracking-widest"
+                >
+                  Stop Broker
+                </button>
               )}
             </div>
 
@@ -479,7 +593,7 @@ export default function SettingsPage() {
                   onChange={(e) =>
                     update({ provider: e.target.value as CloudProvider })
                   }
-                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-bold text-sm"
+                  className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-colors font-bold text-sm"
                 >
                   <option value="openai">OpenAI</option>
                   <option value="anthropic">Anthropic</option>
@@ -727,10 +841,14 @@ export default function SettingsPage() {
         <div className="flex items-center gap-6 mb-16">
           <button
             onClick={handleTestConnection}
-            disabled={testing}
+            disabled={testing || brokerStarting}
             className="px-8 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-xs hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
           >
-            {testing ? "Testing..." : "Test Connection"}
+            {brokerStarting
+              ? "Starting..."
+              : testing
+                ? "Testing..."
+                : "Test Connection"}
           </button>
           {testResult && (
             <span

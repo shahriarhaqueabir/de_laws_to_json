@@ -28,15 +28,80 @@ const LIBRE_LANG_CODES: Record<string, string> = {
 };
 
 const LIBRE_API_URL = "https://libretranslate.com/translate";
-const LIBRE_TIMEOUT_MS = 5000;
+const LIBRE_TIMEOUT_MS = 1500;
 
 // ── Ollama Translation ─────────────────────────────────────────────────────
 // Uses TranslateGemma:4b for high-quality DE↔EN translation
 // when the term map doesn't cover the text.
 
 const OLLAMA_URL = "http://localhost:11434";
-const OLLAMA_TRANSLATE_TIMEOUT_MS = 15000;
+const OLLAMA_TRANSLATE_TIMEOUT_MS = 3_000;
+const OLLAMA_PROBE_TIMEOUT_MS = 1_000;
 const TRANSLATE_MODEL = "translategemma:4b";
+
+// ── Translation Result Cache ─────────────────────────────────────────────────
+// LRU-like cache: maps "text::targetLang" → translated string.
+// Prevents redundant translations of the same text within and across requests.
+const TRANSLATION_CACHE = new Map<string, string>();
+const CACHE_MAX = 500;
+
+function cacheKey(text: string, targetLang: string): string {
+  return `${text}::${targetLang}`;
+}
+
+function getCachedTranslation(
+  text: string,
+  targetLang: string,
+): string | undefined {
+  return TRANSLATION_CACHE.get(cacheKey(text, targetLang));
+}
+
+function setCachedTranslation(
+  text: string,
+  targetLang: string,
+  result: string,
+): void {
+  if (TRANSLATION_CACHE.size >= CACHE_MAX) {
+    // Evict oldest entry (Map preserves insertion order)
+    const firstKey = TRANSLATION_CACHE.keys().next();
+    if (!firstKey.done) TRANSLATION_CACHE.delete(firstKey.value);
+  }
+  TRANSLATION_CACHE.set(cacheKey(text, targetLang), result);
+}
+
+// Per-process cache: once we know Ollama is unreachable, skip it entirely.
+let ollamaReachable: boolean | null = null;
+let ollamaCheckInFlight: Promise<boolean> | null = null;
+
+async function probeOllama(): Promise<boolean> {
+  if (ollamaReachable !== null) return ollamaReachable;
+  if (ollamaCheckInFlight) return ollamaCheckInFlight;
+  ollamaCheckInFlight = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(
+        () => controller.abort(),
+        OLLAMA_PROBE_TIMEOUT_MS,
+      );
+      const res = await fetch(`${OLLAMA_URL}/api/tags`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      const ok = res.ok;
+      ollamaReachable = ok;
+      if (ok) console.log(`[Translate] Ollama reachable at ${OLLAMA_URL}`);
+      else console.warn(`[Translate] Ollama not reachable at ${OLLAMA_URL}`);
+      return ok;
+    } catch {
+      ollamaReachable = false;
+      console.warn(
+        `[Translate] Ollama not reachable at ${OLLAMA_URL} — disabling Ollama translation`,
+      );
+      return false;
+    }
+  })();
+  return ollamaCheckInFlight;
+}
 
 async function callOllamaTranslate(
   text: string,
@@ -47,6 +112,9 @@ async function callOllamaTranslate(
   const supported = new Set(["de", "en"]);
   if (!supported.has(sourceLang) || !supported.has(targetLang)) return null;
   if (sourceLang === targetLang) return text;
+
+  // Quick check — skip if Ollama is not running
+  if (!(await probeOllama())) return null;
 
   const direction =
     sourceLang === "de" ? "German to English" : "English to German";
@@ -798,14 +866,28 @@ export async function translateFromGerman(
 ): Promise<string> {
   if (!text.trim() || targetLanguage === "de") return text;
 
+  // Skip translation if text isn't actually German-like
+  // (prevents wasting time trying to translate English category keys, boilerplate, etc.)
+  if (!isLikelyGerman(text)) {
+    return text;
+  }
+
+  // Check cache first
+  const cached = getCachedTranslation(text, targetLanguage);
+  if (cached !== undefined) return cached;
+
+  let result: string;
+
   // Fast path: German→English term mapping
-  if (targetLanguage === "en") {
+  if (targetLanguage === "en" && !text.startsWith("Search focused on")) {
     const termMatch = findDeEnTermMatch(text);
     if (termMatch) {
       console.log(
         `[Translate] Term-mapped DE→EN: "${text.slice(0, 40)}..." → "${termMatch}"`,
       );
-      return termMatch;
+      result = termMatch;
+      setCachedTranslation(text, targetLanguage, result);
+      return result;
     }
 
     // Ollama TranslateGemma:4b fallback (higher quality than LibreTranslate)
@@ -814,7 +896,9 @@ export async function translateFromGerman(
       console.log(
         `[Translate] Ollama TranslateGemma DE→EN: "${text.slice(0, 40)}..."`,
       );
-      return ollamaResult;
+      result = ollamaResult;
+      setCachedTranslation(text, targetLanguage, result);
+      return result;
     }
   }
 
@@ -826,14 +910,18 @@ export async function translateFromGerman(
       console.log(
         `[Translate] LibreTranslate DE→${targetLanguage}: "${text.slice(0, 40)}..."`,
       );
-      return apiResult;
+      result = apiResult;
+      setCachedTranslation(text, targetLanguage, result);
+      return result;
     }
   }
 
   console.log(
     `[Translate] DE→${targetLanguage} unavailable for: "${text.slice(0, 40)}..."`,
   );
-  return text;
+  result = text;
+  setCachedTranslation(text, targetLanguage, result);
+  return result;
 }
 
 /**

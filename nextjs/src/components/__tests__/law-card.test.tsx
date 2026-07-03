@@ -5,6 +5,21 @@ import type { LawSearchResult } from "../../lib/types";
 
 const mockToast = vi.hoisted(() => vi.fn());
 const mockStore = vi.hoisted((): Record<string, boolean> => ({}));
+const mockRouter = vi.hoisted(() => ({
+  push: vi.fn(),
+  back: vi.fn(),
+  forward: vi.fn(),
+  refresh: vi.fn(),
+  prefetch: vi.fn(),
+  replace: vi.fn(),
+}));
+
+// Mock next/navigation for useRouter + Link
+vi.mock("next/navigation", () => ({
+  useRouter: () => mockRouter,
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 // Mock the auth context to return no user (anonymous)
 vi.mock("../auth-context", () => ({
@@ -74,6 +89,7 @@ beforeEach(() => {
     delete mockStore[key];
   }
   mockToast.mockClear();
+  mockRouter.push.mockClear();
   // Provide a mock for localStorage
   Object.defineProperty(window, "localStorage", {
     value: {
@@ -158,18 +174,22 @@ describe("LawCard", () => {
     expect(mockToast).toHaveBeenCalledWith("Bookmark removed");
   });
 
-  it('"View full law" link points to /laws/{key}', () => {
+  it('"Detailed Examination" navigates to /laws/{key} on click', async () => {
+    const user = userEvent.setup();
     render(<LawCard law={mockLaw} />);
-    const fullLawLink = screen.getByRole("link", {
-      name: /Detailed Examination/i,
+    const card = screen.getByRole("link", {
+      name: /BGB.*Bürgerliches Gesetzbuch/,
     });
-    expect(fullLawLink).toHaveAttribute("href", "/laws/BGB");
+    await user.click(card);
+    expect(mockRouter.push).toHaveBeenCalledWith("/laws/BGB");
   });
 
-  it("law title links to /laws/{key}", () => {
+  it("title click navigates to /laws/{key}", async () => {
+    const user = userEvent.setup();
     render(<LawCard law={mockLaw} />);
-    const titleLink = screen.getByText("Bürgerliches Gesetzbuch").closest("a");
-    expect(titleLink).toHaveAttribute("href", "/laws/BGB");
+    const title = screen.getByText("Bürgerliches Gesetzbuch");
+    await user.click(title);
+    expect(mockRouter.push).toHaveBeenCalledWith("/laws/BGB");
   });
 
   it("shows 'Source: Bundesamt für Justiz'", () => {

@@ -15,7 +15,7 @@ const modes = [
     icon: Brain,
     label: "Browser AI",
     description:
-      "AI runs entirely in your browser via SmolLM2. Fully private, no server calls. ~800MB download.",
+      "AI runs entirely in your browser via Qwen3. Fully private, no server calls. ~1GB download.",
     href: "/chat",
   },
   {
@@ -91,7 +91,7 @@ export default function Home() {
                 >
                   <div>
                     <div className="mb-6 group-hover:scale-110 transition-transform duration-500 origin-left">
-                      <Icon className="w-8 h-8 text-accent-gold opacity-60 group-hover:opacity-100 group-hover:text-accent-gold-bright transition-all" />
+                      <Icon className="w-8 h-8 text-accent-gold opacity-60 group-hover:opacity-100 group-hover:text-accent-gold-bright transition-opacity duration-500" />
                     </div>
                     <h3 className="font-serif font-bold text-xl text-white mb-3 flex items-center gap-2">
                       {mode.label}

@@ -11,7 +11,13 @@ import { createClient } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { syncBookmarksToSupabase } from "../lib/bookmarks-v2";
 
-const supabase = createClient();
+// Lazy-initialized: created on first client-side access, not at module import time
+// This prevents SSR crashes where document is not defined (@supabase/ssr reads cookies)
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getClient() {
+  if (!_supabase) _supabase = createClient();
+  return _supabase;
+}
 
 interface AuthContextValue {
   user: User | null;
@@ -35,24 +41,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    console.log("[DIAG] AuthProvider: fetching user...");
 
-    supabase.auth.getUser().then(
-      ({ data }) => {
-        if (!cancelled) {
-          setUser(data.user);
-          setLoading(false);
-        }
-      },
-      () => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      },
-    );
+    getClient()
+      .auth.getUser()
+      .then(
+        ({ data }) => {
+          console.log(
+            "[DIAG] AuthProvider: user fetched:",
+            data.user?.email || "none",
+          );
+          if (!cancelled) {
+            setUser(data.user);
+            setLoading(false);
+          }
+        },
+        (err) => {
+          console.error("[DIAG] AuthProvider: getUser failed:", err);
+          if (!cancelled) {
+            setLoading(false);
+          }
+        },
+      );
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = getClient().auth.onAuthStateChange((event, session) => {
       if (!cancelled) {
         setUser(session?.user ?? null);
         if (event === "SIGNED_IN") {
@@ -71,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
   ): Promise<string | null> => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await getClient().auth.signInWithPassword({
       email,
       password,
     });
@@ -82,12 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
   ): Promise<string | null> => {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await getClient().auth.signUp({ email, password });
     return error?.message ?? null;
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await getClient().auth.signOut();
     setUser(null);
   };
 

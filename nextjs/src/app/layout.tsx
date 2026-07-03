@@ -9,6 +9,7 @@ const serif = Playfair_Display({
 });
 import "./globals.css";
 import NavBar from "../components/nav-bar";
+import { Diagnostics } from "../components/diagnostic";
 import Footer from "../components/footer";
 import { AuthProvider } from "../components/auth-context";
 import { LangProvider } from "../components/lang-provider";
@@ -38,6 +39,7 @@ export default function RootLayout({
           <Providers>
             <AuthProvider>
               <ChatProvider>
+                <Diagnostics />
                 <NavBar />
                 <div id="main-content" className="flex-1">
                   {children}

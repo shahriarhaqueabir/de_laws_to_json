@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   async headers() {
     return [
       {
@@ -45,9 +48,6 @@ const nextConfig: NextConfig = {
     ];
   },
   serverExternalPackages: ["@huggingface/transformers"],
-  turbopack: {
-    root: path.resolve("."),
-  },
 };
 
 export default nextConfig;

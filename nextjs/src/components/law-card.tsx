@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { LawSearchResult } from "../lib/types";
 import { ChevronRight, BookmarkPlus, BookmarkCheck, LogIn } from "lucide-react";
 import { isBookmarked, addBookmark, removeBookmark } from "../lib/bookmarks-v2";
@@ -10,12 +11,15 @@ import { useAuth } from "./auth-context";
 
 export default function LawCard({ law }: { law: LawSearchResult }) {
   const { user } = useAuth();
+  const router = useRouter();
   const [bookmarked, setBookmarked] = useState(() => isBookmarked(law.key));
 
   const [showSignInTip, setShowSignInTip] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const toggleBookmark = async () => {
+  const toggleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     if (bookmarked) {
       await removeBookmark(law.key);
       setBookmarked(false);
@@ -31,13 +35,16 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
       if (!user) {
         setShowSignInTip(true);
         toast.info("Saved locally. Sign in to sync bookmarks.");
-        // Auto-dismiss after 8 seconds
         timerRef.current = setTimeout(() => setShowSignInTip(false), 8000);
       } else {
         toast.success("Bookmark added");
       }
     }
   };
+
+  const navigateToDetail = useCallback(() => {
+    router.push(`/laws/${law.key}`);
+  }, [router, law.key]);
 
   useEffect(() => {
     return () => {
@@ -46,10 +53,21 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
   }, []);
 
   return (
-    <div className="premium-card p-10 group relative border-white/5 bg-zinc-900/20">
+    <div
+      className="premium-card p-10 group relative border-white/5 bg-zinc-900/20 cursor-pointer transition-all duration-500 hover:border-accent-gold/30"
+      onClick={navigateToDetail}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          navigateToDetail();
+        }
+      }}
+    >
       <button
         onClick={toggleBookmark}
-        className={`absolute top-8 right-10 p-2 transition-all duration-500 active:scale-90 ${
+        className={`absolute top-8 right-10 p-2 transition-all duration-500 active:scale-90 z-10 ${
           bookmarked
             ? "text-accent-gold-bright"
             : "text-zinc-700 hover:text-accent-gold"
@@ -69,13 +87,8 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
             {law.category}
           </span>
           <h3 className="text-3xl font-serif font-bold text-white leading-tight">
-            <Link
-              href={`/laws/${law.key}`}
-              className="hover:text-accent-gold-bright transition-colors duration-500"
-            >
-              <span className="text-accent-gold/40 mr-3">{law.key}</span>
-              {law.title}
-            </Link>
+            <span className="text-accent-gold/40 mr-3">{law.key}</span>
+            {law.title}
           </h3>
         </div>
         <div className="text-right">
@@ -88,7 +101,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 pointer-events-none">
         {law.relevantNorms.map((norm, idx) => (
           <div
             key={idx}
@@ -96,7 +109,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold/20 group-hover/norm:bg-accent-gold transition-colors duration-500" />
             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-accent-gold/60 mb-3">
-              Section {norm.normId} � {norm.title}
+              Section {norm.normId} — {norm.title}
             </h4>
             <p className="legal-text italic text-zinc-400 line-clamp-3 text-sm leading-relaxed">
               {norm.content}
@@ -106,20 +119,20 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
       </div>
 
       <div className="mt-10 pt-8 border-t border-white/5 flex items-center justify-between">
-        <Link
-          href={`/laws/${law.key}`}
-          className="monumental-type opacity-40 hover:opacity-100 hover:text-accent-gold transition-all flex items-center gap-3"
-        >
+        <span className="monumental-type opacity-40 group-hover:opacity-100 group-hover:text-accent-gold transition-all flex items-center gap-3">
           Detailed Examination <ChevronRight className="w-4 h-4" />
-        </Link>
-        <div className="text-xs font-bold text-muted italic font-serif">
+        </span>
+        <span className="text-xs font-bold text-muted italic font-serif">
           Source: Bundesamt für Justiz
-        </div>
+        </span>
       </div>
 
       {/* Sign-in prompt for anonymous users who just bookmarked */}
       {showSignInTip && !user && (
-        <div className="mt-6 p-4 border border-accent-gold/20 bg-accent-gold/5 animate-fade-in">
+        <div
+          className="mt-6 p-4 border border-accent-gold/20 bg-accent-gold/5 animate-fade-in"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Link
             href="/auth"
             className="flex items-center justify-between group"

@@ -1,11 +1,11 @@
 /**
  * Web Worker for client-side text generation via Transformers.js.
  * Used in Browser AI mode — runs entirely in-browser, no server AI call.
- * Model: SmolLM2-360M-Instruct — fast, efficient on-device inference.
+ * Model: Qwen3-0.6B-ONNX — fast, multilingual on-device inference.
  *
  * Expects the `prompt` field to already be formatted in ChatML format
  * (<|im_start|>system / <|im_start|>user / <|im_start|>assistant) so
- * SmolLM2 distinguishes system instructions from user input correctly.
+ * Qwen3 distinguishes system instructions from user input correctly.
  */
 import { pipeline, env } from "@huggingface/transformers";
 
@@ -37,7 +37,7 @@ env.backends = {
 /* eslint-disable @typescript-eslint/no-explicit-any -- Transformers.js pipeline API is dynamic */
 
 const TASK = "text-generation";
-const DEFAULT_MODEL = "HuggingFaceTB/SmolLM2-360M-Instruct";
+const DEFAULT_MODEL = "onnx-community/Qwen3-0.6B-ONNX";
 
 let generator: any = null;
 let currentModel: string | null = null;

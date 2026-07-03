@@ -18,6 +18,8 @@ import {
   DEFAULT_SEARCH_RATE_LIMIT,
 } from "../../../lib/rate-limiter";
 
+const MAX_TRANSLATE_MS = 4_000; // Bail on translations after 4s total
+
 interface SearchResult {
   law_key: string;
   law_title: string;
@@ -305,11 +307,27 @@ export async function GET(req: NextRequest) {
       console.log(`[API Search] Browsing category: "${category}"`);
       const cookieStore = await cookies();
       const supabase = getServerClient(cookieStore);
-      const { data: laws, error: dbError } = await supabase
-        .from("laws")
-        .select("*")
-        .eq("category", category)
-        .limit(20);
+
+      // Timeout after 10s to prevent hanging requests
+      const catResults = await Promise.race([
+        supabase.from("laws").select("*").eq("category", category).limit(20),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error(
+                  `Supabase query timed out for category "${category}"`,
+                ),
+              ),
+            10_000,
+          ),
+        ),
+      ]);
+
+      const { data: laws, error: dbError } = catResults as {
+        data: any[] | null;
+        error: any;
+      };
 
       if (dbError) throw dbError;
 
@@ -341,36 +359,52 @@ export async function GET(req: NextRequest) {
     }
 
     // Build results, translating to target language if needed
-    const needsTranslation = lang !== "de" && lang !== undefined;
+    // Skip translation for category-only browsing (no query) — law titles are canonical
+    // and don't need translation. Only translate when there's an actual search query
+    // with relevant norm content to show.
+    const needsTranslation = lang !== "de" && lang !== undefined && !!safeQuery;
+
+    // Global timeout: if translations take too long, return what we have untranslated
+    let translateDeadline = Date.now() + MAX_TRANSLATE_MS;
 
     const lawResults = [];
     for (const [key, data] of lawMap.entries()) {
+      // If we're past the translation deadline, skip translations for remaining laws
+      const skipTranslate = needsTranslation && Date.now() > translateDeadline;
+      if (skipTranslate) {
+        console.log(
+          `[API Search] Translation deadline exceeded — returning remaining ${lawMap.size - lawResults.length} laws untranslated`,
+        );
+      }
+
       const lawTitle = data.norms[0]?.law_title || key;
       const categoryName = data.norms[0]?.category || "other";
 
       // Translate title and category once per law
-      const [translatedTitle, translatedCategory] = needsTranslation
-        ? await Promise.all([
-            translateFromGerman(lawTitle, lang as AppLanguage),
-            translateFromGerman(categoryName, lang as AppLanguage),
-          ])
-        : [lawTitle, categoryName];
+      const [translatedTitle, translatedCategory] =
+        needsTranslation && !skipTranslate
+          ? await Promise.all([
+              translateFromGerman(lawTitle, lang as AppLanguage),
+              translateFromGerman(categoryName, lang as AppLanguage),
+            ])
+          : [lawTitle, categoryName];
 
       // Translate norm content (up to 3 per law)
       const translatedNorms = await Promise.all(
         data.norms.map(async (n) => {
-          const [translatedNormTitle, translatedContent] = needsTranslation
-            ? await Promise.all([
-                translateFromGerman(n.norm_title || "", lang as AppLanguage),
-                translateFromGerman(
-                  (n.content || "Read full text for details.").slice(0, 300),
-                  lang as AppLanguage,
-                ),
-              ])
-            : [
-                n.norm_title || "",
-                n.content?.slice(0, 300) || "Read full text for details.",
-              ];
+          const [translatedNormTitle, translatedContent] =
+            needsTranslation && !skipTranslate
+              ? await Promise.all([
+                  translateFromGerman(n.norm_title || "", lang as AppLanguage),
+                  translateFromGerman(
+                    (n.content || "Read full text for details.").slice(0, 300),
+                    lang as AppLanguage,
+                  ),
+                ])
+              : [
+                  n.norm_title || "",
+                  n.content?.slice(0, 300) || "Read full text for details.",
+                ];
 
           return {
             normId: n.norm_id || "",
@@ -383,7 +417,7 @@ export async function GET(req: NextRequest) {
       // Translate context summary
       const contextSummary =
         data.hits > 1
-          ? needsTranslation
+          ? needsTranslation && !skipTranslate
             ? await translateFromGerman(
                 `Found ${data.hits} relevant sections in this law.`,
                 lang as AppLanguage,

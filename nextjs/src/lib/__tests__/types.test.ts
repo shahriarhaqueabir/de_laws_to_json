@@ -147,7 +147,16 @@ describe("BROWSER_MODELS", () => {
     expect(BROWSER_MODELS.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("first model contains HuggingFaceTB in id", () => {
-    expect(BROWSER_MODELS[0].id).toContain("HuggingFaceTB");
+  it("first model is Qwen3 (best quality)", () => {
+    expect(BROWSER_MODELS[0].id).toBe("onnx-community/Qwen3-0.6B-ONNX");
+  });
+
+  it("second model is SmolLM2 (lightweight fallback)", () => {
+    expect(BROWSER_MODELS[1].id).toBe("HuggingFaceTB/SmolLM2-360M-Instruct");
+  });
+
+  it("does not contain LaMini-Flan-T5 (encoder-decoder, incompatible)", () => {
+    const ids = BROWSER_MODELS.map((m) => m.id);
+    expect(ids).not.toContain("Xenova/LaMini-Flan-T5-783M");
   });
 });

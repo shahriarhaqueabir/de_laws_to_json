@@ -530,7 +530,7 @@ function ChatContent() {
                           <Link
                             key={j}
                             href={`/laws/${law.law_key}`}
-                            className="text-xs font-bold px-3 py-2 bg-white/5 border border-white/5 text-zinc-500 hover:bg-accent-gold/10 hover:text-accent-gold-bright hover:border-accent-gold/30 transition-all duration-500"
+                            className="text-xs font-bold px-3 py-2 bg-white/5 border border-white/5 text-zinc-500 hover:bg-accent-gold/10 hover:text-accent-gold-bright hover:border-accent-gold/30 transition-colors duration-500"
                           >
                             {law.law_key} {law.norm_id}
                           </Link>
@@ -586,14 +586,14 @@ function ChatContent() {
                   ? "Search statute code..."
                   : t("chat.placeholder")
               }
-              className="w-full bg-white/5 border border-white/10 px-8 py-5 pr-20 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/[0.07] text-white placeholder:text-zinc-400 transition-all duration-500 font-bold tracking-wide"
+              className="w-full bg-white/5 border border-white/10 px-8 py-5 pr-20 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/[0.07] text-white placeholder:text-zinc-400 transition-colors duration-500 font-bold tracking-wide"
               disabled={loading}
             />
             <button
               type="submit"
               aria-label={t("chat.send")}
               disabled={loading || !input.trim()}
-              className="absolute right-2 top-2 bottom-2 aspect-square bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright disabled:opacity-20 transition-all duration-300 flex items-center justify-center group/btn active:scale-95 border border-accent-gold/10"
+              className="absolute right-2 top-2 bottom-2 aspect-square bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright disabled:opacity-20 transition-colors duration-300 transition-transform duration-300 flex items-center justify-center group/btn active:scale-95 border border-accent-gold/10"
             >
               <Send className="w-5 h-5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
             </button>

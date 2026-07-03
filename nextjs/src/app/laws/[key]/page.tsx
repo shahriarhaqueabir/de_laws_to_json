@@ -104,7 +104,7 @@ export default function LawDetailPage() {
     <div className="max-w-5xl mx-auto px-6 py-20">
       <Link
         href="/"
-        className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-widest opacity-40 hover:opacity-100 hover:text-accent-gold mb-16 transition-all duration-500"
+        className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-widest opacity-40 hover:opacity-100 hover:text-accent-gold mb-16 transition-colors duration-500"
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </Link>
@@ -119,7 +119,7 @@ export default function LawDetailPage() {
           </div>
           <button
             onClick={toggleBookmark}
-            className={`ml-auto flex items-center gap-3 px-6 py-2 text-xs font-black uppercase tracking-[0.2em] border transition-all duration-500 active:scale-95 ${
+            className={`ml-auto flex items-center gap-3 px-6 py-2 text-xs font-black uppercase tracking-[0.2em] border transition-colors duration-500 transition-transform duration-300 active:scale-95 ${
               bookmarked
                 ? "bg-accent-gold text-black border-accent-gold"
                 : "bg-transparent text-zinc-500 border-white/10 hover:text-accent-gold hover:border-accent-gold/40"

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import SearchBar from "../../components/search-bar";
 import LawCard from "../../components/law-card";
@@ -12,7 +12,8 @@ function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const category = searchParams.get("category") || "";
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
+  const fetchIdRef = useRef(0);
 
   const [results, setResults] = useState<LawSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -21,24 +22,32 @@ function SearchResults() {
   useEffect(() => {
     if (!query && !category) return;
 
+    const fetchId = ++fetchIdRef.current;
+
     const fetchResults = async () => {
       setLoading(true);
       setError(null);
       try {
-        const url = `/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&lang=${language}`;
+        const url = `/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&lang=en`;
         const res = await fetch(url);
+        // Ignore stale responses from previous fetches
+        if (fetchId !== fetchIdRef.current) return;
         if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
         setResults(data.results || []);
       } catch (err) {
-        setError(t("search.error"));
+        if (fetchId === fetchIdRef.current) {
+          setError(t("search.error"));
+        }
       } finally {
-        setLoading(false);
+        if (fetchId === fetchIdRef.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchResults();
-  }, [query, category, language, t]);
+  }, [query, category]);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-20">

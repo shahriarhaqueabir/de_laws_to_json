@@ -339,13 +339,13 @@ export default function ConversationPage() {
                   ? "SEARCH STATUTE CODE..."
                   : "DESCRIBE SCENARIO FOR ANALYSIS..."
               }
-              className="w-full bg-white/5 border border-white/10 px-8 py-5 pr-20 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/[0.07] text-white placeholder:text-zinc-400 transition-all duration-500 font-bold tracking-wide"
+              className="w-full bg-white/5 border border-white/10 px-8 py-5 pr-20 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/[0.07] text-white placeholder:text-zinc-400 transition-colors duration-500 font-bold tracking-wide"
               disabled={sendMutation.isPending}
             />
             <button
               type="submit"
               disabled={sendMutation.isPending || !input.trim()}
-              className="absolute right-2 top-2 bottom-2 aspect-square bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright disabled:opacity-20 transition-all duration-300 flex items-center justify-center group/btn active:scale-95 border border-accent-gold/10"
+              className="absolute right-2 top-2 bottom-2 aspect-square bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright disabled:opacity-20 transition-colors duration-300 transition-transform duration-300 flex items-center justify-center group/btn active:scale-95 border border-accent-gold/10"
               aria-label="Send message"
             >
               <Send className="w-5 h-5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />

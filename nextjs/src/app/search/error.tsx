@@ -36,7 +36,7 @@ export default function SearchError({
         <div className="flex items-center justify-center gap-4 pt-4">
           <button
             onClick={reset}
-            className="flex items-center gap-3 px-6 py-3 border border-white/10 text-white text-xs font-black uppercase tracking-[0.2em] hover:bg-white/5 hover:border-accent-gold/50 transition-all duration-300 active:scale-95"
+            className="flex items-center gap-3 px-6 py-3 border border-white/10 text-white text-xs font-black uppercase tracking-[0.2em] hover:bg-white/5 hover:border-accent-gold/50 transition-colors duration-300 transition-transform duration-300 active:scale-95"
           >
             <RotateCcw className="w-4 h-4" />
             Retry
