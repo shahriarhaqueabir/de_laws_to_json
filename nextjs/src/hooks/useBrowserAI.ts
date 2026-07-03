@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import {
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  startTransition,
+} from "react";
 
 export interface UseBrowserAIReturn {
   /** Send a prompt to the worker. Returns the generated text when complete. */
@@ -50,9 +56,11 @@ export function useBrowserAI(enabled: boolean = true): UseBrowserAIReturn {
         workerRef.current.terminate();
         workerRef.current = null;
       }
-      setIsReady(false);
-      setIsGenerating(false);
-      setStatus(null);
+      startTransition(() => {
+        setIsReady(false);
+        setIsGenerating(false);
+        setStatus(null);
+      });
       pendingRef.current?.reject(new Error("Worker disabled"));
       pendingRef.current = null;
       return;

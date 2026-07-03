@@ -28,6 +28,38 @@ setInterval(() => {
   }
 }, 300_000);
 
+/**
+ * Per-IP promise-chain lock.
+ *
+ * Ensures that concurrent requests for the same IP acquire the fallback store
+ * in FIFO order matching their creation order, preventing the race condition
+ * where Promise.all concurrent requests interleave between hashIp/rpc awaits
+ * and the fallback counter increment.
+ */
+const ipLocks = new Map<string, Promise<void>>();
+
+function acquireIpLock(ip: string): Promise<() => void> {
+  let release: () => void;
+  const ticket = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  // Atomically chain: capture the previous ticket and insert ours
+  const prev = ipLocks.get(ip) ?? Promise.resolve();
+  ipLocks.set(ip, ticket);
+
+  return (async () => {
+    await prev;
+    return () => {
+      release!();
+      // Only clean up if we're still the current lock (no one queued after us)
+      if (ipLocks.get(ip) === ticket) {
+        ipLocks.delete(ip);
+      }
+    };
+  })();
+}
+
 export interface RateLimitConfig {
   maxRequests: number;
   windowMs: number;
@@ -53,7 +85,10 @@ async function hashIp(ip: string): Promise<string> {
   const data = encoder.encode(ip);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+  return hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 16);
 }
 
 /**
@@ -62,7 +97,12 @@ async function hashIp(ip: string): Promise<string> {
 function checkRateLimitFallback(
   ip: string,
   config: RateLimitConfig,
-): { allowed: boolean; headers: Record<string, string>; remaining: number; resetAt: number } {
+): {
+  allowed: boolean;
+  headers: Record<string, string>;
+  remaining: number;
+  resetAt: number;
+} {
   const now = Date.now();
   const entry = fallbackStore.get(ip);
 
@@ -109,6 +149,8 @@ export async function checkRateLimit(
   ip: string,
   config: RateLimitConfig = DEFAULT_AI_RATE_LIMIT,
 ): Promise<{ allowed: boolean; headers: Record<string, string> }> {
+  const release = await acquireIpLock(ip);
+
   try {
     const ipHash = await hashIp(ip);
     const supabase = createAdminClient();
@@ -122,7 +164,11 @@ export async function checkRateLimit(
 
     if (error) throw error;
 
-    const result = data as { allowed: boolean; remaining: number; reset_at: number };
+    const result = data as {
+      allowed: boolean;
+      remaining: number;
+      reset_at: number;
+    };
     const resetSeconds = Math.ceil(result.reset_at);
 
     // Probabilistic cleanup: ~1 in 20 calls triggers a cleanup to prevent
@@ -137,12 +183,20 @@ export async function checkRateLimit(
         "X-RateLimit-Limit": String(config.maxRequests),
         "X-RateLimit-Remaining": String(result.remaining),
         "X-RateLimit-Reset": String(resetSeconds),
-        ...(result.allowed ? {} : { "Retry-After": String(resetSeconds - Math.ceil(Date.now() / 1000)) }),
+        ...(result.allowed
+          ? {}
+          : {
+              "Retry-After": String(
+                resetSeconds - Math.ceil(Date.now() / 1000),
+              ),
+            }),
       },
     };
   } catch {
     // Fallback to in-memory when Supabase is unavailable
     return checkRateLimitFallback(ip, config);
+  } finally {
+    release();
   }
 }
 
