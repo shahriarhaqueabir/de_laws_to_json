@@ -218,6 +218,12 @@ worktrees/
 .vercel
 .env*
 
+# Internal agent memory, planning, and skill configs (not for public repo)
+.memory/
+plans/
+docs/superpowers/
+.agents/
+
 # Local-only agent config (not pushed to GitHub)
 .githooks/
 

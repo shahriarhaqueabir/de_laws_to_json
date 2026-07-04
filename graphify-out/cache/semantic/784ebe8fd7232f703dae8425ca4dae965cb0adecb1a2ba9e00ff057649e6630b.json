@@ -1,1 +1,0 @@
-{"nodes": [{"id": "nextjs_README_md", "label": "README.md", "file_type": "document", "source_file": "nextjs/README.md"}], "edges": [{"source": "nextjs_README_md", "target": "nextjs_public_file_svg", "relation": "shares_data_with", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "nextjs/README.md"}], "hyperedges": []}
