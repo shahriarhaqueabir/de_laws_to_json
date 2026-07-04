@@ -10,7 +10,7 @@ German Law Vault provides a comprehensive search engine and AI-guided legal assi
 [![Website](https://img.shields.io/badge/website-live-brightgreen?style=flat-square)](https://ai-assisted-german-law-shahriarhaqueabir.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg?style=flat-square)](https://nextjs.org)
 [![Laws](https://img.shields.io/badge/laws-6,000+-gold.svg?style=flat-square)](https://www.gesetze-im-internet.de/)
-[![Tests](https://img.shields.io/badge/tests-308%20passing-brightgreen.svg?style=flat-square)](nextjs/)
+[![Tests](https://img.shields.io/badge/tests-516%20passing-brightgreen.svg?style=flat-square)](nextjs/)
 [![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](.github/pull_request_template.md)
 [![Security](https://img.shields.io/badge/security-RLS%20%7C%20CSP%20%7C%20AES--256--GCM-purple.svg?style=flat-square)](docs/security-architecture.md)
 [![TypeScript](https://img.shields.io/badge/typescript-strict-blue.svg?style=flat-square)](nextjs/tsconfig.json)
@@ -53,7 +53,7 @@ Create case folders with 8 uniform properties (dispute value, opposing party, de
 | **Basic** | Server-side Qdrant vector search — no AI. Fast & free | ✅ No data leaves server |
 | **Browser** | Transformers.js model runs in your browser (~1GB ONNX). Fully offline | ✅ Everything stays local |
 | **Cloud** | Bring your own API key (OpenAI / Anthropic) — encrypted with AES-256-GCM | 🔒 Encrypted at rest |
-| **Local** | Ollama via broker.py — your machine, your model | ✅ 100% offline |
+| **Local** | Ollama via broker.py — your machine, your model. Health diagnostics + exponential backoff | ✅ 100% offline |
 
 ---
 
@@ -87,6 +87,7 @@ Create case folders with 8 uniform properties (dispute value, opposing party, de
     1. **Qdrant Hybrid**: 85% Dense / 15% BM25 reranking
     2. **Postgres Trigram**: Fuzzy matching via `pg_trgm` on `norms` table
     3. **Postgres ILIKE**: Keyword fallback on `laws` table
+- **In-memory cache**: 30s TTL, 500-item LRU cache for repeated searches (Qdrant with_vector: false)
 - 9 language support: DE / EN / TR / AR / FR / ES / PL / UK / RU
 - Category browsing and pagination
 

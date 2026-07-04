@@ -56,6 +56,7 @@ describe("searchNorms", () => {
       offset: 0,
       filter: undefined,
       with_payload: true,
+      with_vector: false,
     });
 
     expect(results).toHaveLength(1);
@@ -81,6 +82,7 @@ describe("searchNorms", () => {
       offset: 0,
       filter: { must: [{ key: "category", match: { value: "housing" } }] },
       with_payload: true,
+      with_vector: false,
     });
   });
 
@@ -141,6 +143,7 @@ describe("searchNorms", () => {
       offset: 20,
       filter: undefined,
       with_payload: true,
+      with_vector: false,
     });
   });
 });

@@ -54,7 +54,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
 
   return (
     <div
-      className="premium-card p-10 group relative border-white/5 bg-zinc-900/20 cursor-pointer transition-all duration-500 hover:border-accent-gold/30"
+      className="premium-card p-10 group relative border-white/5 bg-zinc-900/20 cursor-pointer transition-all duration-500 hover:border-accent-gold/40 edge-glow-electric"
       onClick={navigateToDetail}
       role="link"
       tabIndex={0}
@@ -69,7 +69,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
         onClick={toggleBookmark}
         className={`absolute top-8 right-10 p-2 transition-all duration-500 active:scale-90 z-10 ${
           bookmarked
-            ? "text-accent-gold-bright"
+            ? "text-accent-gold-bright drop-shadow-[0_0_6px_var(--accent-gold-glow)]"
             : "text-zinc-700 hover:text-accent-gold"
         }`}
         title={bookmarked ? "Remove bookmark" : "Add bookmark"}
@@ -92,10 +92,10 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
           </h3>
         </div>
         <div className="text-right">
-          <div className="text-xs text-accent-gold-bright font-black tracking-widest uppercase mb-1">
+          <div className="text-xs text-accent-gold-bright font-black tracking-widest uppercase mb-1 tabular-nums">
             {law.relevance}% Match
           </div>
-          <div className="text-xs text-muted font-bold uppercase tracking-tighter">
+          <div className="text-xs text-muted font-bold uppercase tracking-tighter tabular-nums">
             {law.normHits} Relevant Sections
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
         {law.relevantNorms.map((norm, idx) => (
           <div
             key={idx}
-            className="bg-white/[0.02] p-6 border border-white/5 relative overflow-hidden group/norm"
+            className="bg-white/[0.02] p-6 border border-white/5 relative overflow-hidden group/norm bg-coin-pattern"
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold/20 group-hover/norm:bg-accent-gold transition-colors duration-500" />
             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-accent-gold/60 mb-3">

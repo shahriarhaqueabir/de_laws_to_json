@@ -350,9 +350,9 @@ describe("NavBar", () => {
   });
 
   // ── Language indicator ──
-  it("shows language indicator with EN", () => {
+  it("shows language indicator with en", () => {
     renderWithContext(<NavBar />);
-    expect(screen.getByText("EN")).toBeInTheDocument();
+    expect(screen.getByText("en")).toBeInTheDocument();
   });
 
   // ── Desktop nav items have correct labels ──

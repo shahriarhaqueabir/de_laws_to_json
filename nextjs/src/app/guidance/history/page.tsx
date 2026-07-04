@@ -13,7 +13,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuth } from "@/components/auth-context";
+import { SkeletonList } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useLanguage } from "@/hooks/useLanguage";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -81,6 +83,7 @@ function truncate(text: string, max: number): string {
 
 export default function GuidanceHistoryPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [sessions, setSessions] = useState<GuidanceSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -167,15 +170,15 @@ export default function GuidanceHistoryPage() {
         </div>
         <div>
           <p className="text-muted text-xs font-bold uppercase tracking-widest opacity-40 mb-1">
-            Case Analysis
+            {t("guidance_history.subtitle")}
           </p>
           <h1 className="text-4xl font-serif font-bold text-white tracking-tight">
-            Guidance History
+            {t("guidance_history.title")}
           </h1>
         </div>
         {pagination && (
           <span className="ml-auto text-xs font-black uppercase tracking-[0.3em] text-muted">
-            {pagination.total} Sessions
+            {t("guidance_history.count", { n: pagination.total })}
           </span>
         )}
       </div>
@@ -185,26 +188,36 @@ export default function GuidanceHistoryPage() {
         <div className="glass-panel p-16 text-center border-white/5">
           <AlertTriangle className="w-12 h-12 text-accent-gold/40 mx-auto mb-6" />
           <h2 className="text-2xl font-serif font-bold text-white mb-4">
-            Sign In Required
+            {t("guidance_history.sign_in_title")}
           </h2>
           <p className="text-muted max-w-md mx-auto">
-            Sign in to view your guidance history. Sessions are automatically
-            saved when you run case analysis while signed in.
+            {t("guidance_history.sign_in_desc")}
           </p>
           <Link
             href="/auth"
             className="inline-flex items-center gap-2 mt-8 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold-body hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
           >
-            Sign In
+            {t("guidance_history.sign_in_btn")}
           </Link>
         </div>
       )}
 
-      {/* Loading */}
+      {/* Loading — skeleton */}
       {loading && (
-        <div className="text-center py-32">
-          <Loader2 className="w-8 h-8 text-accent-gold/60 animate-spin mx-auto mb-6" />
-          <p className="text-muted text-sm">Loading sessions...</p>
+        <div
+          role="status"
+          aria-live="polite"
+          aria-label="Loading guidance sessions"
+        >
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-50 shrink-0">
+              {t("guidance_history.loading")}
+            </h2>
+            <div className="h-px w-full bg-zinc-800/50" />
+          </div>
+          <div className="space-y-4">
+            <SkeletonList count={4} />
+          </div>
         </div>
       )}
 
@@ -229,17 +242,16 @@ export default function GuidanceHistoryPage() {
         <div className="glass-panel p-16 text-center border-white/5">
           <Scale className="w-16 h-16 text-zinc-800 mx-auto mb-6" />
           <h2 className="text-2xl font-serif font-bold text-white mb-4">
-            No Guidance Sessions Yet
+            {t("guidance_history.empty_title")}
           </h2>
           <p className="text-muted max-w-md mx-auto mb-8">
-            Describe your legal situation and the AI will generate 3-5 outcome
-            paths. Sessions are saved automatically when you are signed in.
+            {t("guidance_history.empty_desc")}
           </p>
           <Link
             href="/guidance"
             className="inline-flex items-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-gold/20 text-accent-gold-body hover:bg-accent-gold/30 transition-colors border border-accent-gold/20"
           >
-            Analyze a Situation
+            {t("guidance_history.empty_cta")}
           </Link>
         </div>
       )}
@@ -281,7 +293,7 @@ export default function GuidanceHistoryPage() {
                     {formatDate(session.created_at)}
                   </span>
                   {session.dispute_value > 0 && (
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1.5 tabular-nums">
                       <Euro className="w-3 h-3" />
                       {session.dispute_value.toLocaleString("de-DE")} €
                     </span>
@@ -318,7 +330,9 @@ export default function GuidanceHistoryPage() {
                   disabled={deleting === session.id}
                   className="text-xs font-black uppercase tracking-[0.2em] text-muted hover:text-red-500 transition-colors disabled:opacity-50"
                 >
-                  {deleting === session.id ? "Deleting..." : "Delete Session"}
+                  {deleting === session.id
+                    ? t("guidance_history.deleting")
+                    : t("guidance_history.delete")}
                 </button>
               </div>
             </div>
@@ -332,17 +346,20 @@ export default function GuidanceHistoryPage() {
                 disabled={page <= 1}
                 className="text-xs font-bold uppercase tracking-[0.2em] text-muted hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                Previous
+                {t("guidance_history.previous")}
               </button>
-              <span className="text-xs font-mono text-muted">
-                Page {page} of {pagination.totalPages}
+              <span className="text-xs font-mono text-muted tabular-nums">
+                {t("guidance_history.page_info", {
+                  current: page,
+                  total: pagination.totalPages,
+                })}
               </span>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= (pagination?.totalPages || 1)}
                 className="text-xs font-bold uppercase tracking-[0.2em] text-muted hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                Next
+                {t("guidance_history.next")}
               </button>
             </div>
           )}

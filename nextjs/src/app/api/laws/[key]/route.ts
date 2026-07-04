@@ -46,8 +46,7 @@ export async function GET(
       .eq("key", key)
       .single();
 
-    if (error)
-      return NextResponse.json({ error: "Law not found" }, { status: 404 });
+    if (error) return errorResponse("NOT_FOUND", "Law not found", 404);
 
     const qdrant = getQdrant();
 
@@ -64,12 +63,15 @@ export async function GET(
     }
 
     try {
+      // Scroll all norms for this law
+      // with_vector: false — we only need payload for display, not the embedding
       const norms = await qdrant.scroll(COLLECTION, {
         filter: {
           must: [{ key: "law_key", match: { value: key } }],
         },
         limit: 1000,
         with_payload: true,
+        with_vector: false,
       });
 
       return NextResponse.json({

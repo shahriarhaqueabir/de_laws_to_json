@@ -99,6 +99,7 @@ describe("GET /api/laws/[key]", () => {
       filter: { must: [{ key: "law_key", match: { value: "BGB" } }] },
       limit: 1000,
       with_payload: true,
+      with_vector: false,
     });
   });
 
@@ -114,7 +115,7 @@ describe("GET /api/laws/[key]", () => {
     const body = await res.json();
 
     expect(res.status).toBe(404);
-    expect(body.error).toBe("Law not found");
+    expect(body.error.message).toBe("Law not found");
   });
 
   it("invalid (empty) key returns 400 validation", async () => {

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/app/**/*.{ts,tsx}",
+    "src/workers/**/*.{ts,tsx}",
+    "src/**/*.test.{ts,tsx}"
+  ],
+  "project": ["src/**/*.{ts,tsx,cts,mts}"],
+  "ignoreDependencies": ["@next/bundle-analyzer"],
+  "ignore": [],
+  "rules": {
+    "files": "warn"
+  }
+}

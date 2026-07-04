@@ -119,11 +119,11 @@ export default function FolderModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto glass-panel-heavy border border-white/10 shadow-2xl">
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto glass-panel-heavy border border-white/10 shadow-2xl edge-glow-electric bg-brushed-metal">
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-white/5 bg-tertiary/95 backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <FolderPlus className="w-5 h-5 text-accent-cobalt" />
+            <FolderPlus className="w-5 h-5 text-accent-electric" />
             <h2 className="font-serif font-bold text-xl text-white">{title}</h2>
           </div>
           <button
@@ -146,7 +146,7 @@ export default function FolderModal({
 
           {/* Section: Basic Info */}
           <section>
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-electric/60 mb-4">
               Basic Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -159,7 +159,7 @@ export default function FolderModal({
                   value={form.name}
                   onChange={(e) => updateField("name", e.target.value)}
                   placeholder="e.g., Wrongful Dismissal Case"
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors"
                   required
                 />
               </div>
@@ -173,7 +173,7 @@ export default function FolderModal({
                   value={form.description}
                   onChange={(e) => updateField("description", e.target.value)}
                   placeholder="Brief description of the case"
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors"
                 />
               </div>
 
@@ -184,7 +184,7 @@ export default function FolderModal({
                 <select
                   value={form.category}
                   onChange={(e) => updateField("category", e.target.value)}
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors appearance-none"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors appearance-none"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value}>
@@ -203,7 +203,7 @@ export default function FolderModal({
                   onChange={(e) =>
                     updateField("status", e.target.value as FolderStatus)
                   }
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors appearance-none"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors appearance-none"
                 >
                   {(Object.keys(FOLDER_STATUS_LABELS) as FolderStatus[]).map(
                     (s) => (
@@ -219,7 +219,7 @@ export default function FolderModal({
 
           {/* Section: Timeline & Value */}
           <section>
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-electric/60 mb-4">
               Timeline & Value
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -231,7 +231,7 @@ export default function FolderModal({
                   type="date"
                   value={form.incident_date}
                   onChange={(e) => updateField("incident_date", e.target.value)}
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors"
                 />
                 <p className="text-xs text-zinc-700 mt-1">
                   AI calculates deadlines from this date
@@ -246,7 +246,7 @@ export default function FolderModal({
                   type="date"
                   value={form.deadline_date}
                   onChange={(e) => updateField("deadline_date", e.target.value)}
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors"
                 />
                 <p className="text-xs text-zinc-700 mt-1">
                   AI warns when this deadline approaches
@@ -269,7 +269,7 @@ export default function FolderModal({
                     )
                   }
                   placeholder="0.00"
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors"
                 />
                 <p className="text-xs text-zinc-700 mt-1">
                   Used for cost estimation (RVG/GKG)
@@ -280,7 +280,7 @@ export default function FolderModal({
 
           {/* Section: Parties & Court */}
           <section>
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-electric/60 mb-4">
               Parties & Court
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -295,7 +295,7 @@ export default function FolderModal({
                     updateField("opposing_party", e.target.value)
                   }
                   placeholder="e.g., Employer, Landlord"
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors"
                 />
                 <p className="text-xs text-zinc-700 mt-1">
                   AI checks specific protections (KSchG, BDSG, etc.)
@@ -311,7 +311,7 @@ export default function FolderModal({
                   value={form.court_name}
                   onChange={(e) => updateField("court_name", e.target.value)}
                   placeholder="e.g., Arbeitsgericht Berlin"
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors"
                 />
               </div>
 
@@ -324,7 +324,7 @@ export default function FolderModal({
                   value={form.case_number}
                   onChange={(e) => updateField("case_number", e.target.value)}
                   placeholder="e.g., 5 Ca 1234/24"
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors"
+                  className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors"
                 />
               </div>
             </div>
@@ -332,7 +332,7 @@ export default function FolderModal({
 
           {/* Section: Notes */}
           <section>
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-cobalt/60 mb-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-accent-electric/60 mb-4">
               Notes (AI Context)
             </h3>
             <textarea
@@ -340,7 +340,7 @@ export default function FolderModal({
               onChange={(e) => updateField("notes", e.target.value)}
               placeholder="Add any additional context about your case. The AI reads this when generating guidance."
               rows={4}
-              className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors resize-vertical"
+              className="w-full px-4 py-3 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors resize-vertical"
             />
             <p className="text-xs text-zinc-700 mt-1">
               Free-text context — the AI reads this when generating guidance
@@ -360,7 +360,7 @@ export default function FolderModal({
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-cobalt text-white hover:bg-accent-cobalt/90 focus-visible:ring-1 focus-visible:ring-accent-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-electric text-white hover:bg-accent-electric/90 focus-visible:ring-1 focus-visible:ring-accent-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <span className="animate-pulse">Saving...</span>

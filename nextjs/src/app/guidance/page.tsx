@@ -16,17 +16,23 @@ import {
 } from "lucide-react";
 import GuidancePathsDisplay from "../../components/guidance-paths-display";
 import FolderModal from "../../components/folder-modal";
+import { SkeletonList } from "../../components/ui/skeleton";
 import type { FolderFormData } from "../../components/folder-modal";
 import type { GuidancePath, FolderContext } from "../../lib/guidance-types";
 import { FOLDER_STATUS_LABELS } from "../../lib/guidance-types";
 import { getFolders, createFolder } from "../../lib/bookmarks-v2";
 import { useLanguage } from "../../hooks/useLanguage";
+import { useAuth } from "../../components/auth-context";
+import { useChat } from "../../components/chat-context";
+import { FeatureGate } from "../../components/feature-gate";
 
 // ── Page Component ─────────────────────────────────────────────────────────
 
 export default function GuidancePage() {
   const [situation, setSituation] = useState("");
   const { language, t } = useLanguage();
+  const { user } = useAuth();
+  const { settings } = useChat();
   const [selectedFolder, setSelectedFolder] = useState<string>("");
   const [paths, setPaths] = useState<GuidancePath[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -157,7 +163,7 @@ export default function GuidancePage() {
       case "pre_action":
         return "bg-accent-amber/10 text-accent-amber border-accent-amber/20";
       case "consulting":
-        return "bg-accent-cobalt/10 text-accent-cobalt border-accent-cobalt/20";
+        return "bg-accent-electric/10 text-accent-electric border-accent-electric/20";
       case "filed":
         return "bg-blue-500/10 text-blue-400 border-blue-500/20";
       case "in_progress":
@@ -174,15 +180,15 @@ export default function GuidancePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-16 pb-8 border-b border-white/5">
         <div className="flex items-center gap-4">
-          <div className="p-3 border border-accent-cobalt/20 bg-accent-cobalt/5">
-            <Compass className="w-6 h-6 text-accent-cobalt" />
+          <div className="p-3 border border-accent-electric/20 bg-accent-electric/5">
+            <Compass className="w-6 h-6 text-accent-electric" />
           </div>
           <div>
             <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-40 mb-1">
-              Legal Guidance
+              {t("guidance.page_title")}
             </p>
             <h1 className="text-4xl font-serif font-bold text-white tracking-tight">
-              Navigate Your Situation
+              {t("guidance.page_subtitle")}
             </h1>
           </div>
           <Link
@@ -196,23 +202,27 @@ export default function GuidancePage() {
       </div>
 
       {/* Input Section */}
-      <div className="glass-panel p-8 border-white/5 mb-12">
+      <div className="glass-panel p-8 border-white/5 mb-12 relative overflow-hidden edge-glow-electric">
+        <div className="absolute inset-0 bg-coin-pattern opacity-[0.08] pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-electric/20 to-transparent" />
         <div className="grid grid-cols-1 gap-6 mb-8">
           {/* Folder Selector */}
           <div>
             <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
               <Bookmark className="w-3.5 h-3.5" />
-              Case Folder (Optional)
+              {t("guidance.folder_label")}
             </label>
             <div className="flex gap-2">
               <select
                 value={selectedFolder}
                 onChange={(e) => setSelectedFolder(e.target.value)}
-                className="flex-1 px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors appearance-none disabled:opacity-50"
+                className="flex-1 px-4 py-3 bg-black/40 border border-white/10 text-white text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors appearance-none disabled:opacity-50"
                 disabled={foldersLoading}
               >
                 <option value="">
-                  {foldersLoading ? "Loading..." : "— No folder selected —"}
+                  {foldersLoading
+                    ? t("guidance.loading_folder")
+                    : t("guidance.no_folder")}
                 </option>
                 {folders.map((f) => (
                   <option key={f.id} value={f.id}>
@@ -222,7 +232,7 @@ export default function GuidancePage() {
               </select>
               <button
                 onClick={() => setShowFolderModal(true)}
-                className="px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-cobalt/20 text-accent-cobalt hover:bg-accent-cobalt/30 transition-colors border border-accent-cobalt/20"
+                className="px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] bg-accent-electric/20 text-accent-electric hover:bg-accent-electric/30 transition-colors border border-accent-electric/20"
                 title="Create new folder"
               >
                 + New
@@ -231,7 +241,7 @@ export default function GuidancePage() {
             {selectedFolderData && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {selectedFolderData.dispute_value > 0 && (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 bg-white/5 text-zinc-400">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 bg-white/5 text-zinc-400 tabular-nums">
                     <Euro className="w-2.5 h-2.5" />€
                     {selectedFolderData.dispute_value.toLocaleString()}
                   </span>
@@ -258,14 +268,14 @@ export default function GuidancePage() {
         {/* Situation Input */}
         <div className="mb-8">
           <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
-            Describe Your Situation
+            {t("guidance.situation_label")}
           </label>
           <textarea
             value={situation}
             onChange={(e) => setSituation(e.target.value)}
             placeholder="Describe your legal situation in detail. Include relevant facts, dates, parties involved, and any actions you've already taken. You can write in any language — German, English, Turkish, Arabic, French, Spanish, Polish, Ukrainian, or Russian."
             rows={6}
-            className="w-full px-5 py-4 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-cobalt/50 transition-colors resize-vertical"
+            className="w-full px-5 py-4 bg-black/40 border border-white/10 text-white text-sm placeholder:text-zinc-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-electric/50 transition-colors resize-vertical"
           />
           <div className="flex justify-between items-center mt-2">
             <p className="text-xs text-zinc-700">
@@ -279,24 +289,30 @@ export default function GuidancePage() {
         </div>
 
         {/* Submit */}
-        <button
-          onClick={handleGetGuidance}
-          disabled={loading || !situation.trim()}
-          className="flex items-center gap-3 px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] bg-accent-cobalt text-white hover:bg-accent-cobalt/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:translate-y-[1px]"
+        <FeatureGate
+          requirement="ai-mode"
+          message="Sign in and configure AI in Settings for legal guidance"
+          met={!!user && settings.mode !== "basic"}
         >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Analyzing Your Situation...
-            </>
-          ) : (
-            <>
-              <Compass className="w-4 h-4" />
-              Get Guidance
-              <ArrowRight className="w-3.5 h-3.5 ml-2" />
-            </>
-          )}
-        </button>
+          <button
+            onClick={handleGetGuidance}
+            disabled={loading || !situation.trim()}
+            className="flex items-center gap-3 px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] bg-accent-electric text-white hover:bg-accent-electric/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:translate-y-[1px]"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Analyzing Your Situation...
+              </>
+            ) : (
+              <>
+                <Compass className="w-4 h-4" />
+                Get Guidance
+                <ArrowRight className="w-3.5 h-3.5 ml-2" />
+              </>
+            )}
+          </button>
+        </FeatureGate>
       </div>
 
       {/* Error State */}
@@ -309,32 +325,34 @@ export default function GuidancePage() {
                 Guidance Generation Failed
               </h3>
               <p className="text-zinc-400 text-sm">{error}</p>
-              <button
-                onClick={handleGetGuidance}
-                className="mt-4 text-xs font-bold uppercase tracking-[0.2em] text-accent-cobalt hover:text-white transition-colors"
+              <FeatureGate
+                requirement="ai-mode"
+                message="Sign in and configure AI in Settings for legal guidance"
+                met={!!user && settings.mode !== "basic"}
               >
-                Retry
-              </button>
+                <button
+                  onClick={handleGetGuidance}
+                  className="mt-4 text-xs font-bold uppercase tracking-[0.2em] text-accent-electric hover:text-white transition-colors"
+                >
+                  Retry
+                </button>
+              </FeatureGate>
             </div>
           </div>
         </div>
       )}
 
-      {/* Loading State */}
+      {/* Loading State — skeleton */}
       {loading && !paths && (
-        <div className="glass-panel p-12 border-white/5 mb-12 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-accent-cobalt mx-auto mb-6" />
-          <p className="text-zinc-400 text-sm mb-2">
-            Searching German federal laws...
-          </p>
-          <div className="flex items-center justify-center gap-2 text-xs text-zinc-700 uppercase tracking-[0.2em] font-bold">
-            <Scale className="w-3 h-3" />
-            Cross-referencing 6,000+ laws
+        <div className="mb-12">
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-50 shrink-0">
+              Analyzing Your Situation
+            </h2>
+            <div className="h-px w-full bg-zinc-800/50" />
           </div>
-          <div className="mt-6 max-w-md mx-auto">
-            <div className="h-1 bg-white/5 overflow-hidden">
-              <div className="h-full bg-accent-cobalt w-1/3 animate-pulse" />
-            </div>
+          <div className="space-y-12">
+            <SkeletonList count={3} />
           </div>
         </div>
       )}
@@ -346,6 +364,7 @@ export default function GuidancePage() {
             paths={paths}
             folderContext={selectedFolderData}
             language={language}
+            situation={situation}
           />
         </div>
       )}
@@ -363,25 +382,25 @@ export default function GuidancePage() {
             Describe your situation above and the AI will analyze all 6,000+
             German federal laws, cross-reference with your bookmarks and case
             folders, and return{" "}
-            <span className="text-accent-cobalt font-bold">3-5</span> concrete
+            <span className="text-accent-electric font-bold">3-5</span> concrete
             outcome paths with risk assessment, cost estimates, and step-by-step
             next steps.
           </p>
           <div className="flex justify-center gap-6 text-xs text-zinc-700 uppercase tracking-[0.2em] font-bold">
             <div className="flex items-center gap-2">
-              <Check className="w-3 h-3 text-accent-cobalt" />
+              <Check className="w-3 h-3 text-accent-electric" />
               Risk Badges
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-3 h-3 text-accent-cobalt" />
+              <Check className="w-3 h-3 text-accent-electric" />
               Cost Estimates
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-3 h-3 text-accent-cobalt" />
+              <Check className="w-3 h-3 text-accent-electric" />
               Cited Laws
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-3 h-3 text-accent-cobalt" />
+              <Check className="w-3 h-3 text-accent-electric" />
               Document Generation
             </div>
           </div>

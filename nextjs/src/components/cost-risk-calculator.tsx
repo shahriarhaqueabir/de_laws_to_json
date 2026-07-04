@@ -15,7 +15,7 @@ export default function CostRiskCalculator() {
   return (
     <div className="glass-panel p-8 shadow-premium border-white/5">
       <div className="flex items-center gap-3 mb-8">
-        <Calculator className="w-6 h-6 text-accent-cobalt" />
+        <Calculator className="w-6 h-6 text-accent-electric" />
         <h2 className="font-serif font-bold text-2xl text-white">
           Financial Risk Modeling
         </h2>
@@ -35,9 +35,9 @@ export default function CostRiskCalculator() {
               step="500"
               value={disputeValue}
               onChange={(e) => setDisputeValue(Number(e.target.value))}
-              className="flex-1 accent-accent-cobalt"
+              className="flex-1 accent-accent-electric"
             />
-            <div className="w-32 bg-white/5 border border-white/10 px-4 py-2 text-right font-serif text-white">
+            <div className="w-32 bg-white/5 border border-white/10 px-4 py-2 text-right font-serif text-white tabular-nums">
               €{disputeValue.toLocaleString()}
             </div>
           </div>
@@ -53,7 +53,7 @@ export default function CostRiskCalculator() {
             <div className="text-xs font-bold text-muted uppercase tracking-widest mb-1">
               Court Fees (GKG)
             </div>
-            <div className="text-2xl font-serif text-white">
+            <div className="text-2xl font-serif text-white tabular-nums">
               €{fees.courtFees.toLocaleString()}
             </div>
             <div className="text-xs text-muted mt-2 uppercase">
@@ -65,7 +65,7 @@ export default function CostRiskCalculator() {
             <div className="text-xs font-bold text-muted uppercase tracking-widest mb-1">
               Lawyer Fees (RVG)
             </div>
-            <div className="text-2xl font-serif text-white">
+            <div className="text-2xl font-serif text-white tabular-nums">
               €{fees.lawyerFees.toLocaleString()}
             </div>
             <div className="text-xs text-muted mt-2 uppercase">
@@ -73,14 +73,14 @@ export default function CostRiskCalculator() {
             </div>
           </div>
 
-          <div className="p-4 bg-accent-cobalt/10 border border-accent-cobalt/20">
-            <div className="text-xs font-bold text-accent-cobalt uppercase tracking-widest mb-1">
+          <div className="p-4 bg-accent-electric/10 border border-accent-electric/20 bg-coin-pattern glow-electric">
+            <div className="text-xs font-bold text-accent-electric uppercase tracking-widest mb-1">
               Total Litigation Risk
             </div>
-            <div className="text-2xl font-serif text-white">
+            <div className="text-2xl font-serif text-white tabular-nums">
               €{fees.totalRisk.toLocaleString()}
             </div>
-            <div className="text-xs text-accent-cobalt/60 mt-2 uppercase font-bold">
+            <div className="text-xs text-accent-electric/60 mt-2 uppercase font-bold">
               If Case is Lost
             </div>
           </div>

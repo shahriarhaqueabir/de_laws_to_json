@@ -6,6 +6,44 @@ export const INFERENCE_MODEL = "intfloat/multilingual-e5-small";
 let qdrantClient: QdrantClient | null = null;
 
 /**
+ * Simple in-memory cache with TTL for search results.
+ * Reduces redundant Qdrant calls for repeated/identical queries.
+ */
+const searchCache = new Map<
+  string,
+  { results: SearchResult[]; expiry: number }
+>();
+const CACHE_TTL_MS = 30_000; // 30 seconds
+
+function getCacheKey(
+  query: string,
+  category?: string,
+  topK?: number,
+  offset?: number,
+): string {
+  return `${query}|${category || ""}|${topK}|${offset}`;
+}
+
+function getFromCache(key: string): SearchResult[] | null {
+  const entry = searchCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiry) {
+    searchCache.delete(key);
+    return null;
+  }
+  return entry.results;
+}
+
+function setCache(key: string, results: SearchResult[]): void {
+  // Evict oldest entries if cache exceeds 500 items
+  if (searchCache.size >= 500) {
+    const oldest = searchCache.keys().next().value;
+    if (oldest) searchCache.delete(oldest);
+  }
+  searchCache.set(key, { results, expiry: Date.now() + CACHE_TTL_MS });
+}
+
+/**
  * Get the Qdrant client, or return null if not configured.
  * This allows callers to gracefully degrade instead of crashing.
  */
@@ -437,8 +475,19 @@ export async function searchNorms(
   const BM25_B = 0.75;
   const AVG_DOC_LENGTH = 600; // Estimated avg German norm length in tokens
 
+  // Check cache before hitting Qdrant
+  const cacheKey = getCacheKey(prefixedQuery, category, topK, offset);
+  const cached = getFromCache(cacheKey);
+  if (cached) {
+    console.log(
+      `[Qdrant lib] Cache hit for "${query.substring(0, 40)}" — returning ${cached.length} results`,
+    );
+    return cached;
+  }
+
   try {
-    // Step 1: Query dense vectors
+    // Step 1: Query dense vectors (with_vector: false avoids returning
+    // 384d embeddings — we only need scores + payload for BM25 reranking)
     const denseResults = await client.query(COLLECTION, {
       query: {
         text: prefixedQuery,
@@ -448,6 +497,7 @@ export async function searchNorms(
       offset,
       filter: queryFilter,
       with_payload: true,
+      with_vector: false,
     });
 
     console.log(
@@ -546,6 +596,8 @@ export async function searchNorms(
     parsed = rerankByKeywords(parsed, query);
     parsed = boostLawDiversity(parsed, topK);
 
+    // Cache before returning
+    setCache(cacheKey, parsed);
     return parsed;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);

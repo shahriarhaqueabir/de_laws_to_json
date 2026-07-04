@@ -5,7 +5,7 @@ import { getServerClient } from "../../../lib/supabase-server";
 import { createAdminClient } from "../../../lib/supabase-admin";
 import { generateNormExplanation } from "../../../lib/chat";
 import { decryptApiKey } from "../../../lib/encryption";
-import type { CloudProvider } from "../../../lib/types";
+import type { AppLanguage, CloudProvider } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
 import {
@@ -75,16 +75,15 @@ export async function POST(req: NextRequest) {
       DEFAULT_AI_RATE_LIMIT,
     );
     if (!allowed) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "RATE_LIMITED",
-            message: "Too many requests. Please wait before trying again.",
-          },
-        },
-        { status: 429, headers: rateLimitHeaders },
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests. Please wait before trying again.",
+        429,
+        undefined,
+        rateLimitHeaders,
       );
     }
+
     const body = await req.json();
 
     const parsed = ExplainBodySchema.safeParse(body);
@@ -256,7 +255,7 @@ Return STRICT JSON with these exact fields:
       normId,
       lawKey,
       content,
-      lang: "en",
+      lang: lang as AppLanguage,
     });
 
     // 3. Cache in Supabase (admin client — RLS INSERT revoked from anon/authenticated)

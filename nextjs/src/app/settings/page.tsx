@@ -9,14 +9,18 @@ import {
   Brain,
   FileText,
   ShieldAlert,
+  Compass,
 } from "lucide-react";
 import { useChat } from "../../components/chat-context";
+import { useOnboarding } from "../../components/onboarding-context";
+import { useLanguage } from "../../hooks/useLanguage";
 import {
   ChatMode,
   CloudProvider,
   ChatSettings,
   MODE_LABELS,
   BROWSER_MODELS,
+  LANGUAGE_LABELS,
 } from "../../lib/types";
 
 const MODE_ICONS: Record<ChatMode, typeof Plug> = {
@@ -60,6 +64,12 @@ const MODE_STATUS_NOTE: Record<ChatMode, string> = {
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useChat();
+  const {
+    state: onboardingState,
+    setShowWizard,
+    resetOnboarding,
+  } = useOnboarding();
+  const { language } = useLanguage();
   const [brokerOk, setBrokerOk] = useState<boolean | null>(null);
   const [testing, setTesting] = useState(false);
   const [brokerStarting, setBrokerStarting] = useState(false);
@@ -261,6 +271,58 @@ export default function SettingsPage() {
           </span>
         )}
       </div>
+
+      {/* ── Onboarding Section ── */}
+      <section className="mb-12">
+        <div className="flex items-center gap-4 mb-8">
+          <h2 className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-50 shrink-0">
+            Onboarding
+          </h2>
+          <div className="h-px w-full bg-zinc-800/50" />
+        </div>
+        <div className="glass-panel p-6 border-white/5">
+          {onboardingState.completed ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-zinc-400">
+                  You completed setup on {onboardingState.completedDate}
+                </p>
+                <p className="text-xs text-zinc-600 mt-1">
+                  Language: {LANGUAGE_LABELS[language]} · Mode: {settings.mode}
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowWizard(true)}
+                  className="px-4 py-2 border border-accent-gold/20 text-accent-gold-body text-xs font-bold hover:bg-accent-gold/10 transition-all"
+                >
+                  View Setup Guide
+                </button>
+                <button
+                  onClick={resetOnboarding}
+                  className="px-4 py-2 border border-white/10 text-zinc-400 text-xs font-bold hover:bg-white/5 transition-all"
+                >
+                  Restart Onboarding
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-zinc-400">
+                {onboardingState.step > 0
+                  ? `Continue where you left off (Step ${onboardingState.step + 1})`
+                  : "Set up your AI advisor and language preferences"}
+              </p>
+              <button
+                onClick={() => setShowWizard(true)}
+                className="px-4 py-2 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-xs hover:bg-accent-gold-bright transition-all"
+              >
+                {onboardingState.step > 0 ? "Continue" : "Start Setup"}
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ── Chat Mode Selector ── */}
       <section className="mb-12">

@@ -11,7 +11,7 @@ const spec = {
   servers: [
     { url: "http://localhost:3000", description: "Local development" },
     {
-      url: "https://ai-assisted-german-law-shahriarhaqueabir.vercel.app",
+      url: "https://ai-assisted-german-law.vercel.app",
       description: "Production",
     },
   ],

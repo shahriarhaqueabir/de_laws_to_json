@@ -57,6 +57,9 @@ agent-output*
 notes*
 todo*
 
+# Playwright E2E test results
+/e2e-results/
+
 # Heap snapshots from Chrome DevTools
 *.heapsnapshot
 

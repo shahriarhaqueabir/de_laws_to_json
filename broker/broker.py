@@ -120,18 +120,39 @@ async def stream_ollama(
 
 @app.get("/health")
 async def health():
-    """Check broker and Ollama connectivity."""
+    """Check broker and Ollama connectivity with detailed diagnostics."""
     try:
         r = await client.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5.0)
         models = r.json().get("models", [])
         model_names = [m["name"] for m in models]
+        # Check if the default model is actually available
+        default_available = DEFAULT_MODEL in model_names
         return {
             "status": "ok",
             "ollama": True,
+            "broker_version": "1.0",
             "models": model_names,
             "default_model": DEFAULT_MODEL,
+            "default_model_available": default_available,
+            "model_count": len(model_names),
+        }
+    except httpx.ConnectError:
+        return {
+            "status": "error",
+            "ollama": False,
+            "broker_version": "1.0",
+            "detail": "Cannot connect to Ollama. Is it running on "
+            + OLLAMA_BASE_URL
+            + "?",
+            "recommendation": "Start Ollama: ollama serve",
         }
     except Exception as e:
+        return {
+            "status": "error",
+            "ollama": False,
+            "broker_version": "1.0",
+            "detail": str(e),
+        }
         return {
             "status": "degraded",
             "ollama": False,

@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
 import path from "path";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -50,4 +55,4 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@huggingface/transformers"],
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

@@ -5,8 +5,9 @@ import { useSearchParams } from "next/navigation";
 import SearchBar from "../../components/search-bar";
 import LawCard from "../../components/law-card";
 import { LawSearchResult } from "../../lib/types";
-import { Loader2, Scale } from "lucide-react";
+import { Scale } from "lucide-react";
 import { useLanguage } from "../../hooks/useLanguage";
+import { SkeletonList } from "../../components/ui/skeleton";
 
 function SearchResults() {
   const searchParams = useSearchParams();
@@ -56,18 +57,16 @@ function SearchResults() {
       </div>
 
       {loading ? (
-        <div
-          className="flex flex-col items-center justify-center py-32 animate-pulse"
-          role="status"
-          aria-live="polite"
-        >
-          <div className="relative w-12 h-12 mb-8">
-            <Loader2 className="absolute inset-0 w-12 h-12 text-accent-gold animate-spin" />
-            <Loader2 className="absolute inset-0 w-12 h-12 text-accent-gold animate-ping opacity-20" />
+        <div role="status" aria-live="polite" aria-label="Searching">
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-50 shrink-0">
+              {t("search.loading")}
+            </h2>
+            <div className="h-px w-full bg-zinc-800/50" />
           </div>
-          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-60">
-            {t("search.loading")}
-          </p>
+          <div className="space-y-12">
+            <SkeletonList count={3} />
+          </div>
         </div>
       ) : error ? (
         <div className="p-8 bg-red-950/20 border border-red-900/30 text-red-400 font-bold uppercase tracking-widest text-xs text-center">

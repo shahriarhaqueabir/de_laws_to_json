@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { spawn } from "child_process";
+import { spawn, execSync } from "child_process";
 import path from "path";
 import fs from "fs";
+import { errorResponse } from "@/lib/api-utils";
+import { sanitizeErrorMessage } from "@/lib/sanitize";
 
 // ── Process tracking ──
 // globalThis survives HMR/route re-bundling — use it to share PID across routes.
@@ -13,11 +15,11 @@ declare global {
 function detectPythonCommand(): string {
   // Try python first, then python3
   try {
-    require("child_process").execSync("python --version", { stdio: "ignore" });
+    execSync("python --version", { stdio: "ignore" });
     return "python";
   } catch {
     try {
-      require("child_process").execSync("python3 --version", {
+      execSync("python3 --version", {
         stdio: "ignore",
       });
       return "python3";
@@ -45,6 +47,17 @@ function getBrokerDir(): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  // Dev-only guard: prevent process spawn/kill in production
+  if (process.env.NODE_ENV !== "development") {
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "Broker management is only available in development mode",
+      },
+      { status: 403 },
+    );
+  }
+
   try {
     const body = (await req.json()) as { action: string };
     const { action } = body;
@@ -167,10 +180,7 @@ export async function POST(req: NextRequest) {
         // Kill the process tree
         try {
           if (process.platform === "win32") {
-            require("child_process").execSync(
-              `taskkill /PID ${proc.pid} /F /T`,
-              { stdio: "ignore" },
-            );
+            execSync(`taskkill /PID ${proc.pid} /F /T`, { stdio: "ignore" });
           } else {
             proc.kill("SIGTERM");
             // Give it 3s, then SIGKILL
@@ -187,7 +197,7 @@ export async function POST(req: NextRequest) {
       } else if (pid) {
         try {
           if (process.platform === "win32") {
-            require("child_process").execSync(`taskkill /PID ${pid} /F`, {
+            execSync(`taskkill /PID ${pid} /F`, {
               stdio: "ignore",
             });
           } else {
@@ -215,8 +225,7 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
     console.error("[Broker] Manage error:", err);
-    return NextResponse.json({ status: "error", message }, { status: 500 });
+    return errorResponse("SERVER_ERROR", sanitizeErrorMessage(err), 500);
   }
 }

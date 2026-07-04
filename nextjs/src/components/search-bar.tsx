@@ -37,6 +37,7 @@ export default function SearchBar({
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6">
       <form onSubmit={(e) => handleSearch(e)} className="group w-full">
         <div className="relative">
+          <div className="absolute inset-0 bg-brushed-metal opacity-[0.08] pointer-events-none" />
           <div className="absolute inset-0 bg-accent-gold/5 blur-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700" />
           <input
             type="text"
@@ -44,21 +45,21 @@ export default function SearchBar({
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search laws"
             placeholder="Describe your legal situation in detail... (e.g., 'my landlord won\'t return my deposit')"
-            className="w-full px-8 py-6 pr-40 text-xl glass-panel-heavy border-white/5
-                                focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/30 focus:bg-white/[0.04]
-                                text-white placeholder:text-zinc-600 transition-colors duration-500 font-bold tracking-widest uppercase"
+            className="w-full px-6 sm:px-8 py-6 pr-36 sm:pr-80 text-base sm:text-xl glass-panel-heavy border-white/5 rounded-xl
+                                            focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-electric focus:border-accent-electric/30 focus:bg-white/[0.04]
+                                            text-white placeholder:text-zinc-600 transition-colors duration-500 font-bold tracking-widest uppercase focus-electric"
           />
-          <div className="absolute right-2 top-2 bottom-2 flex gap-1">
+          <div className="absolute right-1.5 top-1.5 bottom-1.5 flex gap-1 sm:gap-1.5">
             <button
               type="submit"
               disabled={submitting}
               aria-label="Search"
-              className="aspect-square bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white transition-colors duration-500 transition-transform duration-300 active:scale-95 flex items-center justify-center border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+              className="w-10 sm:w-14 aspect-square bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white transition-colors duration-500 transition-transform duration-300 active:scale-95 flex items-center justify-center border border-white/5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
             >
               {submitting ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
               ) : (
-                <Search className="w-6 h-6" />
+                <Search className="w-4 h-4 sm:w-6 sm:h-6" />
               )}
             </button>
             <button
@@ -67,7 +68,7 @@ export default function SearchBar({
               onClick={(e) =>
                 handleSearch(e as unknown as React.FormEvent, true)
               }
-              className="px-6 bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright transition-colors duration-500 transition-transform duration-300 active:scale-95 flex items-center gap-3 border border-accent-gold/20 font-black uppercase tracking-widest text-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+              className="hidden sm:flex px-5 bg-accent-neon/10 hover:bg-accent-neon/20 text-accent-neon transition-colors duration-500 transition-transform duration-300 active:scale-95 items-center gap-2 border border-accent-neon/20 rounded-lg font-black uppercase tracking-wider text-[11px] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
             >
               <Brain className="w-4 h-4" />
               Analyze via AI

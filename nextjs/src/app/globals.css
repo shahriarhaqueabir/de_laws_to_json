@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* ── Prevent text overflow across all languages ──
+   German compound words, Arabic script, and Cyrillic can
+   overflow containers without explicit word breaking. */
+* {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 :root {
   /* ── Cinematic Legal Palette ── */
   --bg-primary: #050505; /* Deepest Obsidian */
@@ -15,16 +23,34 @@
 
   --border-glass: rgba(255, 255, 255, 0.04);
   --border-metal: rgba(255, 255, 255, 0.08);
-  --border-gold: rgba(158, 141, 114, 0.2);
 
-  --accent-silver: #d4d4d8; /* Silver strike */
-  --accent-gold: #9e8d72; /* Muted Bronze — WCAG AA 5.2:1 on #1a1a1a */
-  --accent-gold-bright: #c5a059; /* Radiant Gold */
-  --accent-gold-body: #a38a4a; /* Body-safe gold (WCAG AA 4.5:1 on #050505) */
-  --accent-gold-glow: rgba(158, 141, 114, 0.2);
+  /* ── Metallic Gold — multi-stop for shiny sheen ── */
+  --accent-silver: #d4d4d8;
+  --accent-gold: #c9a84c; /* Bright metallic gold base */
+  --accent-gold-rich: #bf9530; /* Deep gold for body text — WCAG AA 4.6:1 on #050505 */
+  --accent-gold-bright: #f5d06a; /* Highlight gold */
+  --accent-gold-body: #c9a84c; /* Body-safe gold — WCAG AA 4.5:1 on #050505 */
+  --accent-gold-glow: rgba(201, 168, 76, 0.25);
+  --accent-gold-metallic-1: #bf9530;
+  --accent-gold-metallic-2: #f5d06a;
+  --accent-gold-metallic-3: #e8c44a;
+  --accent-gold-metallic-4: #bf9530;
 
+  /* ── Electric Blue ── */
+  --accent-electric: #00bbff;
+  --accent-electric-dim: rgba(0, 187, 255, 0.12);
+  --accent-electric-glow: rgba(0, 187, 255, 0.35);
+
+  /* ── Neon Purple ── */
+  --accent-neon: #a855f7;
+  --accent-neon-dim: rgba(168, 85, 247, 0.12);
+  --accent-neon-glow: rgba(168, 85, 247, 0.35);
+
+  /* ── Shadow System ── */
   --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.8);
-  --shadow-gold: 0 0 20px rgba(138, 123, 99, 0.1);
+  --shadow-gold: 0 0 24px rgba(201, 168, 76, 0.15);
+  --shadow-electric: 0 0 24px rgba(0, 187, 255, 0.2);
+  --shadow-neon: 0 0 24px rgba(168, 85, 247, 0.2);
 }
 
 @theme inline {
@@ -34,33 +60,59 @@
   --color-tertiary: var(--bg-tertiary);
   --color-elevated: var(--bg-elevated);
   --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-rich: var(--accent-gold-rich);
   --color-accent-gold-bright: var(--accent-gold-bright);
   --color-accent-gold-body: var(--accent-gold-body);
-  --color-accent-cobalt: #3b82f6;
+  --color-accent-electric: var(--accent-electric);
+  --color-accent-neon: var(--accent-neon);
   --color-accent-amber: #f59e0b;
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
   --color-border-glass: var(--border-glass);
   --color-border-metal: var(--border-metal);
-  --color-border-gold: var(--border-gold);
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-serif: var(--font-serif-playfair), serif;
 }
 
 body {
-  background: var(--bg-primary);
-  /* ── Cinematic Lighting ── */
+  background: #050508;
+  /* ── Cinematic Lighting + Brushed Metal Base ── */
   background-image:
-    radial-gradient(
-      circle at 50% -20%,
-      rgba(138, 123, 99, 0.08) 0%,
-      transparent 50%
+    /* Metallic sheen — diagonal brushed highlight */
+    linear-gradient(
+      135deg,
+      transparent 38%,
+      rgba(180, 190, 200, 0.025) 48%,
+      rgba(210, 215, 220, 0.035) 50%,
+      rgba(180, 190, 200, 0.025) 52%,
+      transparent 62%
     ),
+    /* Warm gold glow from top */
     radial-gradient(
-      circle at 0% 0%,
-      rgba(255, 255, 255, 0.02) 0%,
-      transparent 30%
-    );
+        circle at 50% -20%,
+        rgba(201, 168, 76, 0.08) 0%,
+        transparent 50%
+      ),
+    /* Electric blue glow — right edge */
+    radial-gradient(
+        circle at 100% 30%,
+        rgba(0, 187, 255, 0.04) 0%,
+        transparent 40%
+      ),
+    /* Neon purple glow — bottom left */
+    radial-gradient(
+        circle at 0% 80%,
+        rgba(168, 85, 247, 0.03) 0%,
+        transparent 45%
+      ),
+    /* Subtle top-left light */
+    radial-gradient(
+        circle at 0% 0%,
+        rgba(255, 255, 255, 0.015) 0%,
+        transparent 30%
+      ),
+    /* Gunmetal gradient base */
+    linear-gradient(180deg, #0a0a10 0%, #06060a 40%, #050508 70%, #09090d 100%);
   background-attachment: fixed;
   color: var(--text-secondary);
   font-family: var(--font-sans);
@@ -69,34 +121,88 @@ body {
   min-height: 100vh;
 }
 
-/* ── Living grain overlay ── */
+/* ── Leather grain overlay (fine + coarse) ── */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.35;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 512px 512px;
+  opacity: 0.45;
+  background-image:
+    /* Fine grain — subtle metallic texture */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    /* Leather grain — lower frequency, larger organic cells */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    /* Coarse grit — larger cells, different blend */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.15' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:
+    512px 512px,
+    256px 256px,
+    512px 512px;
   background-repeat: repeat;
   mix-blend-mode: overlay;
-  animation: grain-shift 8s steps(3) infinite;
+  animation: grain-shift 16s steps(6) infinite;
+}
+
+/* ── Justitia watermark ── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("/justitia-silhouette.svg");
+  background-repeat: no-repeat;
+  background-position: 78% 60%;
+  background-size: min(48vh, 380px) auto;
+  opacity: 0.04;
 }
 
 @keyframes grain-shift {
   0% {
     transform: translate(0, 0);
   }
-  33% {
-    transform: translate(-4px, -2px);
+  25% {
+    transform: translate(-3px, -2px);
   }
-  66% {
-    transform: translate(2px, 3px);
+  50% {
+    transform: translate(1px, 3px);
+  }
+  75% {
+    transform: translate(2px, -1px);
   }
   100% {
     transform: translate(0, 0);
   }
+}
+
+/* ── Hero Noise & Leather Texture Utilities ── */
+
+/* Fractal noise overlay — use on hero section backgrounds */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  background-repeat: repeat;
+}
+
+/* Gunmetal leather crosshatch — fine woven grain texture */
+.bg-gunmetal-leather {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.003) 2px,
+      rgba(255, 255, 255, 0.003) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.002) 2px,
+      rgba(255, 255, 255, 0.002) 4px
+    );
 }
 
 /* ── Premium Utilities ── */
@@ -128,22 +234,55 @@ body::before {
   content: "";
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.05) 0%,
     transparent 50%
   );
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition-property: opacity;
+  transition-duration: 0.5s;
+  transition-timing-function: ease;
+}
+
+/* Edge glow accent strip */
+.premium-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-gold-bright), transparent 70%) 20%,
+    color-mix(in srgb, var(--accent-gold-bright), transparent 40%) 50%,
+    color-mix(in srgb, var(--accent-gold-bright), transparent 70%) 80%,
+    transparent
+  );
+  opacity: 0;
+  transition-property: opacity;
+  transition-duration: 0.6s;
+  transition-timing-function: ease;
+  pointer-events: none;
 }
 
 .premium-card:hover {
   border-color: var(--accent-gold);
-  box-shadow: var(--shadow-premium), var(--shadow-gold);
+  box-shadow:
+    var(--shadow-premium),
+    var(--shadow-gold),
+    0 0 60px color-mix(in srgb, var(--accent-gold-glow), transparent 60%);
   transform: translateY(-4px);
 }
 
 .premium-card:hover::after {
+  opacity: 1;
+}
+
+.premium-card:hover::before {
   opacity: 1;
 }
 
@@ -161,6 +300,139 @@ body::before {
   border-bottom-color: var(--accent-gold-bright);
 }
 
+/* ── Glow Utility Classes ── */
+.glow-gold {
+  box-shadow:
+    0 0 20px var(--accent-gold-glow),
+    0 0 60px color-mix(in srgb, var(--accent-gold-glow), transparent);
+}
+
+.glow-electric {
+  box-shadow:
+    0 0 20px var(--accent-electric-glow),
+    0 0 60px color-mix(in srgb, var(--accent-electric-glow), transparent);
+}
+
+.glow-neon {
+  box-shadow:
+    0 0 20px var(--accent-neon-glow),
+    0 0 60px color-mix(in srgb, var(--accent-neon-glow), transparent);
+}
+
+.glow-border-electric {
+  border-color: var(--accent-electric);
+  box-shadow: 0 0 12px var(--accent-electric-glow);
+}
+
+.glow-border-neon {
+  border-color: var(--accent-neon);
+  box-shadow: 0 0 12px var(--accent-neon-glow);
+}
+
+.glow-border-gold {
+  border-color: var(--accent-gold-bright);
+  box-shadow: 0 0 12px var(--accent-gold-glow);
+}
+
+/* ── Breathing Glow ── */
+@keyframes breathe-glow {
+  0%,
+  100% {
+    opacity: 0.6;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.3);
+  }
+}
+.animate-breathe-glow {
+  animation: breathe-glow 3s ease-in-out infinite;
+}
+
+/* ── Metallic Gold Gradient Text ── */
+.text-metallic-gold {
+  background: linear-gradient(
+    135deg,
+    var(--accent-gold-metallic-1),
+    var(--accent-gold-metallic-2) 30%,
+    var(--accent-gold-metallic-3) 50%,
+    var(--accent-gold-metallic-2) 70%,
+    var(--accent-gold-metallic-4)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Metallic Gold Border Gradient ── */
+.border-metallic-gold {
+  border-image: linear-gradient(
+      135deg,
+      var(--accent-gold-metallic-1),
+      var(--accent-gold-metallic-2) 30%,
+      var(--accent-gold-metallic-3) 60%,
+      var(--accent-gold-metallic-4)
+    )
+    1;
+}
+
+/* ── Electric Blue Accent Glow (interactive elements) ── */
+.focus-ring-electric:focus-visible {
+  outline: 1px solid var(--accent-electric);
+  outline-offset: 2px;
+  box-shadow: 0 0 16px var(--accent-electric-glow);
+}
+
+/* ── Edge Glow Card Hover ── */
+.edge-glow-gold::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    var(--accent-gold-glow) 50%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(4px);
+}
+.edge-glow-gold:hover::before {
+  opacity: 1;
+}
+
+/* ── Spotlight glow cards ── */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+}
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-gold-bright) 30%,
+    var(--accent-gold-bright) 70%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.spotlight-card:hover::before {
+  opacity: 0.6;
+}
+
 /* Typography refinements */
 h1,
 h2,
@@ -170,6 +442,21 @@ h3 {
   letter-spacing: -0.03em;
   color: var(--text-primary);
   text-wrap: balance;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+
+p,
+li,
+figcaption {
+  text-wrap: pretty;
 }
 
 .legal-text {
@@ -188,6 +475,7 @@ h3 {
 }
 
 /* Scrollbar */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -200,12 +488,12 @@ h3 {
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(46, 91, 255, 0.2);
+  background: var(--accent-electric-dim);
 }
 
 /* Selection */
 ::selection {
-  background: rgba(46, 91, 255, 0.25);
+  background: var(--accent-electric-dim);
   color: white;
 }
 
@@ -256,8 +544,264 @@ h3 {
 
 /* Focus ring */
 :focus-visible {
-  outline: 1px solid var(--accent-gold-bright);
+  outline: 1px solid var(--accent-gold);
   outline-offset: 2px;
+}
+
+/* Electric focus ring for search/inputs */
+:focus-visible.focus-electric {
+  outline: 1px solid var(--accent-electric);
+  outline-offset: 2px;
+  box-shadow: 0 0 16px var(--accent-electric-glow);
+}
+
+/* ── Image Outlines (make-interfaces-feel-better) ── */
+img {
+  outline: 1px solid rgba(255, 255, 255, 0.08);
+  outline-offset: -1px;
+}
+
+/* ── Tabular Numbers for dynamic data ── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Multicolor glow (electric + neon + gold combo) ── */
+.glow-multicolor {
+  box-shadow:
+    0 0 20px var(--accent-electric-glow),
+    0 0 40px var(--accent-neon-glow),
+    0 0 60px color-mix(in srgb, var(--accent-gold-glow), transparent 60%);
+}
+
+/* ── Skeleton loading shimmer ── */
+@keyframes shimmer {
+  0%,
+  100% {
+    background-position: 200% 0;
+  }
+  50% {
+    background-position: -200% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(201, 168, 76, 0.12) 45%,
+    rgba(0, 187, 255, 0.12) 50%,
+    rgba(168, 85, 247, 0.12) 55%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* ── Coin stack pattern (texture utility) ── */
+.bg-coin-pattern {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(255, 255, 255, 0.015) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
+
+/* ── Brushed metal — fine horizontal streaks ── */
+.bg-brushed-metal {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 255, 255, 0.01) 3px,
+      rgba(255, 255, 255, 0.01) 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(255, 255, 255, 0.003) 1px,
+      rgba(255, 255, 255, 0.003) 3px
+    );
+  background-size:
+    100% 100%,
+    100% 12px;
+}
+
+/* ── Crosshatch grid (industrial/schematic texture) ── */
+.bg-crosshatch {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 8px,
+      rgba(255, 255, 255, 0.006) 8px,
+      rgba(255, 255, 255, 0.006) 9px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 8px,
+      rgba(255, 255, 255, 0.006) 8px,
+      rgba(255, 255, 255, 0.006) 9px
+    );
+}
+
+/* ── Fine diagonal wire lines (industrial texture) ── */
+.bg-diagonal-wire {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    rgba(255, 255, 255, 0.008) 20px,
+    rgba(255, 255, 255, 0.008) 21px
+  );
+}
+
+/* ── Diamond plate / checker mesh ── */
+.bg-mesh {
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent 48%,
+      rgba(255, 255, 255, 0.008) 49%,
+      rgba(255, 255, 255, 0.008) 51%,
+      transparent 52%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 48%,
+      rgba(255, 255, 255, 0.008) 49%,
+      rgba(255, 255, 255, 0.008) 51%,
+      transparent 52%
+    );
+  background-size: 32px 32px;
+}
+
+/* ── Edge glow (electric blue) ── */
+.edge-glow-electric::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(0, 187, 255, 0.35) 50%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(6px);
+}
+.edge-glow-electric:hover::before {
+  opacity: 1;
+}
+
+/* ── Edge glow (neon purple) ── */
+.edge-glow-neon::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    rgba(168, 85, 247, 0.35) 50%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(6px);
+}
+.edge-glow-neon:hover::before {
+  opacity: 1;
+}
+
+/* ── Metallic Gold Shimmer Animation ── */
+@keyframes shimmer-gold {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.animate-shimmer-gold {
+  background: linear-gradient(
+    90deg,
+    var(--accent-gold-metallic-1),
+    var(--accent-gold-metallic-2) 25%,
+    var(--accent-gold-bright) 50%,
+    var(--accent-gold-metallic-2) 75%,
+    var(--accent-gold-metallic-4)
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-gold 3s ease-in-out infinite;
+}
+
+/* ── Electric Blue Gradient Text ── */
+.text-metallic-electric {
+  background: linear-gradient(
+    135deg,
+    #0066cc,
+    #00bbff 30%,
+    #66ddff 50%,
+    #00bbff 70%,
+    #0066cc
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Neon Purple Gradient Text ── */
+.text-metallic-neon {
+  background: linear-gradient(
+    135deg,
+    #7c3aed,
+    #a855f7 30%,
+    #c084fc 50%,
+    #a855f7 70%,
+    #7c3aed
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Spotlight glow on hover (any accent) ── */
+.spotlight-glow {
+  position: relative;
+  overflow: hidden;
+}
+.spotlight-glow::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    color-mix(in srgb, var(--accent-electric-glow), transparent 60%) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition-property: opacity;
+  transition-duration: 0.4s;
+  transition-timing-function: ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.spotlight-glow:hover::before {
+  opacity: 1;
 }
 
 /* Reduced motion */

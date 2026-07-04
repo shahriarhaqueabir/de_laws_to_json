@@ -4,6 +4,8 @@ import { Suspense, useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useChat } from "../../components/chat-context";
 import { useAuth } from "../../components/auth-context";
+import { FeatureGate } from "../../components/feature-gate";
+import { useApiKeyStatus } from "../../hooks/useApiKeyStatus";
 import ConversationList from "../../components/conversation-list";
 import {
   MessageSquare,
@@ -48,15 +50,6 @@ const MODE_META: Record<
   basic: { icon: FileText, color: "text-[#888888]", tKey: "chat.mode_basic" },
 };
 
-const LIMITATION_BANNERS: Record<ChatMode, string | null> = {
-  local:
-    "Local AI — only works when broker.py + Ollama are running on your machine.",
-  cloud: "Cloud AI — uses your own API key. You are billed by your provider.",
-  browser: "Browser AI — downloads a ~1GB model on first use. Fully private.",
-  basic:
-    "Basic Search — searches laws and shows relevant excerpts. No AI analysis.",
-};
-
 function ChatContent() {
   const { settings, mode } = useChat();
   const { user } = useAuth();
@@ -74,6 +67,7 @@ function ChatContent() {
   const router = useRouter();
 
   const browserAI = useBrowserAI(mode === "browser");
+  const { hasStoredKey } = useApiKeyStatus();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
 
@@ -110,21 +104,50 @@ function ChatContent() {
     return BROKER_URL_REGEX.test(url);
   }
 
-  // Check broker health in local mode
+  // Check broker health in local mode with exponential backoff
   useEffect(() => {
-    if (mode !== "local") return;
+    if (mode !== "local") {
+      setBrokerOnline(null);
+      return;
+    }
     if (!isValidBrokerUrl(settings.brokerUrl)) {
       setBrokerOnline(false);
       return;
     }
+
+    let attempts = 0;
+    let timer: ReturnType<typeof setTimeout>;
+
     const check = () => {
-      fetch(`${settings.brokerUrl}/health`)
-        .then((r) => setBrokerOnline(r.ok))
-        .catch(() => setBrokerOnline(false));
+      attempts++;
+      fetch(`${settings.brokerUrl}/health`, {
+        signal: AbortSignal.timeout(5000),
+      })
+        .then((r) => {
+          if (r.ok) {
+            setBrokerOnline(true);
+            attempts = 0; // Reset on success
+          } else {
+            setBrokerOnline(false);
+          }
+        })
+        .catch(() => {
+          setBrokerOnline(false);
+        });
     };
+
+    const scheduleNext = () => {
+      // Exponential backoff: 5s, 10s, 20s, 30s, max 60s
+      const delay = Math.min(5000 * Math.pow(1.5, attempts - 1), 60000);
+      timer = setTimeout(() => {
+        check();
+        scheduleNext();
+      }, delay);
+    };
+
     check();
-    const interval = setInterval(check, 15000);
-    return () => clearInterval(interval);
+    scheduleNext();
+    return () => clearTimeout(timer);
   }, [mode, settings.brokerUrl]);
 
   // Scroll to bottom on new messages
@@ -448,9 +471,21 @@ function ChatContent() {
                     {t(modeMeta.tKey)}
                   </span>
                   {mode === "local" && brokerAvailable === true && (
-                    <span className="flex items-center gap-1 text-xs font-bold text-accent-gold-bright uppercase tracking-widest">
-                      <div className="w-1 h-1 rounded-full bg-accent-gold-bright animate-pulse" />
-                      Online
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 uppercase tracking-widest">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Broker Online
+                    </span>
+                  )}
+                  {mode === "local" && brokerAvailable === false && (
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-red-400 uppercase tracking-widest">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                      Broker Offline
+                    </span>
+                  )}
+                  {mode === "local" && brokerAvailable === null && (
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-yellow-400 uppercase tracking-widest">
+                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                      Connecting...
                     </span>
                   )}
                 </div>
@@ -467,7 +502,7 @@ function ChatContent() {
 
         {/* ── Mode Limitation Banner ── */}
         <div className="bg-accent-gold/5 border-b border-accent-gold/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] text-center text-accent-gold-body opacity-60">
-          {LIMITATION_BANNERS[mode]}
+          {t("chat.limitation_" + mode)}
         </div>
 
         {/* ── Chat Messages ── */}
@@ -589,14 +624,47 @@ function ChatContent() {
               className="w-full bg-white/5 border border-white/10 px-8 py-5 pr-20 focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/[0.07] text-white placeholder:text-zinc-400 transition-colors duration-500 font-bold tracking-wide"
               disabled={loading}
             />
-            <button
-              type="submit"
-              aria-label={t("chat.send")}
-              disabled={loading || !input.trim()}
-              className="absolute right-2 top-2 bottom-2 aspect-square bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright disabled:opacity-20 transition-colors duration-300 transition-transform duration-300 flex items-center justify-center group/btn active:scale-95 border border-accent-gold/10"
-            >
-              <Send className="w-5 h-5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
-            </button>
+            {/* ── Send button with mode-aware gating ── */}
+            {(() => {
+              const btn = (
+                <button
+                  type="submit"
+                  aria-label={t("chat.send")}
+                  disabled={loading || !input.trim()}
+                  className="absolute right-2 top-2 bottom-2 aspect-square bg-accent-gold/10 hover:bg-accent-gold/20 text-accent-gold-bright disabled:opacity-20 transition-colors duration-300 transition-transform duration-300 flex items-center justify-center group/btn active:scale-95 border border-accent-gold/10"
+                >
+                  <Send className="w-5 h-5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                </button>
+              );
+
+              if (mode === "cloud") {
+                return (
+                  <FeatureGate
+                    requirement="api-key"
+                    message="Configure an API key in Settings to use Cloud AI"
+                    met={hasStoredKey}
+                    action={() => router.push("/settings")}
+                  >
+                    {btn}
+                  </FeatureGate>
+                );
+              }
+
+              if (mode === "local") {
+                return (
+                  <FeatureGate
+                    requirement="ai-mode-local"
+                    message="Start your local broker to enable Local AI"
+                    met={brokerAvailable === true}
+                    action={() => router.push("/settings")}
+                  >
+                    {btn}
+                  </FeatureGate>
+                );
+              }
+
+              return btn;
+            })()}
           </form>
 
           {mode === "local" && brokerAvailable === false && (

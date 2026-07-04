@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 600" fill="#fff">
+  <g>
+    <!-- Head -->
+    <ellipse cx="150" cy="38" rx="22" ry="26"/>
+
+    <!-- Blindfold -->
+    <path d="M126,36 Q150,32 174,36 Q176,40 174,44 Q150,40 126,44 Q124,40 126,36Z"/>
+
+    <!-- Neck -->
+    <rect x="142" y="62" width="16" height="14" rx="2"/>
+
+    <!-- Robe — flowing main body -->
+    <path d="M130,76 C122,140 116,240 120,340
+             Q124,420 138,460 Q144,478 150,486
+             Q156,478 162,460 Q176,420 180,340
+             C184,240 178,140 170,76Z"/>
+
+    <!-- Robe — left drape -->
+    <path d="M130,76 Q115,200 98,340 Q88,420 78,460 L96,470 Q106,420 115,340 Q130,200 130,76Z"/>
+
+    <!-- Robe — right drape -->
+    <path d="M170,76 Q185,200 202,340 Q212,420 222,460 L204,470 Q194,420 185,340 Q170,200 170,76Z"/>
+
+    <!-- Left arm — reaching out with scales -->
+    <path d="M128,95 Q100,115 72,142 Q68,146 64,142 Q60,138 66,132 Q98,105 126,88Z"/>
+
+    <!-- Right arm — raised holding sword -->
+    <path d="M172,95 Q200,82 218,62 Q222,58 226,62 Q228,67 222,72 Q200,92 174,104Z"/>
+
+    <!-- Scales — beam -->
+    <rect x="28" y="142" width="72" height="4" rx="2"/>
+
+    <!-- Scales — left chain and pan -->
+    <line x1="38" y1="146" x2="38" y2="172" stroke="#fff" stroke-width="2"/>
+    <path d="M22,172 L54,172 L38,190Z"/>
+
+    <!-- Scales — right chain and pan -->
+    <line x1="90" y1="146" x2="90" y2="172" stroke="#fff" stroke-width="2"/>
+    <path d="M74,172 L106,172 L90,190Z"/>
+
+    <!-- Sword — blade -->
+    <path d="M222,18 L224,18 L224,62 L222,62Z"/>
+
+    <!-- Sword — guard -->
+    <rect x="212" y="62" width="24" height="4" rx="2"/>
+
+    <!-- Sword — handle -->
+    <rect x="218" y="66" width="8" height="16"/>
+
+    <!-- Sword — pommel -->
+    <circle cx="222" cy="86" r="5"/>
+  </g>
+</svg>

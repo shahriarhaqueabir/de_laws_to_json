@@ -64,6 +64,7 @@ describe("GuidancePathsDisplay", () => {
         paths={mockPaths}
         folderContext={null}
         language="en"
+        situation=""
       />,
     );
 
@@ -78,6 +79,7 @@ describe("GuidancePathsDisplay", () => {
         paths={mockPaths}
         folderContext={null}
         language="en"
+        situation=""
       />,
     );
 
@@ -91,6 +93,7 @@ describe("GuidancePathsDisplay", () => {
         paths={mockPaths}
         folderContext={null}
         language="en"
+        situation=""
       />,
     );
 
@@ -107,6 +110,7 @@ describe("GuidancePathsDisplay", () => {
         paths={mockPaths}
         folderContext={null}
         language="en"
+        situation=""
       />,
     );
 
@@ -121,6 +125,7 @@ describe("GuidancePathsDisplay", () => {
         paths={mockPaths}
         folderContext={null}
         language="en"
+        situation=""
       />,
     );
 
@@ -147,6 +152,7 @@ describe("GuidancePathsDisplay", () => {
         paths={mockPaths}
         folderContext={mockFolder}
         language="en"
+        situation=""
       />,
     );
 
@@ -157,7 +163,12 @@ describe("GuidancePathsDisplay", () => {
 
   it("shows empty state when no paths", () => {
     render(
-      <GuidancePathsDisplay paths={[]} folderContext={null} language="en" />,
+      <GuidancePathsDisplay
+        paths={[]}
+        folderContext={null}
+        language="en"
+        situation=""
+      />,
     );
 
     expect(

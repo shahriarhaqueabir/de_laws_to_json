@@ -56,6 +56,7 @@ export function Diagnostics() {
         bottom: 0,
         right: 0,
         zIndex: 99999,
+        pointerEvents: "none",
         padding: "4px 10px",
         font: "11px/1.3 monospace",
         background: errors.length ? "#cc3333" : "#1a1a1a",

@@ -1,0 +1,131 @@
+// src/lib/i18n/uk.ts — Ukrainian UI Strings
+import { EN } from "./en";
+
+export const UK: Record<string, string> = {
+  "search.loading": "Шукаємо...",
+  "search.results_count": "{n} закони Отримано",
+  "search.empty":
+    "Не знайдено жодного закону, який відповідав параметрам пошуку.",
+  "search.error": "Помилка при отриманні результатів пошуку.",
+  "search.placeholder": "Шукати німецькі закони...",
+  "search.no_results": "Результати не знайдені",
+  "search.awaiting": "Очікуємо вказівки",
+  "search.init": "Ініціалізація середовища пошуку...",
+  "laws.loading": "Дешифрування закону...",
+  "laws.not_found": "Закон не знайдений або не вдалося його завантажити.",
+  "laws.norms_empty": "Фрагменти законів не індексовані в нейронній пам'яті.",
+  "guidance.loading": "Аналізуємо ситуацію...",
+  "guidance.title": "Юридична консультація",
+  "guidance.describe": "Опишіть свою ситуацію",
+  "guidance.analyze": "Аналізувати",
+  "guidance.no_folder": "Не вибрано папки",
+  "guidance.history": "Історія",
+  "common.error": "Помилка роботи",
+  "nav.sign_in": "Увійти",
+  "nav.sign_out": "Вийти",
+  "nav.search": "Пошук",
+  "nav.guidance": "Консультація",
+  "nav.bookmarks": "Збереження",
+  "nav.chat": "Рада",
+  "nav.settings": "Налаштування",
+  "nav.laws": "Закони",
+  "nav.api_docs": "Документація API",
+  "footer.tagline": "Під законом — свобода",
+  "footer.copyright":
+    "© 2026 Німецький Законний Ваулт — Офіційний Репозиторій Юридичної Інтелектуальної Бази",
+  "auth.title": "Вітаємо",
+  "auth.email": "Електронна пошта",
+  "auth.password": "Пароль",
+  "auth.sign_in_button": "Увійти",
+  "auth.sign_up_button": "Створити обліковий запис",
+  "auth.no_account": "Не маєте облікового запису?",
+  "auth.has_account": "Маєте вже обліковий запис?",
+  "auth.error_prefix": "Помилка",
+  "chat.title": "Юридична Рада",
+  "chat.placeholder": "Опишіть свою ситуацію...",
+  "chat.send": "Відправити",
+  "chat.settings": "Налаштування",
+  "chat.local_offline": "Локальна Оффлайн-нода",
+  "chat.startup_hint":
+    "Запустіть свій локальний Ollama і брукер, щоб увімкнути повністю оффлайн режим штучного інтелекту",
+  "chat.mode_basic": "Базовий",
+  "chat.mode_browser": "Веб-браузер",
+  "chat.mode_cloud": "Хмара",
+  "chat.mode_local": "Локальний",
+  "bookmarks.title": "Мій Збереження",
+  "bookmarks.empty": "Немає збережень ще",
+  "bookmarks.new_folder": "Нова папка",
+  "bookmarks.delete_folder": "Видалити папку",
+  "settings.title": "Налаштування",
+  "settings.api_key": "Ключ API",
+  "settings.save": "Зберегти",
+  "settings.remove": "Видалити",
+  "settings.provider": "Провайдер штучного інтелекту",
+  "settings.model": "Модель",
+  "onboarding.banner_text":
+    "Налаштуйте свій штучний юрист і мову інтерфейсу за 2 хвилини",
+  "onboarding.start": "Почати налаштування",
+  "onboarding.dismiss": "Можливо пізніше",
+  "onboarding.welcome_title": "Вітаємо у Німецькому Законному Ваулті",
+  "onboarding.select_language": "Оберіть свою улюблену мову інтерфейсу",
+  "onboarding.continue": "Продовжити",
+  "onboarding.step_language": "Мова",
+  "onboarding.step_mode": "Режим штучного інтелекту",
+  "onboarding.step_features": "Особливості",
+  "onboarding.step_complete": "Ви всі налаштовані",
+  "onboarding.api_key_q": "Маєте ліцензію API для OpenAI або Anthropic?",
+  "onboarding.yes": "Так",
+  "onboarding.no": "Ні",
+  "onboarding.browser_q":
+    "Хочете, щоб штучний інтелект працював повністю у вашому браузері?",
+  "onboarding.ollama_q": "Маєте встановлений Ollama на своєму комп'ютері?",
+  "onboarding.recommend_cloud":
+    "Хмарний штучний інтелект — найкраща якість, приведіть свій ключ",
+  "onboarding.recommend_browser":
+    "Веб-браузерний штучний інтелект — повністю приватний, працює в браузері (~1GB завантаження)",
+  "onboarding.recommend_local":
+    "Локальний штучний інтелект — оффлайн, використовує ваш локальний Ollama",
+  "onboarding.recommend_basic":
+    "Базовий пошук — без штучного інтелекту, безпосередній пошук законів",
+  "onboarding.feature_title": "Що ви можете зробити",
+  "onboarding.feature_search":
+    "Пошук 6,000+ німецьких законів на вашому пальці",
+  "onboarding.feature_chat": "Юридичний радник",
+  "onboarding.feature_guidance": "Шляхи вирішення для вашої ситуації",
+  "onboarding.feature_translation": "Закони перекладені вашою мовою",
+  "onboarding.feature_bookmarks": "Збереження і організація законів",
+  "onboarding.complete_title": "Ви всі налаштовані",
+  "onboarding.complete_desc":
+    "Ваші налаштування збережені. Почайте експлуатацію німецького закону.",
+  "onboarding.start_app": "Почати використовувати програму",
+  "onboarding.restart": "Повторити налаштування",
+  "onboarding.resume": "Продовжити, де ви залишилися",
+  "onboarding.view_guide": "Подивитись навчальний посібник",
+  "onboarding.completed_on": "Ви налаштували програму {date}",
+  "gate.sign_in": "Увійти, щоб використовувати цю функцію",
+  "gate.api_key":
+    "Налаштуйте ключ API в налаштуваннях, щоб використовувати цю функцію",
+  "gate.ai_mode":
+    "Перевірте режим штучного інтелекту в налаштуваннях, щоб увімкнути цю функцію",
+  "gate.broker":
+    "Запустіть свій локальний брукер, щоб увімкнути оффлайн режим штучного інтелекту",
+
+  "home.tagline": "Bundesrepublik Deutschland",
+  "home.title": "The Law Vault",
+  "home.subtitle":
+    "A comprehensive repository of over 6,000 German federal statutes.",
+  "home.categories": "Categories",
+  "home.mode_basic": "Basic Search",
+  "home.mode_basic_desc":
+    "Search 6,000+ laws and read excerpts directly. No AI \u2014 you interpret the results.",
+  "home.mode_browser": "Browser AI",
+  "home.mode_browser_desc":
+    "AI runs entirely in your browser via Qwen3. Fully private, no server calls. ~1GB download.",
+  "home.mode_cloud": "Cloud AI",
+  "home.mode_cloud_desc":
+    "Bring your own OpenAI/Anthropic key. Best quality, fastest response. You control billing.",
+  "home.mode_local": "Local AI",
+  "home.mode_local_desc":
+    "Connect to Ollama on your machine via the local broker. Fully offline, no data leaves your network.",
+  "home.get_started": "Get Started",
+};

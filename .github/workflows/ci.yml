@@ -44,8 +44,19 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm test
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: nextjs/coverage/
+
+      - name: Knip dead-code detection
+        continue-on-error: true
+        run: npm run lint:knip
 
       - name: Build
         run: npm run build

@@ -25,36 +25,47 @@ import {
 } from "lucide-react";
 import { useAuth } from "./auth-context";
 import { useChat } from "./chat-context";
-import type { ChatMode } from "../lib/types";
+import type { ChatMode, AppLanguage } from "../lib/types";
+import { LANGUAGE_LABELS } from "../lib/types";
 import { useLanguage } from "../hooks/useLanguage";
 
 const MODE_META: Record<
   ChatMode,
-  { icon: typeof Plug; color: string; bg: string; tKey: string }
+  {
+    icon: typeof Plug;
+    color: string;
+    bg: string;
+    tKey: string;
+    accentVar: string;
+  }
 > = {
   local: {
     icon: Plug,
     color: "text-zinc-500",
     bg: "bg-white/5",
     tKey: "chat.mode_local",
+    accentVar: "text-accent-neon",
   },
   cloud: {
     icon: Cloud,
     color: "text-zinc-500",
     bg: "bg-white/5",
     tKey: "chat.mode_cloud",
+    accentVar: "text-accent-electric",
   },
   browser: {
     icon: Brain,
     color: "text-zinc-500",
     bg: "bg-white/5",
     tKey: "chat.mode_browser",
+    accentVar: "text-accent-gold-bright",
   },
   basic: {
     icon: FileText,
     color: "text-zinc-500",
     bg: "bg-white/5",
     tKey: "chat.mode_basic",
+    accentVar: "text-zinc-400",
   },
 };
 
@@ -64,6 +75,7 @@ export default function NavBar() {
   const { mode, setMode, settings, updateSettings } = useChat();
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
@@ -83,7 +95,7 @@ export default function NavBar() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [mobileOpen]);
 
-  const currentLang = "en";
+  const currentLang = settings.language || "en";
 
   const switchMode = (m: ChatMode) => {
     setMode(m);
@@ -190,9 +202,9 @@ export default function NavBar() {
                           key={item.href}
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
-                          className={`flex items-center gap-4 px-4 py-3.5 text-sm font-medium rounded-lg transition-colors duration-300 ${
+                          className={`flex items-center gap-4 px-4 py-3.5 text-sm font-medium rounded-lg transition-all duration-300 ${
                             isActive
-                              ? "bg-accent-gold/10 text-accent-gold-bright"
+                              ? "bg-white/[0.04] text-accent-gold-bright"
                               : "text-zinc-500 hover:bg-white/5 hover:text-white"
                           }`}
                         >
@@ -251,10 +263,66 @@ export default function NavBar() {
               </button>
             )}
 
-            {/* ── Language Indicator (English only) ── */}
-            <div className="ml-1 px-3 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-zinc-600 border border-transparent select-none">
-              <Globe className="w-3 h-3 inline-block mr-1.5" />
-              EN
+            {/* ── Language Selector ── */}
+            <div className="relative ml-1">
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                onKeyDown={(e) => e.key === "Escape" && setLangOpen(false)}
+                aria-haspopup="true"
+                aria-expanded={langOpen}
+                className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-zinc-600 hover:text-zinc-300 transition-colors duration-300 border border-transparent hover:border-white/10"
+              >
+                <Globe className="w-3.5 h-3.5 shrink-0" />
+                <span className="tracking-[0.3em]">{currentLang}</span>
+                <ChevronDown className="w-2.5 h-2.5 opacity-40" />
+              </button>
+
+              {langOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setLangOpen(false)}
+                  />
+                  <div
+                    className="absolute right-0 mt-3 w-52 glass-panel-heavy border-white/10 z-20 py-2 shadow-2xl animate-fade-in"
+                    role="dialog"
+                    aria-label="Select language"
+                  >
+                    <div className="px-4 pb-2 mb-2 border-b border-white/5">
+                      <p className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400">
+                        Language
+                      </p>
+                    </div>
+                    {(
+                      Object.entries(LANGUAGE_LABELS) as [AppLanguage, string][]
+                    ).map(([code, label]) => {
+                      const isActive = code === currentLang;
+                      return (
+                        <button
+                          key={code}
+                          onClick={() => {
+                            updateSettings({ language: code });
+                            setLangOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
+                            isActive
+                              ? "bg-white/[0.04] text-accent-gold-bright"
+                              : "text-zinc-500 hover:bg-white/5 hover:text-white"
+                          }`}
+                        >
+                          <span className="flex-1 tracking-normal normal-case text-sm">
+                            {label}
+                          </span>
+                          <span className="text-[10px] opacity-40 tracking-[0.2em]">
+                            {code.toUpperCase()}
+                          </span>
+                          {isActive && <Check className="w-3 h-3" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="relative ml-1">
@@ -263,7 +331,7 @@ export default function NavBar() {
                 onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
                 aria-haspopup="true"
                 aria-expanded={open}
-                className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs font-black uppercase tracking-[0.2em] transition-colors duration-300 border border-white/5 ${meta.bg} text-zinc-400 hover:bg-white/10 hover:border-white/10`}
+                className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs font-black uppercase tracking-[0.2em] transition-colors duration-300 border border-white/5 ${meta.bg} ${meta.accentVar} hover:bg-white/10 hover:border-white/10`}
               >
                 <ModeIcon className="w-3 h-3" />
                 <span className="hidden sm:inline md:inline">
@@ -297,14 +365,14 @@ export default function NavBar() {
                           <button
                             key={m}
                             onClick={() => switchMode(m)}
-                            className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-colors duration-300 ${
+                            className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
                               isActive
-                                ? "bg-accent-gold/10 text-accent-gold-bright"
+                                ? mm.accentVar + " bg-white/[0.04]"
                                 : "text-zinc-500 hover:bg-white/5 hover:text-white"
                             }`}
                           >
                             <MI
-                              className={`w-4 h-4 ${isActive ? "text-accent-gold" : "text-zinc-400"}`}
+                              className={`w-4 h-4 ${isActive ? mm.accentVar : "text-zinc-400"}`}
                             />
                             <span className="flex-1">{t(mm.tKey)}</span>
                             {isActive && <Check className="w-3 h-3" />}

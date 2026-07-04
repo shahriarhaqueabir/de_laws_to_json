@@ -81,14 +81,12 @@ export async function GET(req: NextRequest) {
     DEFAULT_SEARCH_RATE_LIMIT,
   );
   if (!allowed) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "RATE_LIMITED",
-          message: "Too many requests. Please wait before trying again.",
-        },
-      },
-      { status: 429, headers: rateLimitHeaders },
+    return errorResponse(
+      "RATE_LIMITED",
+      "Too many requests. Please wait before trying again.",
+      429,
+      undefined,
+      rateLimitHeaders,
     );
   }
 

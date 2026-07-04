@@ -1,0 +1,131 @@
+// src/lib/i18n/de.ts — German UI Strings
+import { EN } from "./en";
+
+export const DE: Record<string, string> = {
+  "search.loading": "Suche...",
+  "search.results_count": "{n} Gesetze gefunden",
+  "search.empty": "Keine Gesetze gefunden, die den Suchkriterien entsprechen.",
+  "search.error": "Fehler beim Laden der Sucheergebnisse.",
+  "search.placeholder": "Gesetze nach deutschen Recht suchen...",
+  "search.no_results": "Keine Ergebnisse gefunden",
+  "search.awaiting": "Abwarten auf Eingabe",
+  "search.init": "Umgebung für die Suche initialisieren...",
+  "laws.loading": "Gesetz entschlüsseln...",
+  "laws.not_found": "Gesetz nicht gefunden oder konnte nicht geladen werden.",
+  "laws.norms_empty":
+    "Keine gesetzlichen Fragmente sind derzeit im neuronalen Gedächtnis indexiert.",
+  "guidance.loading": "Situation analysieren...",
+  "guidance.title": "Rechtsberatung",
+  "guidance.describe": "Beschreiben Sie Ihre Situation",
+  "guidance.analyze": "Analyse",
+  "guidance.no_folder": "Kein Ordner ausgewählt",
+  "guidance.history": "Geschichte",
+  "common.error": "Fehler",
+  "nav.sign_in": "Anmelden",
+  "nav.sign_out": "Abmelden",
+  "nav.search": "Suche",
+  "nav.guidance": "Beratung",
+  "nav.bookmarks": "Buchmarken",
+  "nav.chat": "Chat",
+  "nav.settings": "Einstellungen",
+  "nav.laws": "Gesetze",
+  "nav.api_docs": "API-Dokumentation",
+  "footer.tagline": "Unter dem Gesetz die Freiheit",
+  "footer.copyright":
+    "© 2026 German Law Vault — offizieller Rechtsintelligenzdepot",
+  "auth.title": "Willkommen",
+  "auth.email": "E-Mail",
+  "auth.password": "Passwort",
+  "auth.sign_in_button": "Anmelden",
+  "auth.sign_up_button": "Konto erstellen",
+  "auth.no_account": "Kein Konto?",
+  "auth.has_account": "Haben Sie bereits ein Konto?",
+  "auth.error_prefix": "Fehler",
+  "chat.title": "Rechtsanwalt",
+  "chat.placeholder": "Beschreiben Sie Ihre rechtliche Situation...",
+  "chat.send": "Senden",
+  "chat.settings": "Einstellungen",
+  "chat.local_offline": "Lokaler Node aus",
+  "chat.startup_hint":
+    "Starten Sie Ihren lokalen Ollama und Broker, um den vollständig offlinem AI-Modus zu aktivieren",
+  "chat.mode_basic": "Grundlegend",
+  "chat.mode_browser": "Browser",
+  "chat.mode_cloud": "Cloud",
+  "chat.mode_local": "Lokal",
+  "bookmarks.title": "Meine Buchmarken",
+  "bookmarks.empty": "Keine Buchmarken vorhanden",
+  "bookmarks.new_folder": "Neuer Ordner",
+  "bookmarks.delete_folder": "Löschen Ordner",
+  "settings.title": "Einstellungen",
+  "settings.api_key": "API-Schlüssel",
+  "settings.save": "Speichern",
+  "settings.remove": "Entfernen",
+  "settings.provider": "AI-Anbieter",
+  "settings.model": "Modell",
+  "onboarding.banner_text":
+    "Stellen Sie Ihren AI-Berater und die Sprache in 2 Minuten ein",
+  "onboarding.start": "Starten",
+  "onboarding.dismiss": "Später",
+  "onboarding.welcome_title": "Willkommen bei German Law Vault",
+  "onboarding.select_language":
+    "Wählen Sie Ihre bevorzugte Sprache für die Benutzeroberfläche aus",
+  "onboarding.continue": "Weiter",
+  "onboarding.step_language": "Sprache",
+  "onboarding.step_mode": "AI-Modus",
+  "onboarding.step_features": "Funktionen",
+  "onboarding.step_complete": "Alle Einstellungen gespeichert",
+  "onboarding.api_key_q":
+    "Haben Sie einen API-Schlüssel für OpenAI oder Anthropic?",
+  "onboarding.yes": "Ja",
+  "onboarding.no": "Nein",
+  "onboarding.browser_q": "Möchten Sie AI vollständig im Browser ausführen?",
+  "onboarding.ollama_q": "Haben Sie Ollama auf Ihrem Computer installiert?",
+  "onboarding.recommend_cloud":
+    "Cloud-AI — beste Qualität, bringen Sie euren eigenen Schlüssel mit",
+  "onboarding.recommend_browser":
+    "Browser-AI — vollständig privat, läuft im Browser (~1GB Download)",
+  "onboarding.recommend_local":
+    "Lokale AI — offline, nutzt Ihren lokalen Ollama",
+  "onboarding.recommend_basic":
+    "Grundlegende Suche — kein AI, direkte Rechtssuche",
+  "onboarding.feature_title": "Was Sie tun können",
+  "onboarding.feature_search": "Suche nach über 6000 Gesetzen",
+  "onboarding.feature_chat": "AI-Rechtsberater",
+  "onboarding.feature_guidance": "Ausgangsmöglichkeiten für Ihre Situation",
+  "onboarding.feature_translation": "Gesetze in Ihrer Sprache übersetzt",
+  "onboarding.feature_bookmarks": "Gesetze speichern und organisieren",
+  "onboarding.complete_title": "Alle Einstellungen gespeichert",
+  "onboarding.complete_desc":
+    "Ihre Vorlieben wurden gespeichert. Entdecken Sie jetzt das deutsche Recht.",
+  "onboarding.start_app": "Anwenden des Apps starten",
+  "onboarding.restart": "Neustart der Onboarding",
+  "onboarding.resume": "Weiter, wo Sie es vorher gelassen haben",
+  "onboarding.view_guide": "Leitfaden anzeigen",
+  "onboarding.completed_on": "Sie haben die Setup am {date} abgeschlossen",
+  "gate.sign_in": "Anmelden, um dieses Feature zu nutzen",
+  "gate.api_key":
+    "Stellen Sie in Einstellungen einen API-Schlüssel ein, um dieses Feature zu nutzen",
+  "gate.ai_mode":
+    "Wechseln Sie in den AI-Modus in Einstellungen, um dieses Feature zu aktivieren",
+  "gate.broker":
+    "Starten Sie Ihren lokalen Broker, um den vollständig offlinem AI-Modus zu aktivieren",
+
+  "home.tagline": "Bundesrepublik Deutschland",
+  "home.title": "The Law Vault",
+  "home.subtitle":
+    "A comprehensive repository of over 6,000 German federal statutes.",
+  "home.categories": "Categories",
+  "home.mode_basic": "Basic Search",
+  "home.mode_basic_desc":
+    "Search 6,000+ laws and read excerpts directly. No AI \u2014 you interpret the results.",
+  "home.mode_browser": "Browser AI",
+  "home.mode_browser_desc":
+    "AI runs entirely in your browser via Qwen3. Fully private, no server calls. ~1GB download.",
+  "home.mode_cloud": "Cloud AI",
+  "home.mode_cloud_desc":
+    "Bring your own OpenAI/Anthropic key. Best quality, fastest response. You control billing.",
+  "home.mode_local": "Local AI",
+  "home.mode_local_desc":
+    "Connect to Ollama on your machine via the local broker. Fully offline, no data leaves your network.",
+  "home.get_started": "Get Started",
+};

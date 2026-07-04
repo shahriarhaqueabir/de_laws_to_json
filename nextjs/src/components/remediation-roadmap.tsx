@@ -49,7 +49,7 @@ export default function RemediationRoadmap({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-8">
-        <CheckCircle2 className="w-6 h-6 text-accent-cobalt" />
+        <CheckCircle2 className="w-6 h-6 text-accent-electric" />
         <h2 className="font-serif font-bold text-2xl text-white">
           Your Resolution Roadmap
         </h2>
@@ -66,9 +66,9 @@ export default function RemediationRoadmap({
               <div
                 className={`absolute left-0 top-0 w-10 h-10 flex items-center justify-center border-2 z-10 ${
                   step.status === "completed"
-                    ? "bg-accent-cobalt border-accent-cobalt text-white"
+                    ? "bg-accent-electric border-accent-electric text-white"
                     : step.status === "current"
-                      ? "bg-[#0d0d0d] border-accent-cobalt text-accent-cobalt shadow-[0_0_15px_rgba(46,91,255,0.4)]"
+                      ? "bg-[#0d0d0d] border-accent-electric text-accent-electric shadow-[0_0_15px_rgba(0,187,255,0.4)]"
                       : "bg-[#0d0d0d] border-white/10 text-[#6b6b6b]"
                 }`}
               >
@@ -81,9 +81,9 @@ export default function RemediationRoadmap({
 
               {/* Content */}
               <div
-                className={`p-5 glass-panel transition-all duration-300 ${
+                className={`p-5 glass-panel spotlight-glow transition-all duration-300 ${
                   step.status === "current"
-                    ? "border-accent-cobalt/30 scale-[1.02]"
+                    ? "border-accent-electric/30 scale-[1.02]"
                     : "border-white/5 opacity-70"
                 }`}
               >
@@ -101,7 +101,7 @@ export default function RemediationRoadmap({
                 </p>
 
                 {step.status === "current" && (
-                  <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-accent-cobalt hover:text-white transition-colors">
+                  <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-accent-electric hover:text-white transition-colors">
                     Start this step <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -112,7 +112,7 @@ export default function RemediationRoadmap({
       </div>
 
       {/* Outcome Simulator Insight */}
-      <div className="mt-12 p-6 glass-panel-heavy border border-accent-cobalt/20 shadow-glow">
+      <div className="mt-12 p-6 glass-panel-heavy border border-accent-neon/20 edge-glow-electric">
         <div className="flex items-center gap-3 mb-4">
           <AlertTriangle className="w-5 h-5 text-accent-amber" />
           <h3 className="font-serif font-bold text-lg text-white">
@@ -130,7 +130,7 @@ export default function RemediationRoadmap({
           </div>
           <div className="w-full h-1.5 bg-white/5">
             <div
-              className="h-full bg-accent-cobalt shadow-[0_0_10px_rgba(46,91,255,0.5)] transition-all duration-1000"
+              className="h-full bg-accent-electric shadow-[0_0_10px_rgba(0,187,255,0.5)] transition-all duration-1000"
               style={{
                 width: `${diagnosis.potentialOutcome.confidence * 100}%`,
               }}

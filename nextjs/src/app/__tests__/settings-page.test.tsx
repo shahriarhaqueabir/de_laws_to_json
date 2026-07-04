@@ -27,6 +27,7 @@ vi.mock("lucide-react", () => ({
   XCircle: () => <div data-testid="icon-x-circle" />,
   Info: () => <div data-testid="icon-info" />,
   Globe: () => <div data-testid="icon-globe" />,
+  Compass: () => <div data-testid="icon-compass" />,
   Wifi: () => <div data-testid="icon-wifi" />,
   WifiOff: () => <div data-testid="icon-wifi-off" />,
   ArrowLeft: () => <div data-testid="icon-arrow-left" />,
@@ -61,6 +62,53 @@ vi.mock("../../components/auth-context", () => ({
 vi.mock("../../components/toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
   ToastProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+}));
+
+// Mock useLanguage
+vi.mock("../../hooks/useLanguage", () => ({
+  useLanguage: () => ({
+    language: "en",
+    t: (key: string, vars?: Record<string, string | number>) => {
+      const strings: Record<string, string> = {
+        "onboarding.banner_text":
+          "Set up your AI advisor and language in 2 minutes",
+        "onboarding.start": "Start Setup",
+        "onboarding.dismiss": "Maybe Later",
+      };
+      let text = strings[key] || key;
+      if (vars) {
+        for (const [k, v] of Object.entries(vars)) {
+          text = text.replace(`{${k}}`, String(v));
+        }
+      }
+      return text;
+    },
+  }),
+}));
+
+// Mock onboarding context
+vi.mock("../../components/onboarding-context", () => ({
+  useOnboarding: () => ({
+    state: {
+      completed: false,
+      step: 0,
+      dismissed: false,
+      completedDate: null,
+      selectedMode: null,
+      selectedLanguage: null,
+    },
+    setStep: vi.fn(),
+    setCompleted: vi.fn(),
+    setDismissed: vi.fn(),
+    setSelectedMode: vi.fn(),
+    setSelectedLanguage: vi.fn(),
+    resetOnboarding: vi.fn(),
+    showWizard: false,
+    setShowWizard: vi.fn(),
+  }),
+  OnboardingProvider: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>
   ),
 }));

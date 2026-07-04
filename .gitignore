@@ -59,6 +59,9 @@ search_index.json
 ai_translations.json
 translation_cache.json
 
+# Knowledge graph output (regenerable via graphify tool)
+graphify-out/
+
 # Vector embedding cache (regenerable, ~160MB)
 scripts/norms_vectors.npy
 *.npy

@@ -190,6 +190,7 @@ export default function SessionDetailPage() {
                 paths={data.paths}
                 folderContext={null}
                 language="en"
+                situation=""
               />
             </div>
           ) : (

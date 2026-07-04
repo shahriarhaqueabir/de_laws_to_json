@@ -11,13 +11,19 @@ export default defineConfig({
     exclude: ["node_modules", ".next"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "lcov"],
+      reporter: ["text", "lcov", "html"],
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "src/**/*.test.{ts,tsx}",
         "src/**/__tests__/**",
         "src/**/*.d.ts",
       ],
+      thresholds: {
+        lines: 55,
+        functions: 50,
+        branches: 45,
+        statements: 55,
+      },
     },
   },
   resolve: {

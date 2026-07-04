@@ -1,8 +1,8 @@
 # German Law Vault — Project Retrospective
 
-> **Date:** 2026-07-02
-> **Phase:** Hybrid Search + Benchmarking (Sprint 6b)
-> **Branch:** `main` (SHA `d6e40ed`)
+> **Date:** 2026-07-03
+> **Phase:** Polish Sprint (Sprint 7)
+> **Branch:** `main`
 
 ---
 
@@ -89,6 +89,9 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 - **Law abbreviation pre-search** catches exact law lookups before vector search
 - **Local AI broker** provides fully offline legal assistance
 - **Rate limiter migration** from in-memory to Supabase (distributed, persistent)
+- **Bundle analyzer + Qdrant caching** improved build observability and search latency
+- **Error boundaries + skeleton loading** improved UX during failures and loading states
+- **Accessibility pass** added form labels, ARIA attributes, and keyboard navigation across key pages
 
 ### ⚠️ Partial Success
 
@@ -169,6 +172,8 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 5. **Security is a process, not a feature**. Each sprint uncovered new attack surfaces — SSRF via broker URL, IDOR via missing ownership check, CSP bypass via missing `script-src-elem`. Regular security reviews are essential.
 
 6. **Windows development has unique pain points**. Git hooks need explicit installation; gitleaks temp file paths break on Windows; background processes die when terminal closes. The `setup-local-ai.ps1` script automates most of this but OS-specific issues remain.
+7. **Sequential branching avoids merge conflicts** for cross-cutting changes. Running phases in order rather than parallelizing prevented migration chain conflicts and config file collisions.
+8. **Test error shape assertions matter**. Testing `body.error.message` instead of `body.error` prevents brittle tests from breaking on cosmetic formatting changes.
 
 ---
 
@@ -182,11 +187,12 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 | `nextjs/src/hooks/` | React hooks | ✅ Active |
 | `nextjs/src/workers/` | Web workers | ✅ Active |
 | `broker/broker.py` | Local AI broker | ✅ Active |
-| `supabase/migrations/` | 11 migrations | ✅ Active |
+| `supabase/migrations/` | 13 migrations | ✅ Active |
 | `scripts/` | Setup + seed scripts | ✅ Active |
 | `docs/security-architecture.md` | Security docs | ✅ Active |
+| `docs/production.md` | Production deployment guide | ✅ Active |
 | `docs/retrospective.md` | This file | ✅ Active |
-| `docs/adr/` | Architecture decision records | ⚠️ Partial |
+| `docs/adr/` | Architecture decision records (ADR-001–ADR-006) | ✅ 6 ADRs |
 | `plans/` | Sprint plans | ✅ Active |
 
 ---
@@ -201,12 +207,58 @@ German Law Vault makes all 6,000+ German federal laws searchable and understanda
 | Support languages | 9 |
 | AI chat modes | 4 |
 | Bookmark folders properties | 8 (uniform) |
-| Migrations | 9 |
-| Tests | 42 files, 392 tests (Vitest) |
+| Migrations | 13 |
+| Tests | 50 files, 516 tests (Vitest) |
+| Knowledge graph | 1,440 nodes, 2,060 edges, 170 communities |
+| TypeScript errors | 0 (strict mode) |
+| Lint errors | 0 (27 warnings) |
+| ADRs | 6 (ADR-001–ADR-006) |
 | CSP directives | 8 (plus script-src-elem, worker-src) |
 | API endpoints | ~25 |
 | GitHub stars | N/A (new project) |
 
 ---
 
-*Retrospective compiled 2026-06-26. Last SHA: `85e3a2b`.*
+## 11. Sprint 7 — Polish Sprint (2026-07-03)
+
+### Overview
+
+Sprint 7 was a single-session polish sprint completing 6 phases sequentially — Setup/Kanban → Foundation Cleanup → Knowledge Graph & Error Handling → CI/CD & Security/Performance → Feature Polish → Documentation/Retro.
+
+### Accomplishments by Phase
+
+| Phase | Focus | Key Deliverables |
+|-------|-------|-----------------|
+| 0 | Setup & Kanban | Sprint kanban board; sequential branch strategy |
+| 1 | Foundation Cleanup | Migration squash (dead 00005 deleted, chain renamed to 00009–00012); rebased chain; config fixes |
+| 2 | Knowledge Graph & Error Handling | 1,440 nodes, 2,060 edges, 170 communities; fixed 4 API routes with inconsistent catch-blocks; fixed stray `try {` in `guidance/route.ts` |
+| 3 | Test Backfill | Skipped — coverage already adequate |
+| 4 | CI/CD & Security/Perf | CI workflow hardened; `@next/bundle-analyzer` wired; Qdrant in-memory cache (30s TTL, 500 items); `with_vector: false` for scroll; composite DB indexes (migration 00013); rate limiter headers via `errorResponse()` |
+| 5 | Feature Polish | Broker health endpoint with diagnostics + exponential backoff; status badge in chat header; skeleton loading components; error boundaries on 4 pages; global `overflow-wrap: break-word`; accessibility (labels, ARIA, keyboard nav) |
+| 6 | Documentation & Retro | README, ADR-005, ADR-006, `production.md`, `security-architecture.md` updates; graph rebuild; this retro |
+
+### What Went Well
+
+- **516 tests pass consistently** — zero failures across 50 test files
+- **TypeScript strict mode clean** — zero errors across the entire codebase
+- **Sequential phases avoided merge conflicts** despite touching migrations, config, and docs
+- **Sub-agents handled documentation generation** efficiently
+- **Graphify update mode** preserved semantic data without requiring an API key
+
+### Lessons Learned
+
+- Catch the **stray `try {` without `catch`** pattern earlier — it was a latent 500-error bug in `guidance/route.ts`
+- **Test error shape expectations** should assert on `body.error.message` not `body.error` to avoid brittle tests
+- **Git stash operations** can alter staged/unstaged state — always verify with `git status`
+- **`graphify --update`** is fast and preserves graph state across changes
+
+### Open Items
+
+- Phase 2 and 6 intentionally placed last per user preference
+- No production deployment — user pushes manually
+- E2E tests scaffolded but not run (no Playwright browsers installed)
+- 27 pre-existing lint warnings remain unaddressed
+
+---
+
+*Retrospective compiled 2026-07-03. Last SHA: (uncommitted).*

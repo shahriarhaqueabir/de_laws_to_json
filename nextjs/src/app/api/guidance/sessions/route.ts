@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { getServerClient } from "@/lib/supabase-server";
 import { errorResponse, successResponse } from "@/lib/api-utils";
+import { sanitizeErrorMessage } from "@/lib/sanitize";
 
 /**
  * GET /api/guidance/sessions
@@ -65,7 +66,6 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Database error";
-    return errorResponse("DB_ERROR", message, 500);
+    return errorResponse("DB_ERROR", sanitizeErrorMessage(err), 500);
   }
 }

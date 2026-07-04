@@ -1,6 +1,6 @@
 # Security Architecture — German Law Vault
 
-> **Last updated:** 2026-06-26
+> **Last updated:** 2026-07-03
 > **Project:** AI-Assisted-German-Law
 > **Stack:** Next.js 16 (App Router) + Supabase + Qdrant Cloud
 
@@ -368,6 +368,7 @@ The application uses a **Supabase-backed sliding-window rate limiter** in `lib/r
 4. If the count exceeds the limit, the function returns `{ allowed: false }`.
 5. A **probabilistic cleanup** call (~1-in-20 requests) removes expired windows to prevent unbounded table growth.
 6. If Supabase is unavailable, it **falls back to an in-memory Map** (for offline development/testing).
+7. Rate limit headers (`RateLimit-Limit`, `RateLimit-Remaining`, `Retry-After`) are returned with `429` responses via the 5th parameter of `errorResponse()`.
 
 ```ts
 // Configuration constants

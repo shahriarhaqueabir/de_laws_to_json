@@ -54,13 +54,46 @@ async function getGenerator(
 }
 
 self.addEventListener("message", async (event: MessageEvent) => {
-  const { id, prompt, model } = event.data;
+  const { id, task, prompt, text: inputText, language, model } = event.data;
   const modelToUse = model || DEFAULT_MODEL;
 
   try {
     const gen = await getGenerator(modelToUse, (x: any) => {
       self.postMessage({ status: "progress", id, ...x });
     });
+
+    // ── Translation task (reuses the same Qwen model) ──
+    if (task === "translate") {
+      if (!inputText) {
+        self.postMessage({
+          status: "error",
+          id,
+          error: "No text provided for translation",
+        });
+        return;
+      }
+
+      const langName = language || "English";
+      const systemMsg = `You are a precise translator for German legal texts. Translate the following German legal text to ${langName}. Return ONLY the translated text. Do not add explanations, notes, or any other text.`;
+      const finalPrompt = `<|im_start|>system\n${systemMsg}<|im_end|>\n<|im_start|>user\n${inputText}<|im_end|>\n<|im_start|>assistant\n`;
+
+      const output = await gen(finalPrompt, {
+        max_new_tokens: 1024,
+        temperature: 0.3,
+        do_sample: true,
+      });
+
+      const full = Array.isArray(output)
+        ? output[0]?.generated_text || ""
+        : (output as any)?.generated_text || "";
+
+      const result = full.startsWith(finalPrompt)
+        ? full.slice(finalPrompt.length).trim()
+        : full.trim();
+
+      self.postMessage({ status: "complete", id, output: result });
+      return;
+    }
 
     if (prompt === "INIT_ONLY") {
       self.postMessage({ status: "ready", id });
