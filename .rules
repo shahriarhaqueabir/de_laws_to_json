@@ -86,14 +86,29 @@ plans/
 docs/adr/                       # Architecture Decision Records
 ```
 
-## Security — Secret Scanning
+## Git Hooks
 
-### Pre-commit Hook (Local)
-- Hook script: `.githooks/pre-commit` — scans staged changes with gitleaks
-- Config: `.gitleaks.toml` — project-specific rules for Supabase, Qdrant, OpenAI, Anthropic keys
-- Install on Windows: `powershell -ExecutionPolicy Bypass -File .githooks\install.ps1`
-- Install on macOS/Linux: `git config core.hooksPath .githooks && chmod +x .githooks/pre-commit`
-- To bypass (emergencies only): `git commit --no-verify`
+All hooks live in `.githooks/` (configured via `git config core.hooksPath .githooks`).
+
+### Pre-commit: Secret Scanning
+- Script: `.githooks/pre-commit` — scans staged changes with gitleaks
+- Config: `.gitleaks.toml` — project-specific rules for Supabase, Qdrant, OpenAI keys
+- Install: `git config core.hooksPath .githooks && chmod +x .githooks/pre-commit`
+- Bypass: `git commit --no-verify`
+
+### Post-push: graphify Knowledge Graph
+- Script: `.githooks/post-push` — rebuilds the codebase knowledge graph after every `git push`
+- Runs `graphify extract` with the configured GGUF model via llama.cpp
+- Falls back to AST-only `graphify update` if the LLM server is unreachable
+- **LLM**: `hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M` served at `http://localhost:8080/v1`
+- To start the model server:
+  ```bash
+  llama-server -m path/to/model.gguf --port 8080
+  ```
+- To disable the hook: `chmod -x .githooks/post-push`
+- Environment variables (overridable):
+  - `OPENAI_BASE_URL` — defaults to `http://localhost:8080/v1`
+  - `OPENAI_MODEL` — defaults to the GGUF model name above
 
 ### CI Secret Scanning
 - Runs on every push and PR via `gitleaks/gitleaks-action@v2` in CI workflow
@@ -126,6 +141,15 @@ cd nextjs && npm run lint        # ESLint
 supabase start                  # Start local Supabase
 supabase db reset               # Reset DB with migrations
 supabase migration up           # Apply pending migrations
+
+# graphify Knowledge Graph
+graphify extract . --backend openai --max-concurrency 1  # Full build with local LLM
+graphify update .                                        # Fast AST-only update
+graphify query "<question>"                               # Query the built graph
+graphify hook status                                     # Check hook installation
+
+# Run llama.cpp server for graphify LLM
+# llama-server -m path/to/hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M.gguf --port 8080
 ```
 
 ## Key Conventions
