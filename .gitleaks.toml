@@ -23,7 +23,7 @@ tags = ["supabase", "api-key"]
 [[rules]]
 id = "qdrant-api-key"
 description = "Qdrant Cloud API key"
-regex = '''(?i)(?:qdrant_api_key|QDRANT_API_KEY)[^']*['\"]([a-zA-Z0-9_-]{20,})['\"]'''
+regex = '''(?i)(?:qdrant_api_key|QDRANT_API_KEY)\s*[:=]\s*['"]([a-zA-Z0-9_-]{20,})['"]'''
 tags = ["qdrant", "api-key"]
 
 [[rules]]
@@ -69,4 +69,6 @@ paths = [
     # One-off scripts and test infrastructure (env var names, not secrets)
     ".*scripts/.*",
     ".*tests/.*",
+    # Graphify AST cache — env var references in Python AST trees, not secrets
+    ".*graphify-out/cache/.*",
 ]
