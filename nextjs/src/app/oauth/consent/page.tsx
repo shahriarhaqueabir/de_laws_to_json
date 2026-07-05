@@ -119,8 +119,8 @@ function ConsentPageInner() {
             description: data.description ?? null,
             scope_descriptions: scope
               ? scope
-                  .split(" ")
-                  .map((s) => descriptions[s] ?? `Access scope: ${s}`)
+                .split(" ")
+                .map((s) => descriptions[s] ?? `Access scope: ${s}`)
               : [],
           });
         }
@@ -173,8 +173,8 @@ function ConsentPageInner() {
             const errBody = await res.json().catch(() => null);
             throw new Error(
               errBody?.error_description ??
-                errBody?.error ??
-                "Authorization request failed.",
+              errBody?.error ??
+              "Authorization request failed.",
             );
           }
 
