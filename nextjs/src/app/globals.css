@@ -38,12 +38,12 @@
 
   /* ── Electric Blue ── */
   --accent-electric: #00bbff;
-  --accent-electric-dim: rgba(0, 187, 255, 0.12);
+  --accent-electric-dim: rgba(0, 136, 204, 0.12);
   --accent-electric-glow: rgba(0, 187, 255, 0.35);
 
   /* ── Neon Purple ── */
   --accent-neon: #a855f7;
-  --accent-neon-dim: rgba(168, 85, 247, 0.12);
+  --accent-neon-dim: rgba(124, 58, 237, 0.12);
   --accent-neon-glow: rgba(168, 85, 247, 0.35);
 
   /* ── Shadow System ── */
@@ -96,13 +96,13 @@ body {
     /* Electric blue glow — right edge */
     radial-gradient(
         circle at 100% 30%,
-        rgba(0, 187, 255, 0.04) 0%,
+        rgba(0, 136, 204, 0.04) 0%,
         transparent 40%
       ),
     /* Neon purple glow — bottom left */
     radial-gradient(
         circle at 0% 80%,
-        rgba(168, 85, 247, 0.03) 0%,
+        rgba(124, 58, 237, 0.03) 0%,
         transparent 45%
       ),
     /* Subtle top-left light */
@@ -145,18 +145,49 @@ body::before {
   animation: grain-shift 16s steps(6) infinite;
 }
 
-/* ── Justitia watermark ── */
+/* ── Crosshatch pattern + gold glow + overlay image ── */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: url("/justitia-silhouette.svg");
-  background-repeat: no-repeat;
-  background-position: 78% 60%;
-  background-size: min(48vh, 380px) auto;
-  opacity: 0.04;
+  background-image:
+    /* Top: overlay image */
+    url("/background-overlay.png"),
+    /* Middle: fine diagonal crosshatch — legal document grid */
+    repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 32px,
+        rgba(255, 255, 255, 0.012) 32px,
+        rgba(255, 255, 255, 0.012) 33px
+      ),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 32px,
+      rgba(255, 255, 255, 0.012) 32px,
+      rgba(255, 255, 255, 0.012) 33px
+    ),
+    /* Bottom: warm radial glow */
+    radial-gradient(
+        ellipse 50% 40% at 78% 60%,
+        rgba(255, 215, 0, 0.04) 0%,
+        transparent 70%
+      );
+  background-position:
+    center,
+    0 0,
+    0 0,
+    0 0;
+  background-size:
+    50vh auto,
+    32px 32px,
+    32px 32px,
+    auto;
+  background-repeat: no-repeat, repeat, repeat, no-repeat;
+  opacity: 1;
 }
 
 @keyframes grain-shift {
@@ -589,8 +620,8 @@ img {
     90deg,
     rgba(255, 255, 255, 0.03) 25%,
     rgba(201, 168, 76, 0.12) 45%,
-    rgba(0, 187, 255, 0.12) 50%,
-    rgba(168, 85, 247, 0.12) 55%,
+    rgba(0, 136, 204, 0.12) 50%,
+    rgba(124, 58, 237, 0.12) 55%,
     rgba(255, 255, 255, 0.03) 75%
   );
   background-size: 200% 100%;

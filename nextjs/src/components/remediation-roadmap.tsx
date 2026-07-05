@@ -64,13 +64,12 @@ export default function RemediationRoadmap({
             <div key={step.id} className="relative pl-12">
               {/* Node */}
               <div
-                className={`absolute left-0 top-0 w-10 h-10 flex items-center justify-center border-2 z-10 ${
-                  step.status === "completed"
-                    ? "bg-accent-electric border-accent-electric text-white"
-                    : step.status === "current"
-                      ? "bg-[#0d0d0d] border-accent-electric text-accent-electric shadow-[0_0_15px_rgba(0,187,255,0.4)]"
-                      : "bg-[#0d0d0d] border-white/10 text-[#6b6b6b]"
-                }`}
+                className={`absolute left-0 top-0 w-10 h-10 flex items-center justify-center border-2 z-10 ${step.status === "completed"
+                  ? "bg-accent-electric border-accent-electric text-white"
+                  : step.status === "current"
+                    ? "bg-[#0d0d0d] border-accent-electric text-accent-electric shadow-[0_0_15px_rgba(0,187,255,0.4)]"
+                    : "bg-[#0d0d0d] border-white/10 text-[#6b6b6b]"
+                  }`}
               >
                 {step.status === "completed" ? (
                   <CheckCircle2 className="w-5 h-5" />
@@ -81,11 +80,10 @@ export default function RemediationRoadmap({
 
               {/* Content */}
               <div
-                className={`p-5 glass-panel spotlight-glow transition-all duration-300 ${
-                  step.status === "current"
-                    ? "border-accent-electric/30 scale-[1.02]"
-                    : "border-white/5 opacity-70"
-                }`}
+                className={`p-5 glass-panel spotlight-glow transition-all duration-300 ${step.status === "current"
+                  ? "border-accent-electric/30 scale-[1.02]"
+                  : "border-white/5 opacity-70"
+                  }`}
               >
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-bold text-white">{step.title}</h3>
