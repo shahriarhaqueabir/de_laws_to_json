@@ -20,6 +20,18 @@ function SearchResults() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Set page title for SEO
+  useEffect(() => {
+    if (query) {
+      document.title = `${query} — Search Results — German Law Vault`;
+    } else if (category) {
+      const label = category.charAt(0).toUpperCase() + category.slice(1);
+      document.title = `${label} Laws — German Law Vault`;
+    } else {
+      document.title = "Search — German Law Vault";
+    }
+  }, [query, category]);
+
   useEffect(() => {
     if (!query && !category) return;
 

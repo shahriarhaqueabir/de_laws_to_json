@@ -45,6 +45,11 @@ export default function GuidancePage() {
   const selectedFolderData =
     folders.find((f) => f.id === selectedFolder) || null;
 
+  // ── SEO: Set page title ──
+  useEffect(() => {
+    document.title = "Legal Guidance — German Law Vault";
+  }, []);
+
   // Load folders from localStorage and Supabase
   const loadFolders = useCallback(async () => {
     setFoldersLoading(true);
@@ -118,7 +123,7 @@ export default function GuidancePage() {
         const errData = await res.json().catch(() => ({}));
         throw new Error(
           errData.message ||
-            `Guidance generation failed (${res.status}). Please try again.`,
+          `Guidance generation failed (${res.status}). Please try again.`,
         );
       }
 

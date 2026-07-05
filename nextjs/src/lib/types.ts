@@ -138,14 +138,14 @@ export const BROWSER_MODELS = [
   {
     id: "onnx-community/Qwen3-0.6B-ONNX",
     name: "Qwen3 (0.6B)",
-    size: "~1GB",
-    description: "Best quality multilingual model (recommended).",
+    size: "~570MB",
+    description: "Best quality multilingual model with legal reasoning capability. Recommended for desktop devices.",
   },
   {
-    id: "HuggingFaceTB/SmolLM2-360M-Instruct",
-    name: "SmolLM2 (360M)",
-    size: "~800MB",
-    description: "Fast, efficient on-device inference (lightweight fallback).",
+    id: "onnx-community/gemma-3-270m-it-ONNX",
+    name: "Gemma 3 (270M)",
+    size: "~275MB",
+    description: "Lightweight multilingual model by Google DeepMind. Supports 140+ languages, fits most devices.",
   },
 ];
 

@@ -1,7 +1,10 @@
 /**
  * Web Worker for client-side text generation via Transformers.js.
  * Used in Browser AI mode — runs entirely in-browser, no server AI call.
- * Model: Qwen3-0.6B-ONNX — fast, multilingual on-device inference.
+ *
+ * Models (all loaded with dtype: "q4f16" for WASM compatibility):
+ *   - onnx-community/Qwen3-0.6B-ONNX   (570 MB) — best multilingual quality
+ *   - onnx-community/gemma-3-270m-it-ONNX (273 MB) — lightweight fallback
  *
  * Expects the `prompt` field to already be formatted in ChatML format
  * (<|im_start|>system / <|im_start|>user / <|im_start|>assistant) so
@@ -47,7 +50,13 @@ async function getGenerator(
   progress_callback?: (x: any) => void,
 ) {
   if (!generator || currentModel !== modelName) {
-    generator = await pipeline(TASK, modelName, { progress_callback });
+    // Use q4f16 (4-bit quantized) weights to fit within WASM heap.
+    // FP32 weights (~2 GB) cause std::bad_alloc on most devices.
+    // q4f16 reduces memory to ~570 MB for Qwen3-0.6B, ~273 MB for Gemma 3 270M.
+    generator = await pipeline(TASK, modelName, {
+      dtype: "q4f16",
+      progress_callback,
+    });
     currentModel = modelName;
   }
   return generator;

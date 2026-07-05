@@ -63,6 +63,10 @@ const MODE_STATUS_NOTE: Record<ChatMode, string> = {
 };
 
 export default function SettingsPage() {
+  useEffect(() => {
+    document.title = "Settings — German Law Vault";
+  }, []);
+
   const { settings, updateSettings } = useChat();
   const {
     state: onboardingState,
@@ -94,7 +98,7 @@ export default function SettingsPage() {
         setKeyDecryptable(d.keyDecryptable);
         setStoredProvider(d.provider);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [settings.mode, settings.provider]);
 
   // Check broker health + fetch available Ollama models when in local mode
@@ -346,21 +350,19 @@ export default function SettingsPage() {
               <button
                 key={mode}
                 onClick={() => update({ mode })}
-                className={`flex items-start gap-6 p-6 border text-left transition-colors duration-500 relative overflow-hidden group ${
-                  isActive
+                className={`flex items-start gap-6 p-6 border text-left transition-colors duration-500 relative overflow-hidden group ${isActive
                     ? "border-accent-gold/40 bg-white/[0.03] shadow-premium"
                     : "border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]"
-                }`}
+                  }`}
               >
                 {isActive && (
                   <div className="absolute top-0 left-0 w-1 h-full bg-accent-gold shadow-[0_0_15px_var(--accent-gold-glow)]" />
                 )}
                 <div
-                  className={`p-3 border transition-colors duration-500 ${
-                    isActive
+                  className={`p-3 border transition-colors duration-500 ${isActive
                       ? "border-accent-gold/30 bg-accent-gold/10 text-accent-gold-bright"
                       : "border-white/5 bg-white/5 text-zinc-400 group-hover:text-zinc-300"
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                 </div>
@@ -619,7 +621,7 @@ export default function SettingsPage() {
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ action: "stop" }),
                       });
-                    } catch {}
+                    } catch { }
                     setBrokerOk(false);
                     setTestResult("Stopped");
                   }}
@@ -843,11 +845,10 @@ export default function SettingsPage() {
                   <button
                     key={m.id}
                     onClick={() => update({ browserModel: m.id })}
-                    className={`p-6 border text-left transition-all duration-500 relative overflow-hidden group ${
-                      settings.browserModel === m.id
+                    className={`p-6 border text-left transition-all duration-500 relative overflow-hidden group ${settings.browserModel === m.id
                         ? "border-accent-gold/40 bg-accent-gold/5"
                         : "border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]"
-                    }`}
+                      }`}
                   >
                     <div className="flex justify-between items-start mb-3">
                       <span className="font-serif font-bold text-lg text-white group-hover:text-accent-gold-bright transition-colors">
@@ -900,33 +901,32 @@ export default function SettingsPage() {
       {(settings.mode === "local" ||
         settings.mode === "cloud" ||
         settings.mode === "browser") && (
-        <div className="flex items-center gap-6 mb-16">
-          <button
-            onClick={handleTestConnection}
-            disabled={testing || brokerStarting}
-            className="px-8 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-xs hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
-          >
-            {brokerStarting
-              ? "Starting..."
-              : testing
-                ? "Testing..."
-                : "Test Connection"}
-          </button>
-          {testResult && (
-            <span
-              className={`text-xs font-black uppercase tracking-widest ${
-                testResult.includes("✓") ||
-                testResult.includes("Ready") ||
-                testResult.includes("Established")
-                  ? "text-accent-gold-bright"
-                  : "text-red-400"
-              }`}
+          <div className="flex items-center gap-6 mb-16">
+            <button
+              onClick={handleTestConnection}
+              disabled={testing || brokerStarting}
+              className="px-8 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-xs hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
             >
-              {testResult}
-            </span>
-          )}
-        </div>
-      )}
+              {brokerStarting
+                ? "Starting..."
+                : testing
+                  ? "Testing..."
+                  : "Test Connection"}
+            </button>
+            {testResult && (
+              <span
+                className={`text-xs font-black uppercase tracking-widest ${testResult.includes("✓") ||
+                    testResult.includes("Ready") ||
+                    testResult.includes("Established")
+                    ? "text-accent-gold-bright"
+                    : "text-red-400"
+                  }`}
+              >
+                {testResult}
+              </span>
+            )}
+          </div>
+        )}
 
       {/* ── Data Store ── */}
       <section className="border-t border-white/5 pt-12">

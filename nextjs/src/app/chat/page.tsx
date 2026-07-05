@@ -71,6 +71,11 @@ function ChatContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
 
+  // ── SEO: Set page title ──
+  useEffect(() => {
+    document.title = "AI Chat — German Law Vault";
+  }, []);
+
   // ── Session Storage for Guests (external system sync) ──
   useEffect(() => {
     if (!user) {
@@ -536,11 +541,10 @@ function ChatContent() {
                 className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[85%] relative group ${
-                    m.role === "user"
+                  className={`max-w-[85%] relative group ${m.role === "user"
                       ? "px-6 py-4 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold-bright"
                       : "px-8 py-8 glass-panel text-zinc-300"
-                  }`}
+                    }`}
                 >
                   {m.role === "assistant" && (
                     <>

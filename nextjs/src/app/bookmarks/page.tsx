@@ -79,6 +79,10 @@ function formatEur(value: number): string {
 // ── Page Component ──────────────────────────────────────────────────────────
 
 export default function BookmarksPage() {
+  useEffect(() => {
+    document.title = "Bookmarks — German Law Vault";
+  }, []);
+
   const [bookmarks, setBookmarks] = useState<BookmarkV2[]>([]);
   const [folders, setFolders] = useState<BookmarkFolder[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
