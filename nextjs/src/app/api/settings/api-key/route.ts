@@ -1,40 +1,55 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { z } from "zod";
 import { cookies } from "next/headers";
 import { getServerClient } from "../../../../lib/supabase-server";
-import { errorResponse } from "../../../../lib/api-utils";
+import { errorResponse, successResponse } from "../../../../lib/api-utils";
 import { encryptApiKey } from "../../../../lib/encryption";
 import { sanitizeErrorMessage } from "../../../../lib/sanitize";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_SEARCH_RATE_LIMIT,
+} from "../../../../lib/rate-limiter";
 
-const VALID_PROVIDERS = ["openai", "anthropic", "openai-compatible"] as const;
-type Provider = (typeof VALID_PROVIDERS)[number];
-
-function isValidProvider(value: string): value is Provider {
-  return VALID_PROVIDERS.includes(value as Provider);
-}
+const SaveApiKeySchema = z.object({
+  apiKey: z.string().min(1, "apiKey is required"),
+  provider: z.enum(["openai", "anthropic", "openai-compatible"]),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { apiKey, provider } = await req.json();
-
-    if (!apiKey || typeof apiKey !== "string") {
+    // Rate limiting
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
       return errorResponse(
-        "VALIDATION_ERROR",
-        "apiKey is required and must be a string",
-        400,
+        "RATE_LIMITED",
+        "Too many requests. Please wait before trying again.",
+        429,
+        undefined,
+        rateLimitHeaders,
       );
     }
 
-    if (
-      !provider ||
-      typeof provider !== "string" ||
-      !isValidProvider(provider)
-    ) {
+    const body = await req.json();
+    const parsed = SaveApiKeySchema.safeParse(body);
+
+    if (!parsed.success) {
       return errorResponse(
         "VALIDATION_ERROR",
-        `provider must be one of: ${VALID_PROVIDERS.join(", ")}`,
-        400,
+        "Invalid request body",
+        422,
+        parsed.error.issues.map((i) => ({
+          field: i.path.join("."),
+          message: i.message,
+        })),
       );
     }
+
+    const { apiKey, provider } = parsed.data;
 
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
@@ -44,7 +59,13 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return errorResponse("UNAUTHORIZED", "User must be signed in", 401);
+      return errorResponse(
+        "UNAUTHORIZED",
+        "User must be signed in",
+        401,
+        undefined,
+        rateLimitHeaders,
+      );
     }
 
     const encryptedKey = await encryptApiKey(apiKey);
@@ -61,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true });
+    return successResponse({ success: true });
   } catch (err: unknown) {
     const message = sanitizeErrorMessage(err);
     return errorResponse("DB_ERROR", message, 500);
@@ -70,6 +91,22 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests. Please wait before trying again.",
+        429,
+        undefined,
+        rateLimitHeaders,
+      );
+    }
+
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
 
@@ -78,7 +115,13 @@ export async function DELETE(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return errorResponse("UNAUTHORIZED", "User must be signed in", 401);
+      return errorResponse(
+        "UNAUTHORIZED",
+        "User must be signed in",
+        401,
+        undefined,
+        rateLimitHeaders,
+      );
     }
 
     const { error } = await supabase
@@ -88,15 +131,31 @@ export async function DELETE(req: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true });
+    return successResponse({ success: true });
   } catch (err: unknown) {
     const message = sanitizeErrorMessage(err);
     return errorResponse("DB_ERROR", message, 500);
   }
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests. Please wait before trying again.",
+        429,
+        undefined,
+        rateLimitHeaders,
+      );
+    }
+
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
 
@@ -105,7 +164,13 @@ export async function GET(_req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return errorResponse("UNAUTHORIZED", "User must be signed in", 401);
+      return errorResponse(
+        "UNAUTHORIZED",
+        "User must be signed in",
+        401,
+        undefined,
+        rateLimitHeaders,
+      );
     }
 
     const { data: keyRow } = await supabase
@@ -114,12 +179,10 @@ export async function GET(_req: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    return NextResponse.json({
-      data: {
-        has_key: !!keyRow,
-        provider: keyRow?.provider || null,
-        updated_at: keyRow?.updated_at || null,
-      },
+    return successResponse({
+      has_key: !!keyRow,
+      provider: keyRow?.provider || null,
+      updated_at: keyRow?.updated_at || null,
     });
   } catch (err: unknown) {
     const message = sanitizeErrorMessage(err);

@@ -359,11 +359,14 @@ function ChatContent() {
           const langName = "English";
           const baseSystem = settings.ollamaParams?.system_prompt || "";
 
-          // Build a ChatML-formatted prompt so SmolLM2 properly distinguishes
-          // system instructions from user input.
+          // Build a model-aware prompt (Qwen → ChatML, Gemma → Gemma format)
+          const currentModel = settings.browserModel || "onnx-community/Qwen3-0.6B-ONNX";
+          const isGemma = currentModel.toLowerCase().includes("gemma");
           const systemContent = `${baseSystem}\n\nThe user's language is: ${langName}. Always respond in ${langName}.`;
           const userContent = `Context from German laws:\n${(data.citedLaws || []).map((l: CitedLaw) => `[${l.law_key} ${l.norm_id}] ${l.law_title}`).join("\n")}\n\nUser situation:\n${userMsg}\n\nProvide guidance based on the relevant laws above. Include citations.`;
-          const prompt = `<|im_start|>system\n${systemContent}<|im_end|>\n<|im_start|>user\n${userContent}<|im_end|>\n<|im_start|>assistant\n`;
+          const prompt = isGemma
+            ? `<start_of_turn>system\n${systemContent}<end_of_turn>\n<start_of_turn>user\n${userContent}<end_of_turn>\n<start_of_turn>model\n`
+            : `<|im_start|>system\n${systemContent}<|im_end|>\n<|im_start|>user\n${userContent}<|im_end|>\n<|im_start|>assistant\n`;
 
           const workerResponse = await browserAI.generate(
             prompt,
@@ -542,8 +545,8 @@ function ChatContent() {
               >
                 <div
                   className={`max-w-[85%] relative group ${m.role === "user"
-                      ? "px-6 py-4 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold-bright"
-                      : "px-8 py-8 glass-panel text-zinc-300"
+                    ? "px-6 py-4 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold-bright"
+                    : "px-8 py-8 glass-panel text-zinc-300"
                     }`}
                 >
                   {m.role === "assistant" && (

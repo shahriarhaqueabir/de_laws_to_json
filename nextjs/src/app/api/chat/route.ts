@@ -8,6 +8,7 @@ import type { ChatMode, CloudProvider, CitedLaw } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
 import { decryptApiKey } from "../../../lib/encryption";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
+import { isValidBrokerUrl, resolveBrokerUrl } from "../../../lib/broker";
 import { translateQueryToGerman } from "../../../lib/translate-server";
 import { detectCategory } from "../../../lib/category-detect";
 import { extractLawKeys, KNOWN_LAW_KEYS } from "../../../lib/law-keys";
@@ -17,18 +18,7 @@ import {
   DEFAULT_AI_RATE_LIMIT,
 } from "../../../lib/rate-limiter";
 
-// ── SSRF Protection: Broker URL validation ──
-// Only allow localhost/loopback addresses to prevent SSRF attacks
-const BROKER_URL_REGEX = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
-function isValidBrokerUrl(url: string): boolean {
-  return BROKER_URL_REGEX.test(url);
-}
-
-const envBrokerUrl = process.env.NEXT_PUBLIC_BROKER_URL;
-const BROKER_URL =
-  envBrokerUrl && isValidBrokerUrl(envBrokerUrl)
-    ? envBrokerUrl
-    : "http://localhost:9000";
+const BROKER_URL = resolveBrokerUrl();
 
 const OllamaParamsSchema = z
   .object({
@@ -189,7 +179,7 @@ export async function POST(req: NextRequest) {
           if (needsUnfiltered) {
             console.log(
               `[Chat API] Homogeneous results (top: ${topLaw?.[0] || "?"} = ${(homogeneityRatio * 100).toFixed(0)}%), ` +
-                `trying unfiltered search`,
+              `trying unfiltered search`,
             );
             const unfiltered = await searchNorms(searchQuery, undefined, 50);
             if (unfiltered.length > 0) {
@@ -313,10 +303,10 @@ export async function POST(req: NextRequest) {
           response = keyRotationDetected
             ? `**Encryption Key Changed**\n\nYour stored API key was encrypted with a previous server encryption key and can no longer be decrypted. Please re-enter your API key in **Settings** to restore Cloud AI access.\n\n`
             : `No API key configured. Please add your API key in **Settings**.\n\n` +
-              `**Relevant laws found:**\n` +
-              citedLaws
-                .map((l) => `- **${l.law_key}** ${l.norm_id} — ${l.law_title}`)
-                .join("\n");
+            `**Relevant laws found:**\n` +
+            citedLaws
+              .map((l) => `- **${l.law_key}** ${l.norm_id} — ${l.law_title}`)
+              .join("\n");
           brokerAvailable = null;
           break;
         }

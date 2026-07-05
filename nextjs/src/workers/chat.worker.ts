@@ -3,14 +3,15 @@
  * Used in Browser AI mode — runs entirely in-browser, no server AI call.
  *
  * Models (all loaded with dtype: "q4f16" for WASM compatibility):
- *   - onnx-community/Qwen3-0.6B-ONNX   (570 MB) — best multilingual quality
- *   - onnx-community/gemma-3-270m-it-ONNX (273 MB) — lightweight fallback
+ *   - onnx-community/Qwen3-0.6B-ONNX      (570 MB) — best multilingual quality
+ *   - onnx-community/gemma-3-270m-it-ONNX  (273 MB) — lightweight fallback
  *
- * Expects the `prompt` field to already be formatted in ChatML format
- * (<|im_start|>system / <|im_start|>user / <|im_start|>assistant) so
- * Qwen3 distinguishes system instructions from user input correctly.
+ * Prompt format is model-aware:
+ *   - Qwen3 uses ChatML:  <|im_start|>system ... <|im_end|>
+ *   - Gemma 3 uses:       <start_of_turn>system\n...<end_of_turn>
  */
 import { pipeline, env } from "@huggingface/transformers";
+import { isGemmaModel, buildFullPrompt } from "../lib/prompt-format";
 
 // ── WASM Configuration for CSP Compatibility ──
 // Transformers.js downloads ONNX WASM binaries at runtime.
@@ -41,6 +42,8 @@ env.backends = {
 
 const TASK = "text-generation";
 const DEFAULT_MODEL = "onnx-community/Qwen3-0.6B-ONNX";
+
+// Prompt format functions imported from lib/prompt-format.ts
 
 let generator: any = null;
 let currentModel: string | null = null;
@@ -84,7 +87,7 @@ self.addEventListener("message", async (event: MessageEvent) => {
 
       const langName = language || "English";
       const systemMsg = `You are a precise translator for German legal texts. Translate the following German legal text to ${langName}. Return ONLY the translated text. Do not add explanations, notes, or any other text.`;
-      const finalPrompt = `<|im_start|>system\n${systemMsg}<|im_end|>\n<|im_start|>user\n${inputText}<|im_end|>\n<|im_start|>assistant\n`;
+      const finalPrompt = buildFullPrompt(systemMsg, inputText, modelToUse);
 
       const output = await gen(finalPrompt, {
         max_new_tokens: 1024,

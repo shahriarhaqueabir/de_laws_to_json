@@ -1,8 +1,25 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import { cookies } from "next/headers";
 import { getServerClient } from "@/lib/supabase-server";
 import { errorResponse, successResponse } from "@/lib/api-utils";
 import { sanitizeErrorMessage } from "@/lib/sanitize";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_SEARCH_RATE_LIMIT,
+} from "@/lib/rate-limiter";
+
+const SessionsQuerySchema = z.object({
+  page: z.preprocess(
+    (v) => (v === null || v === "" ? undefined : v),
+    z.coerce.number().int().default(1),
+  ).transform((v) => Math.max(1, v)),
+  limit: z.preprocess(
+    (v) => (v === null || v === "" ? undefined : v),
+    z.coerce.number().int().default(20),
+  ).transform((v) => Math.max(1, Math.min(50, v))),
+});
 
 /**
  * GET /api/guidance/sessions
@@ -10,6 +27,22 @@ import { sanitizeErrorMessage } from "@/lib/sanitize";
  */
 export async function GET(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests. Please wait before trying again.",
+        429,
+        undefined,
+        rateLimitHeaders,
+      );
+    }
+
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
     const {
@@ -17,16 +50,25 @@ export async function GET(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return errorResponse("UNAUTHORIZED", "User must be signed in", 401);
+      return errorResponse(
+        "UNAUTHORIZED",
+        "User must be signed in",
+        401,
+        undefined,
+        rateLimitHeaders,
+      );
     }
 
-    // Pagination
+    // Pagination with Zod validation
     const url = new URL(req.url);
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
-    const limit = Math.min(
-      50,
-      Math.max(1, parseInt(url.searchParams.get("limit") || "20", 10)),
-    );
+    const parsed = SessionsQuerySchema.safeParse({
+      page: url.searchParams.get("page"),
+      limit: url.searchParams.get("limit"),
+    });
+    // Fall back to defaults on validation failure
+    const { page, limit } = parsed.success
+      ? parsed.data
+      : { page: 1, limit: 20 };
     const offset = (page - 1) * limit;
 
     // Get total count

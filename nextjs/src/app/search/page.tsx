@@ -13,7 +13,7 @@ function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const category = searchParams.get("category") || "";
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const fetchIdRef = useRef(0);
 
   const [results, setResults] = useState<LawSearchResult[]>([]);
@@ -41,7 +41,7 @@ function SearchResults() {
       setLoading(true);
       setError(null);
       try {
-        const url = `/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&lang=en`;
+        const url = `/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&lang=${language || "en"}`;
         const res = await fetch(url);
         // Ignore stale responses from previous fetches
         if (fetchId !== fetchIdRef.current) return;

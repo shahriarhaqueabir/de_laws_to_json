@@ -7,6 +7,7 @@ import { generateNormExplanation } from "../../../lib/chat";
 import { decryptApiKey } from "../../../lib/encryption";
 import type { AppLanguage, CloudProvider } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
+import { isValidBrokerUrl, resolveBrokerUrl } from "../../../lib/broker";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
 import {
   checkRateLimit,
@@ -148,10 +149,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Generate via AI
     if (mode === "local") {
-      const brokerUrl =
-        bodyBrokerUrl ||
-        process.env.NEXT_PUBLIC_BROKER_URL ||
-        "http://localhost:9000";
+      const brokerUrl = resolveBrokerUrl(bodyBrokerUrl);
       const langName = "English";
 
       const explainPrompt = `Explain this German law section. Respond in ${langName}.

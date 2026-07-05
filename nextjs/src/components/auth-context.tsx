@@ -41,16 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    console.log("[DIAG] AuthProvider: fetching user...");
-
     getClient()
       .auth.getUser()
       .then(
         ({ data }) => {
-          console.log(
-            "[DIAG] AuthProvider: user fetched:",
-            data.user?.email || "none",
-          );
           if (!cancelled) {
             setUser(data.user);
             setLoading(false);

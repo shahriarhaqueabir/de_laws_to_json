@@ -12,6 +12,7 @@ import {
 } from "@/lib/guidance";
 import { decryptApiKey } from "@/lib/encryption";
 import { sanitizeErrorMessage } from "@/lib/sanitize";
+import { isValidBrokerUrl } from "@/lib/broker";
 import { translateFromGerman } from "@/lib/translate-server";
 import {
   checkRateLimit,
@@ -163,7 +164,7 @@ export async function POST(req: NextRequest) {
     }
 
     // LOCAL MODE — skip API key, use local broker
-    if (mode === "local" && brokerUrl) {
+    if (mode === "local" && brokerUrl && isValidBrokerUrl(brokerUrl)) {
       const translatedSituation = await translateQueryToGerman(situation);
       const norms = await searchNorms(
         translatedSituation,

@@ -151,8 +151,8 @@ describe("BROWSER_MODELS", () => {
     expect(BROWSER_MODELS[0].id).toBe("onnx-community/Qwen3-0.6B-ONNX");
   });
 
-  it("second model is SmolLM2 (lightweight fallback)", () => {
-    expect(BROWSER_MODELS[1].id).toBe("HuggingFaceTB/SmolLM2-360M-Instruct");
+  it("second model is Gemma 3 270M (lightweight fallback)", () => {
+    expect(BROWSER_MODELS[1].id).toBe("onnx-community/gemma-3-270m-it-ONNX");
   });
 
   it("does not contain LaMini-Flan-T5 (encoder-decoder, incompatible)", () => {

@@ -42,9 +42,9 @@ const MODE_LIMITATIONS: Record<ChatMode, string[]> = {
     "Your question and law context are sent to the provider for processing",
   ],
   browser: [
-    "Requires downloading an ~800MB AI model on first use (SmolLM2, one-time)",
+    "Requires downloading a ~570MB AI model on first use (Qwen3, one-time)",
     "Generation is slower than cloud AI — runs on your CPU",
-    "Uses SmolLM2-360M — faster than Qwen1.5 with improved instruction following",
+    "Uses Qwen3-0.6B — best multilingual quality for 9-language support",
     "Still limited for complex legal reasoning — upgrade to cloud or local AI for difficult cases",
     "Only works in browsers that support Web Workers + WASM",
   ],
@@ -212,8 +212,8 @@ export default function SettingsPage() {
 
         const result = await new Promise<string>((resolve, reject) => {
           worker.onmessage = (e) => {
-            if (e.data.status === "progress") {
-              if (e.data.status === "download") {
+            if (e.data.status === "download" || e.data.status === "progress") {
+              if (e.data.loaded && e.data.total) {
                 setTestResult(
                   `Downloading model... ${Math.round((e.data.loaded / e.data.total) * 100)}%`,
                 );
@@ -351,8 +351,8 @@ export default function SettingsPage() {
                 key={mode}
                 onClick={() => update({ mode })}
                 className={`flex items-start gap-6 p-6 border text-left transition-colors duration-500 relative overflow-hidden group ${isActive
-                    ? "border-accent-gold/40 bg-white/[0.03] shadow-premium"
-                    : "border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]"
+                  ? "border-accent-gold/40 bg-white/[0.03] shadow-premium"
+                  : "border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]"
                   }`}
               >
                 {isActive && (
@@ -360,8 +360,8 @@ export default function SettingsPage() {
                 )}
                 <div
                   className={`p-3 border transition-colors duration-500 ${isActive
-                      ? "border-accent-gold/30 bg-accent-gold/10 text-accent-gold-bright"
-                      : "border-white/5 bg-white/5 text-zinc-400 group-hover:text-zinc-300"
+                    ? "border-accent-gold/30 bg-accent-gold/10 text-accent-gold-bright"
+                    : "border-white/5 bg-white/5 text-zinc-400 group-hover:text-zinc-300"
                     }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -846,8 +846,8 @@ export default function SettingsPage() {
                     key={m.id}
                     onClick={() => update({ browserModel: m.id })}
                     className={`p-6 border text-left transition-all duration-500 relative overflow-hidden group ${settings.browserModel === m.id
-                        ? "border-accent-gold/40 bg-accent-gold/5"
-                        : "border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]"
+                      ? "border-accent-gold/40 bg-accent-gold/5"
+                      : "border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]"
                       }`}
                   >
                     <div className="flex justify-between items-start mb-3">
@@ -916,10 +916,10 @@ export default function SettingsPage() {
             {testResult && (
               <span
                 className={`text-xs font-black uppercase tracking-widest ${testResult.includes("✓") ||
-                    testResult.includes("Ready") ||
-                    testResult.includes("Established")
-                    ? "text-accent-gold-bright"
-                    : "text-red-400"
+                  testResult.includes("Ready") ||
+                  testResult.includes("Established")
+                  ? "text-accent-gold-bright"
+                  : "text-red-400"
                   }`}
               >
                 {testResult}
