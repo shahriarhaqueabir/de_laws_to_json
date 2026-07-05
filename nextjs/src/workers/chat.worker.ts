@@ -45,6 +45,26 @@ const DEFAULT_MODEL = "onnx-community/Qwen3-0.6B-ONNX";
 
 // Prompt format functions imported from lib/prompt-format.ts
 
+/**
+ * Strip Gemma-style <think> reasoning blocks from model output.
+ * Gemma 3 often wraps its chain-of-thought in <think>...</think>
+ * tags before the final answer. These should not be shown to the user.
+ */
+function stripThinkTags(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim();
+}
+
+/**
+ * Clean model output: strip prompt prefix, strip think tags, trim.
+ */
+function cleanOutput(full: string, prompt: string): string {
+  let text = full.startsWith(prompt)
+    ? full.slice(prompt.length).trim()
+    : full.trim();
+  text = stripThinkTags(text);
+  return text;
+}
+
 let generator: any = null;
 let currentModel: string | null = null;
 
@@ -99,9 +119,7 @@ self.addEventListener("message", async (event: MessageEvent) => {
         ? output[0]?.generated_text || ""
         : (output as any)?.generated_text || "";
 
-      const result = full.startsWith(finalPrompt)
-        ? full.slice(finalPrompt.length).trim()
-        : full.trim();
+      const result = cleanOutput(full, finalPrompt);
 
       self.postMessage({ status: "complete", id, output: result });
       return;
@@ -113,7 +131,7 @@ self.addEventListener("message", async (event: MessageEvent) => {
     }
 
     const output = await gen(prompt, {
-      max_new_tokens: 512,
+      max_new_tokens: 2048,
       temperature: 0.3,
       do_sample: true,
     });
@@ -123,10 +141,8 @@ self.addEventListener("message", async (event: MessageEvent) => {
       ? output[0]?.generated_text || ""
       : (output as any)?.generated_text || "";
 
-    // Strip the input prompt from the output
-    const text = full.startsWith(prompt)
-      ? full.slice(prompt.length).trim()
-      : full.trim();
+    // Strip the input prompt and any Gemma-style <think> tags
+    const text = cleanOutput(full, prompt);
 
     self.postMessage({ status: "complete", id, output: text });
   } catch (error: any) {
