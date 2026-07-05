@@ -127,7 +127,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   opacity: 0.45;
   background-image:
     /* Fine grain — subtle metallic texture */
@@ -151,7 +151,7 @@ body::after {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   background-image:
     /* Top: overlay image */
     url("/background-overlay.png"),
