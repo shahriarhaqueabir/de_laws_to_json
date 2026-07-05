@@ -396,19 +396,16 @@ function expandQuery(query: string, category?: string): string {
   // If we have a category, prepend a German domain term to help E5-small
   // focus on the right legal area
   const DOMAIN_TERMS: Record<string, string> = {
-    labor:
-      "Arbeitsrecht Kündigung Arbeitnehmer Arbeitgeber Kündigungsschutz BGB KSchG BetrVG TzBfG Arbeitsvertrag",
-    traffic:
-      "Verkehrsrecht Straßenverkehr Unfall Kfz StVG StVO Fahrerlaubnis Haftung Schadensersatz Kraftfahrzeug",
-    housing:
-      "Mietrecht Wohnung Miete Vermieter Mieter BGB Mietvertrag Nebenkosten",
-    consumer: "Verbraucherschutz Kauf Vertrag Widerruf BGB Gewährleistung",
-    criminal: "Strafrecht Straftat StGB Ordnungswidrigkeit OWiG",
-    family: "Familienrecht Scheidung Sorgerecht Unterhalt BGB Sorgeerklärung",
-    social: "Sozialrecht Krankenversicherung Rente SGB Sozialgesetzbuch",
-    finance: "Steuerrecht Einkommensteuer Finanzen AO EStG",
-    public: "Verwaltungsrecht Grundgesetz GG Behörde VwVfG",
-    tech: "Umweltrecht Energie Digitalisierung BImSchG EEG",
+    labor: "Arbeitsrecht Kündigung Arbeitnehmer",
+    traffic: "Verkehrsrecht Unfall Haftung",
+    housing: "Mietrecht Wohnung Miete",
+    consumer: "Verbraucherschutz Kauf Widerruf",
+    criminal: "Strafrecht StGB Straftat",
+    family: "Familienrecht Scheidung Unterhalt",
+    social: "Sozialrecht SGB Rente",
+    finance: "Steuerrecht EStG Einkommensteuer",
+    public: "Verwaltungsrecht GG Behörde",
+    tech: "Umweltrecht Energie Digitalisierung",
     berlin: "Berlin Landesrecht",
   };
 
@@ -438,8 +435,7 @@ export async function searchNorms(
   const expandedQuery = expandQuery(query, category);
 
   console.log(
-    `[Qdrant lib] Searching${
-      category ? ` (category: ${category})` : ""
+    `[Qdrant lib] Searching${category ? ` (category: ${category})` : ""
     }: "${expandedQuery}" → topK: ${topK}`,
   );
 

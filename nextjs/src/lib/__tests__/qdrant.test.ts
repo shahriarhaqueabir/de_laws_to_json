@@ -4,7 +4,7 @@ const mockQuery = vi.fn();
 
 const MockQdrantClient = vi.fn(function (this: { query: typeof mockQuery }) {
   this.query = mockQuery;
-}) as unknown as { new (): { query: typeof mockQuery }; mockClear: () => void };
+}) as unknown as { new(): { query: typeof mockQuery }; mockClear: () => void };
 
 vi.mock("@qdrant/js-client-rest", () => ({
   QdrantClient: MockQdrantClient,
@@ -75,7 +75,7 @@ describe("searchNorms", () => {
     // Should pass the category filter in the single dense query
     expect(mockQuery).toHaveBeenCalledWith("german_norms", {
       query: {
-        text: "query: Mietrecht Wohnung Miete Vermieter Mieter BGB Mietvertrag Nebenkosten Miete",
+        text: "query: Mietrecht Wohnung Miete Miete",
         model: "intfloat/multilingual-e5-small",
       },
       limit: 100,
