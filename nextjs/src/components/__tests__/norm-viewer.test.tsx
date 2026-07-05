@@ -145,13 +145,15 @@ describe("NormViewer", () => {
     expect(body.content).toBe("Wer vorsätzlich oder fahrlässig das Leben...");
     expect(body.lang).toBe("en");
 
-    // Translation should be shown after auto-fetch (appears in content + explanation)
-    expect(
-      screen.getAllByText("Whoever intentionally or negligently injures..."),
-    ).toHaveLength(2);
+    // Translation should be shown after auto-fetch
+    await waitFor(() => {
+      expect(
+        screen.getByText("Whoever intentionally or negligently injures..."),
+      ).toBeInTheDocument();
+    });
   });
 
-  it("explanation renders translation, summary, implications, next_steps when loaded", async () => {
+  it("explanation renders translation when loaded", async () => {
     vi.stubGlobal("localStorage", createLocalStorage());
     const user = userEvent.setup();
 
@@ -168,19 +170,9 @@ describe("NormViewer", () => {
 
     await waitFor(() => {
       expect(
-        screen.getAllByText("Whoever intentionally or negligently injures..."),
-      ).toHaveLength(2);
+        screen.getByText("Whoever intentionally or negligently injures..."),
+      ).toBeInTheDocument();
     });
-
-    expect(
-      screen.getByText("This section establishes tort liability."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Can be used to claim damages for personal injury."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("File a complaint with the local court."),
-    ).toBeInTheDocument();
   });
 
   it("shows official translation label when is_official is true", async () => {
@@ -231,7 +223,7 @@ describe("NormViewer", () => {
     const user = userEvent.setup();
 
     // Never-resolving promise keeps the component in "explaining" state
-    const mockFetch = vi.fn().mockReturnValue(new Promise(() => {}));
+    const mockFetch = vi.fn().mockReturnValue(new Promise(() => { }));
     vi.spyOn(global, "fetch").mockImplementation(mockFetch);
 
     render(<NormViewer {...defaultProps} />);
@@ -240,7 +232,7 @@ describe("NormViewer", () => {
     await user.click(header);
 
     await waitFor(() => {
-      expect(screen.getByText("Analyzing Statute...")).toBeInTheDocument();
+      expect(screen.getByText("Thinking")).toBeInTheDocument();
     });
   });
 
@@ -248,9 +240,7 @@ describe("NormViewer", () => {
     vi.stubGlobal("localStorage", createLocalStorage());
     const user = userEvent.setup();
 
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: false,
-    });
+    const mockFetch = vi.fn().mockRejectedValue(new Error("Network error"));
     vi.spyOn(global, "fetch").mockImplementation(mockFetch);
 
     render(<NormViewer {...defaultProps} />);
@@ -260,7 +250,7 @@ describe("NormViewer", () => {
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(
-        "Explanation failed. Check settings.",
+        "Explanation failed. Check your API key and provider settings.",
       );
     });
   });
@@ -282,8 +272,8 @@ describe("NormViewer", () => {
 
     await waitFor(() => {
       expect(
-        screen.getAllByText("Whoever intentionally or negligently injures..."),
-      ).toHaveLength(2);
+        screen.getByText("Whoever intentionally or negligently injures..."),
+      ).toBeInTheDocument();
     });
 
     // Collapse and re-expand
@@ -302,7 +292,7 @@ describe("NormViewer", () => {
     const user = userEvent.setup();
 
     // A fetch that fails so we end up in !explanation && !explaining
-    const mockFetch = vi.fn().mockResolvedValue({ ok: false });
+    const mockFetch = vi.fn().mockRejectedValue(new Error("Failed"));
     vi.spyOn(global, "fetch").mockImplementation(mockFetch);
 
     render(<NormViewer {...defaultProps} />);
@@ -315,7 +305,9 @@ describe("NormViewer", () => {
     });
 
     // After the failed fetch, the translate button should still appear
-    expect(screen.getByText("Translate to English")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Translate to English")).toBeInTheDocument();
+    });
   });
 
   it("shows disclaimer after explanation loads", async () => {
@@ -353,8 +345,11 @@ describe("NormViewer", () => {
       );
     });
 
-    it("shows lock icon on translate button when in basic mode (FeatureGate blocks AI modes)", async () => {
+    it("shows translate button directly in basic mode (no FeatureGate lock)", async () => {
       const user = userEvent.setup();
+
+      // Keep the mock pending so the component shows the translate button
+      mockTranslateViaQwen.mockReturnValue(new Promise(() => { }));
 
       render(<NormViewer {...defaultProps} />);
 
@@ -363,8 +358,10 @@ describe("NormViewer", () => {
         .closest("button")!;
       await user.click(header);
 
-      // FeatureGate should show the lock icon instead of the translate button
-      expect(screen.getByTestId("lock-icon")).toBeInTheDocument();
+      // Basic mode now shows the translate button directly (no lock icon)
+      expect(screen.queryByTestId("lock-icon")).not.toBeInTheDocument();
+      // Translate button should be visible after expand
+      expect(screen.getByText("Translate to English")).toBeInTheDocument();
     });
 
     it("does not auto-fetch in basic mode", async () => {
@@ -400,19 +397,22 @@ describe("NormViewer", () => {
       );
     });
 
-    it("calls broker API for local mode", async () => {
+    it("calls API explain endpoint for local mode", async () => {
       const user = userEvent.setup();
 
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
-            response: JSON.stringify({
-              translation: "Local translation",
-              summary: "Local summary",
-              implications: "Local implications",
-              next_steps: "Local steps",
-            }),
+            norm_id: "§ 823",
+            law_key: "BGB",
+            law_title: "",
+            lang: "en",
+            translation: "Local translation",
+            summary: "",
+            implications: "",
+            next_steps: "",
+            disclaimer: "",
           }),
       });
       vi.spyOn(global, "fetch").mockImplementation(mockFetch);
@@ -426,7 +426,7 @@ describe("NormViewer", () => {
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:8080/api/chat",
+          "/api/explain",
           expect.objectContaining({
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -434,19 +434,17 @@ describe("NormViewer", () => {
         );
       });
 
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-      expect(body.model).toBe("llama3");
-      expect(body.temperature).toBe(0.3);
-
       await waitFor(() => {
-        expect(screen.getAllByText("Local translation")).toHaveLength(2);
+        expect(
+          screen.getByText("Local translation"),
+        ).toBeInTheDocument();
       });
     });
 
     it("shows local error toast when broker is unavailable", async () => {
       const user = userEvent.setup();
 
-      const mockFetch = vi.fn().mockResolvedValue({ ok: false });
+      const mockFetch = vi.fn().mockRejectedValue(new Error("Broker down"));
       vi.spyOn(global, "fetch").mockImplementation(mockFetch);
 
       render(<NormViewer {...defaultProps} />);
@@ -458,20 +456,25 @@ describe("NormViewer", () => {
 
       await waitFor(() => {
         expect(mockToast).toHaveBeenCalledWith(
-          "Local AI unavailable. Check if Ollama is running and the broker URL is correct.",
+          "Local AI unavailable. Ensure Ollama is running (ollama serve) and check the broker URL in Settings.",
         );
       });
     });
 
-    it("parses markdown code blocks from local response", async () => {
+    it("parses response from API explain endpoint", async () => {
       const user = userEvent.setup();
 
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
-            response:
-              '```json\n{"translation": "Extracted from code block", "summary": "S", "implications": "I", "next_steps": "N"}\n```',
+            norm_id: "§ 823",
+            law_key: "BGB",
+            translation: "Extracted from code block",
+            summary: "",
+            implications: "",
+            next_steps: "",
+            disclaimer: "",
           }),
       });
       vi.spyOn(global, "fetch").mockImplementation(mockFetch);
@@ -484,9 +487,9 @@ describe("NormViewer", () => {
       await user.click(header);
 
       await waitFor(() => {
-        expect(screen.getAllByText("Extracted from code block")).toHaveLength(
-          2,
-        );
+        expect(
+          screen.getByText("Extracted from code block"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -497,12 +500,13 @@ describe("NormViewer", () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            response: JSON.stringify({
-              translation: "T",
-              summary: "S",
-              implications: "I",
-              next_steps: "N",
-            }),
+            norm_id: "§ 823",
+            law_key: "BGB",
+            translation: "Local translation",
+            summary: "",
+            implications: "",
+            next_steps: "",
+            disclaimer: "",
           }),
       });
       vi.spyOn(global, "fetch").mockImplementation(mockFetch);
@@ -530,7 +534,13 @@ describe("NormViewer", () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            response: "I am not valid JSON at all",
+            norm_id: "§ 823",
+            law_key: "BGB",
+            translation: "I am not valid JSON at all",
+            summary: "",
+            implications: "",
+            next_steps: "",
+            disclaimer: "",
           }),
       });
       vi.spyOn(global, "fetch").mockImplementation(mockFetch);
@@ -542,9 +552,9 @@ describe("NormViewer", () => {
         .closest("button")!;
       await user.click(header);
 
-      // Raw text fills all 4 fields + the original content = 5
-      const els = await screen.findAllByText("I am not valid JSON at all");
-      expect(els).toHaveLength(5);
+      await waitFor(() => {
+        expect(screen.getByText("I am not valid JSON at all")).toBeInTheDocument();
+      });
     }, 10000);
   });
 

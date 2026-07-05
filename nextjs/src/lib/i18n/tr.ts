@@ -108,21 +108,20 @@ export const TR: Record<string, string> = {
   "gate.broker": "Yerel brokeri başlatma, yerel AI'yi etkinleştirmek için.",
 
   "home.tagline": "Bundesrepublik Deutschland",
-  "home.title": "The Law Vault",
-  "home.subtitle":
-    "A comprehensive repository of over 6,000 German federal statutes.",
-  "home.categories": "Categories",
-  "home.mode_basic": "Basic Search",
+  "home.title": "Kanun Deposu",
+  "home.subtitle": "6.000'den fazla Alman federal kanununun kapsamlı bir arşivi.",
+  "home.categories": "Kategoriler",
+  "home.mode_basic": "Temel Arama",
   "home.mode_basic_desc":
-    "Search 6,000+ laws and read excerpts directly. No AI \u2014 you interpret the results.",
-  "home.mode_browser": "Browser AI",
+    "6.000'den fazla kanunda arama yapın ve özetleri doğrudan okuyun. Yapay zeka yok — sonuçları siz yorumlarsınız.",
+  "home.mode_browser": "Tarayıcı Yapay Zekası",
   "home.mode_browser_desc":
-    "AI runs entirely in your browser via Qwen3. Fully private, no server calls. ~1GB download.",
-  "home.mode_cloud": "Cloud AI",
+    "Yapay zeka, Qwen3 aracılığıyla tamamen tarayıcınızda çalışır. Tamamen gizli, sunucu çağrısı yok. ~1GB indirme.",
+  "home.mode_cloud": "Bulut Yapay Zekası",
   "home.mode_cloud_desc":
-    "Bring your own OpenAI/Anthropic key. Best quality, fastest response. You control billing.",
-  "home.mode_local": "Local AI",
+    "Kendi OpenAI/Anthropic anahtarınızı getirin. En iyi kalite, en hızlı yanıt. Faturalandırmayı siz kontrol edersiniz.",
+  "home.mode_local": "Yerel Yapay Zeka",
   "home.mode_local_desc":
-    "Connect to Ollama on your machine via the local broker. Fully offline, no data leaves your network.",
-  "home.get_started": "Get Started",
+    "Yerel broker aracılığıyla makinenizdeki Ollama'ya bağlanın. Tamamen çevrimdışı, ağınızdan hiçbir veri çıkmaz.",
+  "home.get_started": "Başlayın",
 };

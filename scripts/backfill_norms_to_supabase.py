@@ -53,7 +53,7 @@ def scroll_all_norms():
             payload = p.payload or {}
             norms.append(
                 {
-                    "law_key": payload.get("law_key", ""),
+                    "law_key": (payload.get("law_key", "") or "").strip(),
                     "law_title": payload.get("law_title", ""),
                     "category": payload.get("category", "other"),
                     "norm_id": payload.get("norm_id", ""),

@@ -22,6 +22,7 @@ export interface OnboardingState {
 interface OnboardingContextValue {
   state: OnboardingState;
   setStep: (step: number) => void;
+  goBack: () => void;
   setCompleted: () => void;
   setDismissed: () => void;
   setSelectedMode: (mode: ChatMode) => void;
@@ -89,6 +90,18 @@ export function OnboardingProvider({
     persist(ONBOARDING_STEP_KEY, String(step));
   };
 
+  const goBack = () => {
+    setState((prev) => {
+      const next = Math.max(0, prev.step - 1);
+      return { ...prev, step: next };
+    });
+    const currentStep = parseInt(
+      localStorage.getItem(ONBOARDING_STEP_KEY) || "0",
+      10,
+    );
+    persist(ONBOARDING_STEP_KEY, String(Math.max(0, currentStep - 1)));
+  };
+
   const setCompleted = () => {
     const date = new Date().toISOString().split("T")[0];
     setState((prev) => ({
@@ -135,6 +148,7 @@ export function OnboardingProvider({
       value={{
         state,
         setStep,
+        goBack,
         setCompleted,
         setDismissed,
         setSelectedMode,

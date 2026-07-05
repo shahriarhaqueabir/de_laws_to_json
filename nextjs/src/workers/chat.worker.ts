@@ -106,12 +106,12 @@ self.addEventListener("message", async (event: MessageEvent) => {
       }
 
       const langName = language || "English";
-      const systemMsg = `You are a precise translator for German legal texts. Translate the following German legal text to ${langName}. Return ONLY the translated text. Do not add explanations, notes, or any other text.`;
+      const systemMsg = `Translate the following German legal text to ${langName}. Respond with ONLY the translated text and nothing else — no explanations, no notes, no JSON, no formatting.`;
       const finalPrompt = buildFullPrompt(systemMsg, inputText, modelToUse);
 
       const output = await gen(finalPrompt, {
         max_new_tokens: 1024,
-        temperature: 0.3,
+        temperature: 0.1,
         do_sample: true,
       });
 
@@ -119,7 +119,17 @@ self.addEventListener("message", async (event: MessageEvent) => {
         ? output[0]?.generated_text || ""
         : (output as any)?.generated_text || "";
 
-      const result = cleanOutput(full, finalPrompt);
+      let result = cleanOutput(full, finalPrompt);
+
+      // If the model returned JSON with a "translation" field, extract just that
+      try {
+        const parsed = JSON.parse(result);
+        if (parsed.translation && typeof parsed.translation === "string") {
+          result = parsed.translation.trim();
+        }
+      } catch {
+        // Not JSON — use as-is
+      }
 
       self.postMessage({ status: "complete", id, output: result });
       return;
@@ -130,8 +140,11 @@ self.addEventListener("message", async (event: MessageEvent) => {
       return;
     }
 
+    // Use 12k max new tokens for long-form legal analysis.
+    // Qwen3-0.6B supports up to 32k; Gemma 3 270M supports ~8k.
+    const maxTokens = isGemmaModel(modelToUse) ? 8192 : 12288;
     const output = await gen(prompt, {
-      max_new_tokens: 2048,
+      max_new_tokens: maxTokens,
       temperature: 0.3,
       do_sample: true,
     });

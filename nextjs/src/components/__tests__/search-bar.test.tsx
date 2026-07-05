@@ -14,18 +14,18 @@ beforeEach(() => {
 });
 
 describe("SearchBar", () => {
-  it("renders search input with placeholder text", () => {
+  it("renders search input with aria-label", () => {
     render(<SearchBar />);
-    const input = screen.getByPlaceholderText(/Describe your legal situation/i);
+    const input = screen.getByLabelText(/Search laws/i);
     expect(input).toBeInTheDocument();
     expect(input).toHaveValue("");
   });
 
-  it("submitting with query navigates to /search?q=...", async () => {
+  it("submitting with query navigates to /search?q=... in search mode", async () => {
     const user = userEvent.setup();
     render(<SearchBar />);
 
-    const input = screen.getByPlaceholderText(/Describe your legal situation/i);
+    const input = screen.getByLabelText(/Search laws/i);
     await user.type(input, "BGB § 823");
     await user.type(input, "{Enter}");
 
@@ -34,11 +34,28 @@ describe("SearchBar", () => {
     );
   });
 
+  it("submitting with query navigates to /chat?q=... in analyze mode", async () => {
+    const user = userEvent.setup();
+    render(<SearchBar />);
+
+    // Switch to AI Analysis mode
+    const analyzeBtn = screen.getByText(/AI Analysis/i);
+    await user.click(analyzeBtn);
+
+    const input = screen.getByLabelText(/Search laws/i);
+    await user.type(input, "Kündigung");
+    await user.type(input, "{Enter}");
+
+    expect(mockPush).toHaveBeenCalledWith(
+      "/chat?q=" + encodeURIComponent("Kündigung"),
+    );
+  });
+
   it("submitting with empty query does not navigate", async () => {
     const user = userEvent.setup();
     render(<SearchBar />);
 
-    const input = screen.getByPlaceholderText(/Describe your legal situation/i);
+    const input = screen.getByLabelText(/Search laws/i);
     // Submit without typing anything
     await user.type(input, "{Enter}");
 
@@ -49,7 +66,7 @@ describe("SearchBar", () => {
     const user = userEvent.setup();
     render(<SearchBar />);
 
-    const input = screen.getByPlaceholderText(/Describe your legal situation/i);
+    const input = screen.getByLabelText(/Search laws/i);
     await user.type(input, "Mietrecht");
 
     expect(input).toHaveValue("Mietrecht");
@@ -57,7 +74,7 @@ describe("SearchBar", () => {
 
   it("renders with initial value", () => {
     render(<SearchBar initialValue="StGB" />);
-    const input = screen.getByPlaceholderText(/Describe your legal situation/i);
+    const input = screen.getByLabelText(/Search laws/i);
     expect(input).toHaveValue("StGB");
   });
 });

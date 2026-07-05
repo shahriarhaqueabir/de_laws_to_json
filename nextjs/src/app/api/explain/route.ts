@@ -5,7 +5,7 @@ import { getServerClient } from "../../../lib/supabase-server";
 import { createAdminClient } from "../../../lib/supabase-admin";
 import { generateNormExplanation } from "../../../lib/chat";
 import { decryptApiKey } from "../../../lib/encryption";
-import type { AppLanguage, CloudProvider } from "../../../lib/types";
+import { LANGUAGE_NAMES, type AppLanguage, type CloudProvider } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
 import { isValidBrokerUrl, resolveBrokerUrl } from "../../../lib/broker";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
@@ -14,6 +14,44 @@ import {
   getClientIp,
   DEFAULT_AI_RATE_LIMIT,
 } from "../../../lib/rate-limiter";
+
+function extractPlainTranslation(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+
+  // 1. Strip <think> tags (common in Qwen/DeepSeek models)
+  let text = raw.replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim();
+
+  // 2. Try code fences first
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlockMatch) text = codeBlockMatch[1].trim();
+
+  // 3. Try to find and parse a JSON object anywhere in the text
+  //    Handles cases where extra text follows the JSON.
+  const jsonMatch = text.match(/\{[\s\S]*?"translation"\s*:\s*"[\s\S]*?"[\s\S]*?\}/);
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0]) as { translation?: unknown };
+      if (typeof parsed.translation === "string") {
+        return parsed.translation.trim();
+      }
+    } catch {
+      // Fall through
+    }
+  }
+
+  // 4. Try parsing the whole text as JSON
+  try {
+    const parsed = JSON.parse(text) as { translation?: unknown };
+    if (typeof parsed.translation === "string") {
+      return parsed.translation.trim();
+    }
+  } catch {
+    // Not JSON — use the cleaned text as-is.
+  }
+
+  // 5. Return as-is (already stripped think tags and code fences)
+  return text;
+}
 
 const ExplainBodySchema = z.object({
   normId: z.string().min(1, "normId is required").max(100),
@@ -68,6 +106,7 @@ async function resolveApiKey(
 }
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
   try {
     // Rate limiting
     const ip = getClientIp(req);
@@ -128,16 +167,19 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (cached) {
-      console.log(`[Cache Hit] Explanation found for ${normCacheId} (${lang})`);
+      const elapsed = Date.now() - startTime;
+      console.log(
+        `[Explain] Cache hit for ${normCacheId} (${lang}): ${elapsed}ms`,
+      );
       return NextResponse.json({
         norm_id: normId,
         law_key: lawKey,
         law_title: lawTitle || "",
         lang,
-        translation: cached.translation,
-        summary: cached.summary,
-        implications: cached.implications,
-        next_steps: cached.next_steps,
+        translation: extractPlainTranslation(cached.translation),
+        summary: "",
+        implications: "",
+        next_steps: "",
         disclaimer: "",
         is_official: cached.is_official,
       });
@@ -150,69 +192,110 @@ export async function POST(req: NextRequest) {
     // 2. Generate via AI
     if (mode === "local") {
       const brokerUrl = resolveBrokerUrl(bodyBrokerUrl);
-      const langName = "English";
+      const langName = LANGUAGE_NAMES[lang as AppLanguage] || "English";
 
-      const explainPrompt = `Explain this German law section. Respond in ${langName}.
+      const explainPrompt = `Translate this German legal text to ${langName}. ONLY the translation, nothing else. No thinking, no analysis, no JSON, no notes.\n\n${content}`;
 
-German text: ${content}
-
-Return STRICT JSON with these exact fields:
-{
-  "translation": "accurate legal translation of the German text",
-  "summary": "what this means in simple terms in the user's language",
-  "implications": "what this means practically for the person involved, written in the user's language",
-  "next_steps": "concrete recommended actions the person can take, written in the user's language"
-}`;
-
-      const brokerRes = await fetch(`${brokerUrl}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: explainPrompt,
-          context: content,
-          model: ollamaModel || undefined,
-          language: langName,
-          temperature: ollamaParams?.temperature ?? 0.3,
-          top_p: ollamaParams?.top_p ?? 0.9,
-          top_k: ollamaParams?.top_k ?? 40,
-          max_tokens: ollamaParams?.max_tokens ?? 2048,
-          system_prompt: ollamaParams?.system_prompt || undefined,
-        }),
-        signal: AbortSignal.timeout(120000),
-      });
+      let brokerRes: Response;
+      let usedDirectOllama = false;
+      try {
+        brokerRes = await fetch(`${brokerUrl}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: explainPrompt,
+            model: "qwen2.5:1.5b-translate",
+            language: langName,
+            temperature: 0,
+            max_tokens: 2048,
+          }),
+          signal: AbortSignal.timeout(15000),
+        });
+      } catch (fetchErr) {
+        console.error("[Explain] Broker fetch failed, trying direct Ollama:", fetchErr);
+        // Broker unreachable — fall back to direct Ollama (port 11434)
+        try {
+          const ollamaBody = {
+            model: "qwen2.5:1.5b-translate",
+            prompt: explainPrompt,
+            stream: false,
+            options: { temperature: 0, num_predict: 2048 },
+          };
+          const directRes = await fetch("http://localhost:11434/api/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(ollamaBody),
+            signal: AbortSignal.timeout(30000),
+          });
+          if (!directRes.ok) {
+            throw new Error(`Ollama returned ${directRes.status}`);
+          }
+          const rawData = await directRes.json();
+          brokerRes = {
+            ok: true,
+            json: async () => ({ response: rawData.response }),
+          } as Response;
+          usedDirectOllama = true;
+        } catch (ollamaErr) {
+          console.error("[Explain] Direct Ollama also failed:", ollamaErr);
+          return NextResponse.json({
+            norm_id: normId,
+            law_key: lawKey,
+            law_title: lawTitle || "",
+            lang,
+            translation: "",
+            summary: "Local AI unavailable. Ensure Ollama is running (ollama serve) on port 11434, or start the broker on port 9000.",
+            implications: "",
+            next_steps: "",
+            disclaimer: "",
+          });
+        }
+      }
 
       if (!brokerRes.ok) {
         throw new Error("Broker returned error");
       }
 
       const data = await brokerRes.json();
-      let jsonStr = data.response.trim();
-      const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlockMatch) {
-        jsonStr = codeBlockMatch[1].trim();
+      const translation = extractPlainTranslation(data.response);
+
+      if (usedDirectOllama) {
+        console.log("[Explain] Translation via direct Ollama (port 11434)");
       }
 
-      let parsed;
+      // Cache in Supabase
       try {
-        parsed = JSON.parse(jsonStr);
-      } catch {
-        parsed = {
-          translation: jsonStr,
-          summary: jsonStr,
-          implications: jsonStr,
-          next_steps: jsonStr,
-        };
+        const adminSupabase = createAdminClient();
+        if (translation && translation.length > 10) {
+          await adminSupabase.from("norm_explanations").insert({
+            norm_id: normCacheId,
+            law_key: lawKey,
+            lang,
+            translation,
+            summary: "",
+            implications: "",
+            next_steps: "",
+          }).maybeSingle();
+        }
+      } catch (cacheErr) {
+        console.warn("[Explain] Failed to cache local translation:", cacheErr);
+        // Non-fatal
       }
+
+      const elapsed = Date.now() - startTime;
+      console.log(
+        `[Explain] Local translation (${lang}) for ${normCacheId}: ${elapsed}ms`,
+      );
 
       return NextResponse.json({
         norm_id: normId,
         law_key: lawKey,
         law_title: lawTitle || "",
         lang,
-        translation: parsed.translation || "",
-        summary: parsed.summary || "",
-        implications: parsed.implications || "",
-        next_steps: parsed.next_steps || "",
+        translation,
+        summary: "",
+        implications: "",
+        next_steps: "",
         disclaimer: "",
       });
     }
@@ -294,12 +377,18 @@ Return STRICT JSON with these exact fields:
       // Non-fatal — return the generated explanation anyway
     }
 
+    const elapsed = Date.now() - startTime;
+    console.log(
+      `[Explain] Cloud (${provider}) ${mode} for ${normCacheId} (${lang}): ${elapsed}ms`,
+    );
+
     return NextResponse.json({
       ...explanation,
       law_title: lawTitle || "",
     });
   } catch (err: unknown) {
-    console.error("Explain API Error:", err);
+    const elapsed = Date.now() - startTime;
+    console.error(`[Explain] Error after ${elapsed}ms:`, err);
     const message =
       err instanceof Error
         ? sanitizeErrorMessage(err)

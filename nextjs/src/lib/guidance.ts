@@ -158,10 +158,10 @@ function buildPlaybookContext(
     for (const step of playbook.steps) {
       parts.push(
         `${step.step}. **${step.title}** — ${step.description}` +
-          (step.deadline_days
-            ? ` (Deadline: ${step.deadline_days} days)`
-            : "") +
-          (step.statute ? ` [${step.statute}]` : ""),
+        (step.deadline_days
+          ? ` (Deadline: ${step.deadline_days} days)`
+          : "") +
+        (step.statute ? ` [${step.statute}]` : ""),
       );
     }
   }
@@ -438,7 +438,7 @@ async function callLocalBroker(
         language: "English",
         temperature: 0.3,
         top_p: 0.9,
-        max_tokens: 4096,
+        max_tokens: 8192,
         system_prompt: systemPrompt,
       }),
       signal: AbortSignal.timeout(120000),

@@ -86,7 +86,7 @@ def seed_db():
             )
         )
         payload = {
-            "law_key": norm["law_key"],
+            "law_key": norm["law_key"].strip(),
             "law_title": norm["law_title"],
             "category": norm["category"] if norm.get("category") else "other",
             "norm_id": norm["norm_id"],

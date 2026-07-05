@@ -23,8 +23,11 @@ export async function GET(
   try {
     const { key } = await params;
 
+    // Trim law keys — database may have trailing spaces from legacy data
+    const trimmedKey = key.trim();
+
     const keySchema = z.string().min(1, "Law key is required");
-    const keyResult = keySchema.safeParse(key);
+    const keyResult = keySchema.safeParse(trimmedKey);
     if (!keyResult.success) {
       return errorResponse(
         "VALIDATION_ERROR",
@@ -43,7 +46,7 @@ export async function GET(
     const { data: law, error } = await supabase
       .from("laws")
       .select("*")
-      .eq("key", key)
+      .eq("key", trimmedKey)
       .single();
 
     if (error) return errorResponse("NOT_FOUND", "Law not found", 404);
@@ -67,7 +70,7 @@ export async function GET(
       // with_vector: false — we only need payload for display, not the embedding
       const norms = await qdrant.scroll(COLLECTION, {
         filter: {
-          must: [{ key: "law_key", match: { value: key } }],
+          must: [{ key: "law_key", match: { value: trimmedKey } }],
         },
         limit: 1000,
         with_payload: true,

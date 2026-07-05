@@ -145,14 +145,16 @@ export interface ExplainParams {
   lang: AppLanguage;
 }
 
-const EXPLAIN_SYSTEM_PROMPT = `You are a precise multilingual legal translator and advisor. Your role is to explain German legal text to someone who does not speak German. You translate accurately, summarize clearly, identify practical implications, and recommend concrete next steps.
+const EXPLAIN_SYSTEM_PROMPT = `You are a precise multilingual legal translator. Your only task is to translate German legal text accurately into the requested language.
 
 Rules:
-- The source text is always German law. Read it carefully.
-- Explain everything in the user's chosen language — not in German.
-- Be precise about legal terms. When a German legal concept has no direct equivalent, keep the German term and explain it.
-- Cite specific section references where applicable.
-- Return ONLY valid JSON. No markdown, no code fences, no extra text.`;
+- Translate the German legal text accurately into the user's requested language.
+- Preserve legal terminology and nuance.
+- Return ONLY a valid JSON object with a single "translation" field.
+- No markdown, no code fences, no explanatory text, no notes.
+
+Example response format:
+{"translation": "The translated text goes here..."}`;
 
 export async function generateNormExplanation(
   params: ExplainParams,
@@ -171,17 +173,10 @@ export async function generateNormExplanation(
 
   const systemMessage = EXPLAIN_SYSTEM_PROMPT;
 
-  const userMessage = `Explain this German law section. Respond in ${langName}.
+  const userMessage = `Translate this German law section to ${langName}. Return ONLY a JSON object with a "translation" field containing the translation.
 
-German text: ${content}
-
-Return STRICT JSON with these exact fields:
-{
-  "translation": "accurate legal English translation of the German text",
-  "summary": "what this means in simple terms in the user's language",
-  "implications": "what this means practically for the person involved, written in the user's language",
-  "next_steps": "concrete recommended actions the person can take, written in the user's language"
-}`;
+German text:
+${content}`;
 
   const messages = [
     { role: "system", content: systemMessage },

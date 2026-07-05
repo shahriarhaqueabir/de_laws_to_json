@@ -9,6 +9,7 @@ const serif = Playfair_Display({
 });
 import "./globals.css";
 import NavBar from "../components/nav-bar";
+import { cookies } from "next/headers";
 
 import Footer from "../components/footer";
 import { AuthProvider } from "../components/auth-context";
@@ -116,13 +117,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const lang = cookieStore.get("glv_lang")?.value || "de";
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   return (
-    <html lang="de" className={`${GeistSans.variable} ${serif.variable}`}>
+    <html lang={lang} dir={dir} className={`${GeistSans.variable} ${serif.variable}`}>
       <head>
         {/* Preconnect to external origins for performance */}
         <link

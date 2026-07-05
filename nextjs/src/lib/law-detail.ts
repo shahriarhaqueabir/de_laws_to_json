@@ -23,13 +23,16 @@ export type LawDetailResult = Record<string, unknown> & {
 export async function getLawDetail(
   key: string,
 ): Promise<LawDetailResult | null> {
+  // Trim law keys — database may have trailing spaces from legacy data
+  const trimmedKey = key.trim();
+
   const cookieStore = await cookies();
   const supabase = getServerClient(cookieStore);
 
   const { data: law, error } = await supabase
     .from("laws")
     .select("*")
-    .eq("key", key)
+    .eq("key", trimmedKey)
     .single();
 
   if (error || !law) return null;
@@ -45,7 +48,7 @@ export async function getLawDetail(
     try {
       const result = await qdrant.scroll(COLLECTION, {
         filter: {
-          must: [{ key: "law_key", match: { value: key } }],
+          must: [{ key: "law_key", match: { value: trimmedKey } }],
         },
         limit: 1000,
         with_payload: true,

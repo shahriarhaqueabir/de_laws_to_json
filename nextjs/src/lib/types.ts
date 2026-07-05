@@ -45,22 +45,22 @@ export const MODE_LABELS: Record<
 > = {
   local: {
     label: "Local AI",
-    description: "Uses Ollama on your machine via the local broker.",
+    description: "Uses Ollama on your machine via the local broker. Two models: 'german-legal' (6.6GB) for full legal analysis/guidance, and 'qwen2.5:1.5b-translate' (1GB) for fast section translations.",
   },
   cloud: {
     label: "Cloud AI",
     description:
-      "Uses your API key to call OpenAI, Anthropic, or any OpenAI-compatible provider.",
+      "Uses your API key to call OpenAI, Anthropic, or any OpenAI-compatible provider. Translations use a lightweight single-field response for speed.",
   },
   browser: {
     label: "Browser AI",
     description:
-      "Runs a Transformers.js model in your browser (~1GB download). Fully private.",
+      "Runs Qwen3-0.6B ONNX model in your browser (~570MB download). Handles all 9 languages. Fully private — no data leaves your machine.",
   },
   basic: {
     label: "Basic Search",
     description:
-      "Searches laws and shows relevant paragraphs. No AI generation.",
+      "Searches laws and shows relevant paragraphs. No AI generation. Translations use the same browser-based Qwen model as Browser AI mode.",
   },
 };
 
@@ -115,7 +115,7 @@ export const DEFAULT_OLLAMA_PARAMS: OllamaParams = {
   temperature: 0.3,
   top_p: 0.9,
   top_k: 40,
-  max_tokens: 2048,
+  max_tokens: 8192,
   system_prompt: "", // Will be populated from SYSTEM_PROMPT in chat.ts if empty
 };
 
@@ -139,13 +139,13 @@ export const BROWSER_MODELS = [
     id: "onnx-community/Qwen3-0.6B-ONNX",
     name: "Qwen3 (0.6B)",
     size: "~570MB",
-    description: "Best quality multilingual model with legal reasoning capability. Recommended for desktop devices.",
+    description: "Best quality multilingual model for 9-language translation and basic chat. Recommended for desktop devices. Shared across Browser AI and Basic modes for norm translations.",
   },
   {
     id: "onnx-community/gemma-3-270m-it-ONNX",
     name: "Gemma 3 (270M)",
     size: "~275MB",
-    description: "Lightweight multilingual model by Google DeepMind. Supports 140+ languages, fits most devices.",
+    description: "Lightweight multilingual model by Google DeepMind. Supports 140+ languages, fits most devices. Faster than Qwen3 but slightly less accurate for legal translation.",
   },
 ];
 
@@ -153,7 +153,7 @@ export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
   mode: "basic",
   language: "en",
   brokerUrl: "http://localhost:9000",
-  ollamaModel: "ministral-3:8b",
+  ollamaModel: "german-legal:latest",
   ollamaParams: DEFAULT_OLLAMA_PARAMS,
   provider: "openai",
   model: "gpt-4o-mini",

@@ -31,6 +31,15 @@ export function buildAssistantPrefix(model: string): string {
   return "<|im_start|>assistant\n";
 }
 
+
+/**
+ * Strip model reasoning blocks (<think>...</think>) from output.
+ * Common in Gemma 3, DeepSeek R1, QwQ, and other reasoning models.
+ */
+export function stripThinkTags(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim();
+}
+
 export function buildFullPrompt(
   systemContent: string,
   userContent: string,

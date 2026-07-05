@@ -32,31 +32,32 @@ const MODE_ICONS: Record<ChatMode, typeof Plug> = {
 
 const MODE_LIMITATIONS: Record<ChatMode, string[]> = {
   local: [
-    "Requires Ollama + broker.py running on your machine",
+    "Requires Ollama running on your machine (ollama serve)",
+    "Broker (broker.py) optional — translation falls back to direct Ollama on port 11434",
     "Not available on the live site (Vercel)",
-    "Model limited to what Ollama can run locally (default: ministral-3:8b)",
+    "Two models: 'german-legal' (6.6GB) for full analysis/guidance; 'qwen2.5:1.5b-translate' (1GB) for fast section translations",
   ],
   cloud: [
     "You are billed directly by your AI provider (OpenAI, Anthropic, etc.)",
-    "API key is stored in your browser only — clears if you wipe site data",
+    "API key is stored on the server (encrypted) — set it once, use everywhere",
     "Your question and law context are sent to the provider for processing",
   ],
   browser: [
-    "Requires downloading a ~570MB AI model on first use (Qwen3, one-time)",
-    "Generation is slower than cloud AI — runs on your CPU",
-    "Uses Qwen3-0.6B — best multilingual quality for 9-language support",
-    "Still limited for complex legal reasoning — upgrade to cloud or local AI for difficult cases",
+    "Requires downloading a ~570MB AI model on first use (Qwen3-0.6B, one-time)",
+    "Generation is slower than cloud AI — runs on your CPU via Web Workers",
+    "Handles all 9 languages for translation and basic chat. Fully private.",
+    "Limited for complex legal reasoning — upgrade to cloud or local AI",
     "Only works in browsers that support Web Workers + WASM",
   ],
   basic: [
     "No AI analysis or reasoning — shows raw legal text excerpts",
-    "You must interpret the laws and their implications yourself",
+    "Translations use the same browser-based Qwen model as Browser AI mode",
     "Best for quick lookups or when you prefer to read the law directly",
   ],
 };
 
 const MODE_STATUS_NOTE: Record<ChatMode, string> = {
-  local: "Broker must be running on localhost:9000",
+  local: "Ollama on localhost:11434 (broker optional)",
   cloud: "Verify your API key is active",
   browser: "Model downloads on first use (~1GB)",
   basic: "Always available — no setup required",
@@ -574,6 +575,34 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* Model purpose labels */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 border border-white/10 bg-white/[0.02]">
+                <p className="text-xs font-black text-accent-gold-bright uppercase tracking-[0.2em] mb-1">
+                  Translation Model
+                </p>
+                <p className="text-xs font-bold font-mono text-zinc-300 mb-2">
+                  qwen2.5:1.5b-translate (1GB)
+                </p>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Used for fast section-by-section translations in all 9 languages.
+                  Runs with temperature 0 for precision.
+                </p>
+              </div>
+              <div className="p-4 border border-white/10 bg-white/[0.02]">
+                <p className="text-xs font-black text-amber-400 uppercase tracking-[0.2em] mb-1">
+                  Analysis Model
+                </p>
+                <p className="text-xs font-bold font-mono text-zinc-300 mb-2">
+                  german-legal:latest (6.6GB)
+                </p>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Used for in-depth legal guidance, multi-step reasoning, citation
+                  analysis, and outcome prediction.
+                </p>
+              </div>
+            </div>
+
             <div className="p-4 bg-accent-gold/5 border border-accent-gold/20 flex items-start gap-4">
               <ShieldAlert className="w-5 h-5 text-accent-gold mt-0.5" />
               <div>
@@ -886,14 +915,37 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4 mb-6">
             <FileText className="w-5 h-5 text-accent-gold" />
             <h2 className="font-serif font-bold text-xl text-white">
-              Search Only
+              Basic Search Mode
             </h2>
           </div>
 
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-xl">
-            Search only. This mode bypasses AI analysis and retrieves raw
-            statutory text. No setup required.
-          </p>
+          <div className="space-y-4">
+            <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-xl">
+              Bypasses AI analysis and retrieves raw statutory text from Qdrant
+              vector search. No API key or setup required.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 border border-white/5 bg-white/[0.01]">
+                <p className="text-xs font-black text-accent-gold-body uppercase tracking-[0.2em] mb-2">
+                  Search & Browse
+                </p>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Full-text and semantic search across all 6,000+ laws and
+                  103,000+ sections. Always available.
+                </p>
+              </div>
+              <div className="p-4 border border-white/5 bg-white/[0.01]">
+                <p className="text-xs font-black text-accent-gold-body uppercase tracking-[0.2em] mb-2">
+                  Section Translation
+                </p>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Translations use the browser-based Qwen3-0.6B model (same as
+                  Browser AI mode). First use requires a ~570MB download.
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
       )}
 

@@ -14,7 +14,7 @@ export async function callOpenAI(
   apiKey: string,
   model: string,
   messages: Array<{ role: string; content: string }>,
-  maxTokens: number = 1024,
+  maxTokens: number = 4096,
   temperature: number = 0.3,
 ): Promise<string> {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -43,7 +43,7 @@ export async function callAnthropic(
   model: string,
   system: string,
   messages: Array<{ role: string; content: string }>,
-  maxTokens: number = 1024,
+  maxTokens: number = 4096,
   temperature: number = 0.3,
 ): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -130,7 +130,7 @@ export async function callOpenAICompatible(
   apiKey: string,
   model: string,
   messages: Array<{ role: string; content: string }>,
-  maxTokens: number = 1024,
+  maxTokens: number = 4096,
   temperature: number = 0.3,
 ): Promise<string> {
   // SSRF validation: reject private/internal endpoints

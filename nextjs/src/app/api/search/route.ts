@@ -185,18 +185,18 @@ export async function GET(req: NextRequest) {
                 `content.ilike.%${searchQuery}%,norm_title.ilike.%${searchQuery}%,norm_id.ilike.%${searchQuery}%`,
               )
               .limit(20) as unknown as Promise<{
-              data:
+                data:
                 | {
-                    law_key: string;
-                    law_title: string;
-                    category: string;
-                    norm_id: string;
-                    norm_title: string;
-                    content: string;
-                  }[]
+                  law_key: string;
+                  law_title: string;
+                  category: string;
+                  norm_id: string;
+                  norm_title: string;
+                  content: string;
+                }[]
                 | null;
-              error: any;
-            }>);
+                error: any;
+              }>);
 
             if (!trgmErr && trgmResults && trgmResults.length > 0) {
               console.log(
@@ -231,9 +231,9 @@ export async function GET(req: NextRequest) {
               config: "german",
             })
             .limit(10) as unknown as Promise<{
-            data: { key: string; title: string; category: string }[] | null;
-            error: any;
-          }>);
+              data: { key: string; title: string; category: string }[] | null;
+              error: any;
+            }>);
 
           if (ftResponse.data && ftResponse.data.length > 0) {
             console.log(
@@ -347,10 +347,12 @@ export async function GET(req: NextRequest) {
       { hits: number; topScore: number; norms: SearchResult[] }
     >();
     for (const r of allResults) {
-      if (!lawMap.has(r.law_key)) {
-        lawMap.set(r.law_key, { hits: 0, topScore: 0, norms: [] });
+      const trimmedKey = r.law_key.trim();
+      const key = trimmedKey || r.law_key;
+      if (!lawMap.has(key)) {
+        lawMap.set(key, { hits: 0, topScore: 0, norms: [] });
       }
-      const entry = lawMap.get(r.law_key)!;
+      const entry = lawMap.get(key)!;
       entry.hits++;
       entry.topScore = Math.max(entry.topScore, r.score ?? 0);
       if (entry.norms.length < 3) entry.norms.push(r);
@@ -382,9 +384,9 @@ export async function GET(req: NextRequest) {
       const [translatedTitle, translatedCategory] =
         needsTranslation && !skipTranslate
           ? await Promise.all([
-              translateFromGerman(lawTitle, lang as AppLanguage),
-              translateFromGerman(categoryName, lang as AppLanguage),
-            ])
+            translateFromGerman(lawTitle, lang as AppLanguage),
+            translateFromGerman(categoryName, lang as AppLanguage),
+          ])
           : [lawTitle, categoryName];
 
       // Translate norm content (up to 3 per law)
@@ -393,16 +395,16 @@ export async function GET(req: NextRequest) {
           const [translatedNormTitle, translatedContent] =
             needsTranslation && !skipTranslate
               ? await Promise.all([
-                  translateFromGerman(n.norm_title || "", lang as AppLanguage),
-                  translateFromGerman(
-                    (n.content || "Read full text for details.").slice(0, 300),
-                    lang as AppLanguage,
-                  ),
-                ])
+                translateFromGerman(n.norm_title || "", lang as AppLanguage),
+                translateFromGerman(
+                  (n.content || "Read full text for details.").slice(0, 300),
+                  lang as AppLanguage,
+                ),
+              ])
               : [
-                  n.norm_title || "",
-                  n.content?.slice(0, 300) || "Read full text for details.",
-                ];
+                n.norm_title || "",
+                n.content?.slice(0, 300) || "Read full text for details.",
+              ];
 
           return {
             normId: n.norm_id || "",
@@ -417,9 +419,9 @@ export async function GET(req: NextRequest) {
         data.hits > 1
           ? needsTranslation && !skipTranslate
             ? await translateFromGerman(
-                `Found ${data.hits} relevant sections in this law.`,
-                lang as AppLanguage,
-              )
+              `Found ${data.hits} relevant sections in this law.`,
+              lang as AppLanguage,
+            )
             : `Found ${data.hits} relevant sections in this law.`
           : "";
 

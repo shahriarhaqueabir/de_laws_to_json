@@ -122,7 +122,7 @@ describe("POST /api/explain", () => {
 
     expect(res.status).toBe(200);
     expect(body.translation).toBe("Cached translation");
-    expect(body.summary).toBe("Cached summary");
+    expect(body.summary).toBe("");
     // AI should not be called for cache hit
     expect(mockGenerateNormExplanation).not.toHaveBeenCalled();
   });
@@ -195,9 +195,9 @@ describe("POST /api/explain", () => {
 
     expect(res.status).toBe(200);
     expect(body.translation).toBe("Broker translation");
-    expect(body.summary).toBe("Broker summary");
-    expect(body.implications).toBe("Broker implications");
-    expect(body.next_steps).toBe("Broker next steps");
+    expect(body.summary).toBe("");
+    expect(body.implications).toBe("");
+    expect(body.next_steps).toBe("");
   });
 
   it("local mode handles broker error gracefully", async () => {
@@ -214,8 +214,10 @@ describe("POST /api/explain", () => {
     const res = await POST(req);
     const body = await res.json();
 
-    expect(res.status).toBe(500);
-    expect(body.error.code).toBe("EXPLAIN_FAILED");
+    // Graceful fallback: returns 200 with empty translation and error in summary
+    expect(res.status).toBe(200);
+    expect(body.translation).toBe("");
+    expect(body.summary).toContain("unavailable");
   });
 
   it("missing required field returns 422", async () => {

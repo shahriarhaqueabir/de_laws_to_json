@@ -108,21 +108,20 @@ export const PL: Record<string, string> = {
   "gate.broker": "Uruchom swój lokalny broker, aby włączyć tryb AI lokalny",
 
   "home.tagline": "Bundesrepublik Deutschland",
-  "home.title": "The Law Vault",
-  "home.subtitle":
-    "A comprehensive repository of over 6,000 German federal statutes.",
-  "home.categories": "Categories",
-  "home.mode_basic": "Basic Search",
+  "home.title": "Skarbiec Prawa",
+  "home.subtitle": "Kompleksowe repozytorium ponad 6000 niemieckich ustaw federalnych.",
+  "home.categories": "Kategorie",
+  "home.mode_basic": "Wyszukiwanie Podstawowe",
   "home.mode_basic_desc":
-    "Search 6,000+ laws and read excerpts directly. No AI \u2014 you interpret the results.",
-  "home.mode_browser": "Browser AI",
+    "Szukaj w ponad 6000 ustaw i czytaj fragmenty bezpośrednio. Bez AI — Ty interpretujesz wyniki.",
+  "home.mode_browser": "AI w Przeglądarce",
   "home.mode_browser_desc":
-    "AI runs entirely in your browser via Qwen3. Fully private, no server calls. ~1GB download.",
-  "home.mode_cloud": "Cloud AI",
+    "AI działa całkowicie w Twojej przeglądarce przez Qwen3. Pełna prywatność, brak połączeń z serwerem. Pobieranie ~1GB.",
+  "home.mode_cloud": "AI w Chmurze",
   "home.mode_cloud_desc":
-    "Bring your own OpenAI/Anthropic key. Best quality, fastest response. You control billing.",
-  "home.mode_local": "Local AI",
+    "Użyj własnego klucza OpenAI/Anthropic. Najlepsza jakość, najszybsza odpowiedź. Ty kontrolujesz koszty.",
+  "home.mode_local": "Lokalne AI",
   "home.mode_local_desc":
-    "Connect to Ollama on your machine via the local broker. Fully offline, no data leaves your network.",
-  "home.get_started": "Get Started",
+    "Połącz się z Ollama na swoim komputerze przez lokalny broker. Całkowicie offline, żadne dane nie opuszczają Twojej sieci.",
+  "home.get_started": "Rozpocznij",
 };

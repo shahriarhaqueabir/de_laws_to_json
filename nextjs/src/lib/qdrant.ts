@@ -507,10 +507,9 @@ export async function searchNorms(
       .map((r) => {
         const payload = r.payload as Record<string, unknown> | undefined;
         return {
-          law_key: (payload?.law_key as string) ?? "",
+          law_key: ((payload?.law_key as string) ?? "").trim(),
           law_title:
-            ((payload?.law_title as string) || (payload?.law_key as string)) ??
-            "",
+            (((payload?.law_title as string) ?? (payload?.law_key as string)) ?? "").trim(),
           category: (payload?.category as string) ?? "other",
           norm_id: (payload?.norm_id as string) ?? "",
           norm_title: (payload?.norm_title as string) ?? "",

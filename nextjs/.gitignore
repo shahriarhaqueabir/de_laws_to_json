@@ -76,5 +76,8 @@ temp/
 # Local override configs
 *.local
 
+# Windows null devices
+nul
+
 # Supabase CLI local working directory (machine-local config)
 supabase/

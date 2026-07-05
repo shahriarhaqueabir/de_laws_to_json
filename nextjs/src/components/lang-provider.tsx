@@ -14,8 +14,11 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
         if (raw) {
           const settings = JSON.parse(raw);
           const lang = settings.language || "en";
-          document.documentElement.lang = lang;
-          document.documentElement.dir = DIR_MAP[lang] || "ltr";
+          // Only update if different to avoid redundant DOM mutations
+          if (document.documentElement.lang !== lang) {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = DIR_MAP[lang] || "ltr";
+          }
         }
       } catch {
         // localStorage may be unavailable

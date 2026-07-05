@@ -111,21 +111,20 @@ export const UK: Record<string, string> = {
     "Запустіть свій локальний брукер, щоб увімкнути оффлайн режим штучного інтелекту",
 
   "home.tagline": "Bundesrepublik Deutschland",
-  "home.title": "The Law Vault",
-  "home.subtitle":
-    "A comprehensive repository of over 6,000 German federal statutes.",
-  "home.categories": "Categories",
-  "home.mode_basic": "Basic Search",
+  "home.title": "Сховище Законів",
+  "home.subtitle": "Комплексний репозиторій понад 6000 федеральних законів Німеччини.",
+  "home.categories": "Категорії",
+  "home.mode_basic": "Базовий Пошук",
   "home.mode_basic_desc":
-    "Search 6,000+ laws and read excerpts directly. No AI \u2014 you interpret the results.",
-  "home.mode_browser": "Browser AI",
+    "Шукайте серед 6000+ законів і читайте уривки напряму. Без ШІ — ви самі інтерпретуєте результати.",
+  "home.mode_browser": "ШІ в Браузері",
   "home.mode_browser_desc":
-    "AI runs entirely in your browser via Qwen3. Fully private, no server calls. ~1GB download.",
-  "home.mode_cloud": "Cloud AI",
+    "ШІ працює повністю у вашому браузері через Qwen3. Повна приватність, жодних серверних викликів. Завантаження ~1 ГБ.",
+  "home.mode_cloud": "Хмарний ШІ",
   "home.mode_cloud_desc":
-    "Bring your own OpenAI/Anthropic key. Best quality, fastest response. You control billing.",
-  "home.mode_local": "Local AI",
+    "Використовуйте свій власний ключ OpenAI/Anthropic. Найкраща якість, найшвидша відповідь. Ви самі контролюєте витрати.",
+  "home.mode_local": "Локальний ШІ",
   "home.mode_local_desc":
-    "Connect to Ollama on your machine via the local broker. Fully offline, no data leaves your network.",
-  "home.get_started": "Get Started",
+    "Підключайтеся до Ollama на вашому комп'ютері через локальний брокер. Повністю офлайн, дані не покидають вашу мережу.",
+  "home.get_started": "Почати",
 };

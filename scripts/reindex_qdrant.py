@@ -155,7 +155,7 @@ def main():
             (
                 point_id,
                 {
-                    "law_key": payload.get("law_key", ""),
+                    "law_key": (payload.get("law_key", "") or "").strip(),
                     "law_title": law_title,
                     "category": category,
                     "norm_id": payload.get("norm_id", ""),

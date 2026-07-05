@@ -156,7 +156,7 @@ def convert_xml_to_dict(
 
 
 def _remove_year_suffix(key: str) -> str:
-    return re.sub(r"\d{4}$", "", key)
+    return re.sub(r"\d{4}$", "", key).strip()
 
 
 def _extract_content_tag(law_tag):
@@ -325,10 +325,13 @@ def process_file(xml_path: str) -> Optional[Dict]:
         return None
 
     raw_key = metadaten.get("jurabk", metadaten.get("amtabk", "unknown"))
-    if isinstance(raw_key, list):
-        raw_key = raw_key[0]
-    if not raw_key or not str(raw_key).strip():
-        return None
+        if isinstance(raw_key, list):
+            raw_key = raw_key[0]
+        if not raw_key:
+            return None
+        raw_key = str(raw_key).strip()
+        if not raw_key:
+            return None
 
     langue_tag = soup.find("langue")
     title = langue_tag.text if langue_tag else str(raw_key)

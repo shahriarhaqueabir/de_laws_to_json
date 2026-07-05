@@ -99,6 +99,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     if (sanitizedPatch.brokerUrl !== undefined) {
       sanitizedPatch.brokerUrl = sanitizeBrokerUrl(sanitizedPatch.brokerUrl);
     }
+    if (sanitizedPatch.language !== undefined) {
+      // Sync language to cookie for server-side hydration (ADR-009)
+      document.cookie = `glv_lang=${sanitizedPatch.language}; path=/; max-age=31536000; SameSite=Lax`;
+    }
     const next = { ...settings, ...sanitizedPatch };
     setSettings(next);
     // Persist settings to localStorage

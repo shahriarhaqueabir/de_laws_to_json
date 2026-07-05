@@ -160,10 +160,11 @@ describe("SettingsPage", () => {
 
   it("renders mode selection cards for all 4 chat modes", () => {
     render(<SettingsPage />);
-    expect(screen.getByText(/basic search/i)).toBeInTheDocument();
-    expect(screen.getByText(/browser ai/i)).toBeInTheDocument();
-    expect(screen.getByText(/cloud ai/i)).toBeInTheDocument();
-    expect(screen.getByText(/local ai/i)).toBeInTheDocument();
+    // Mode labels appear in both buttons and section headings
+    expect(screen.getAllByText(/basic search/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/browser ai/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/cloud ai/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/local ai/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it("highlights the selected mode", () => {

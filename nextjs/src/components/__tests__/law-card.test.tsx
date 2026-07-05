@@ -174,22 +174,19 @@ describe("LawCard", () => {
     expect(mockToast).toHaveBeenCalledWith("Bookmark removed");
   });
 
-  it('"Detailed Examination" navigates to /laws/{key} on click', async () => {
-    const user = userEvent.setup();
+  it('renders a link to the law detail page', () => {
     render(<LawCard law={mockLaw} />);
-    const card = screen.getByRole("link", {
-      name: /BGB.*Bürgerliches Gesetzbuch/,
+    const link = screen.getByRole("link", {
+      name: /View details for Bürgerliches Gesetzbuch/i,
     });
-    await user.click(card);
-    expect(mockRouter.push).toHaveBeenCalledWith("/laws/BGB");
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/laws/BGB");
+    expect(link).toHaveClass("absolute", "inset-0");
   });
 
-  it("title click navigates to /laws/{key}", async () => {
-    const user = userEvent.setup();
+  it('provides a "Detailed Examination" visual cue', () => {
     render(<LawCard law={mockLaw} />);
-    const title = screen.getByText("Bürgerliches Gesetzbuch");
-    await user.click(title);
-    expect(mockRouter.push).toHaveBeenCalledWith("/laws/BGB");
+    expect(screen.getByText(/Detailed Examination/i)).toBeInTheDocument();
   });
 
   it("shows 'Source: Bundesamt für Justiz'", () => {

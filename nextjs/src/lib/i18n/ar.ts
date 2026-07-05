@@ -103,21 +103,20 @@ export const AR: Record<string, string> = {
   "gate.broker": "قم بتشغيل الوسيط المحلي لتفعيل الذكاء الاصطناعي المحلي",
 
   "home.tagline": "Bundesrepublik Deutschland",
-  "home.title": "The Law Vault",
-  "home.subtitle":
-    "A comprehensive repository of over 6,000 German federal statutes.",
-  "home.categories": "Categories",
-  "home.mode_basic": "Basic Search",
+  "home.title": "خزنة القوانين",
+  "home.subtitle": "مستودع شامل لأكثر من 6000 قانون اتحادي ألماني.",
+  "home.categories": "التصنيفات",
+  "home.mode_basic": "البحث الأساسي",
   "home.mode_basic_desc":
-    "Search 6,000+ laws and read excerpts directly. No AI \u2014 you interpret the results.",
-  "home.mode_browser": "Browser AI",
+    "ابحث في أكثر من 6000 قانون واقرأ المقتطفات مباشرة. لا يوجد ذكاء اصطناعي - أنت من يفسر النتائج.",
+  "home.mode_browser": "الذكاء الاصطناعي في المتصفح",
   "home.mode_browser_desc":
-    "AI runs entirely in your browser via Qwen3. Fully private, no server calls. ~1GB download.",
-  "home.mode_cloud": "Cloud AI",
+    "يعمل الذكاء الاصطناعي بالكامل في متصفحك عبر Qwen3. خصوصية كاملة، لا توجد مكالمات خادم. تحميل حوالي 1 جيجابايت.",
+  "home.mode_cloud": "الذكاء الاصطناعي السحابي",
   "home.mode_cloud_desc":
-    "Bring your own OpenAI/Anthropic key. Best quality, fastest response. You control billing.",
-  "home.mode_local": "Local AI",
+    "أحضر مفتاح OpenAI/Anthropic الخاص بك. أفضل جودة، أسرع استجابة. أنت تتحكم في الفواتير.",
+  "home.mode_local": "الذكاء الاصطناعي المحلي",
   "home.mode_local_desc":
-    "Connect to Ollama on your machine via the local broker. Fully offline, no data leaves your network.",
-  "home.get_started": "Get Started",
+    "اتصل بـ Ollama على جهازك عبر الوسيط المحلي. غير متصل تمامًا، لا توجد بيانات تغادر شبكتك.",
+  "home.get_started": "ابدأ الآن",
 };

@@ -25,7 +25,7 @@ const OllamaParamsSchema = z
     temperature: z.number().min(0).max(2).optional(),
     top_p: z.number().min(0).max(1).optional(),
     top_k: z.number().int().min(0).optional(),
-    max_tokens: z.number().int().min(1).max(4096).optional(),
+    max_tokens: z.number().int().min(1).max(16384).optional(),
     system_prompt: z.string().optional(),
   })
   .strict()
@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
               temperature: ollamaParams?.temperature ?? 0.3,
               top_p: ollamaParams?.top_p ?? 0.9,
               top_k: ollamaParams?.top_k ?? 40,
-              max_tokens: ollamaParams?.max_tokens ?? 1024,
+              max_tokens: ollamaParams?.max_tokens ?? 8192,
               system_prompt: ollamaParams?.system_prompt || undefined,
             }),
             signal: AbortSignal.timeout(120000),
@@ -323,8 +323,8 @@ export async function POST(req: NextRequest) {
             norms: citedLaws,
             context: contextStr,
             language: "en",
-            temperature: ollamaParams?.temperature as number,
-            maxTokens: ollamaParams?.max_tokens as number,
+            temperature: ollamaParams?.temperature ?? 0.3,
+            maxTokens: ollamaParams?.max_tokens ?? 8192,
             systemPrompt: ollamaParams?.system_prompt as string,
           });
           brokerAvailable = null;
