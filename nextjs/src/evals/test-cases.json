@@ -1,0 +1,19 @@
+[
+  {
+    "query": "custody rights for my child",
+    "expected_law_key": "BGB"
+  },
+  {
+    "query": "speeding ticket on highway",
+    "expected_law_key": "StVG",
+    "expected_category": "traffic"
+  },
+  {
+    "query": "termination of employment contract",
+    "expected_law_key": "TzBfG"
+  },
+  {
+    "query": "Mord",
+    "expected_law_key": "StGB"
+  }
+]

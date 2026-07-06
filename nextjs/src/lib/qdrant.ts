@@ -489,7 +489,7 @@ export async function searchNorms(
         text: prefixedQuery,
         model: INFERENCE_MODEL,
       },
-      limit: topK * 2, // Request more for BM25 re-ranking pool
+      limit: topK * 10, // Request significantly more for BM25 re-ranking pool to fix single-word keyword blindness
       offset,
       filter: queryFilter,
       with_payload: true,
