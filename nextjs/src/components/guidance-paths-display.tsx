@@ -447,7 +447,7 @@ export default function GuidancePathsDisplay({
                                 <Gavel className="w-3 h-3 text-accent-gold flex-shrink-0 mt-0.5" />
                                 <div>
                                   <a
-                                    href={`/laws/${law.law_key}`}
+                                    href={`/laws/${encodeURIComponent(law.law_key)}`}
                                     className="text-accent-gold-bright hover:text-white transition-colors font-bold"
                                   >
                                     {law.law_key} {law.norm_id}

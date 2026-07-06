@@ -43,7 +43,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
   };
 
   const navigateToDetail = useCallback(() => {
-    router.push(`/laws/${law.key}`);
+    router.push(`/laws/${encodeURIComponent(law.key)}`);
   }, [router, law.key]);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function LawCard({ law }: { law: LawSearchResult }) {
     <div className="premium-card p-10 group relative border-white/5 bg-zinc-900/20 transition-all duration-500 hover:border-accent-gold/40 edge-glow-electric overflow-hidden">
       {/* ── Stretched Link for the whole card ── */}
       <Link
-        href={`/laws/${law.key}`}
+        href={`/laws/${encodeURIComponent(law.key)}`}
         className="absolute inset-0 z-0"
         aria-label={`View details for ${law.title}`}
       />

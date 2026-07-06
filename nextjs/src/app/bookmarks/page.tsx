@@ -402,7 +402,7 @@ export default function BookmarksPage() {
                         </div>
 
                         <Link
-                          href={`/laws/${bm.law_key}`}
+                          href={`/laws/${encodeURIComponent(bm.law_key)}`}
                           className="text-lg font-serif font-bold text-white hover:text-accent-gold-bright transition-colors duration-500 block leading-tight"
                         >
                           <span className="text-accent-gold-body mr-2">

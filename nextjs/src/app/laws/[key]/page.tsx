@@ -15,7 +15,8 @@ export async function generateMetadata({
   params: Promise<{ key: string }>;
 }): Promise<Metadata> {
   const { key } = await params;
-  const trimmedKey = key.trim();
+  const decodedKey = decodeURIComponent(key);
+  const trimmedKey = decodedKey.trim();
 
   // Lightweight fetch — just the law title, no norms needed for metadata
   try {
@@ -109,7 +110,8 @@ export default async function LawDetailPage({
   params: Promise<{ key: string }>;
 }) {
   const { key } = await params;
-  const trimmedKey = key.trim();
+  const decodedKey = decodeURIComponent(key);
+  const trimmedKey = decodedKey.trim();
 
   const data = await getLawDetail(trimmedKey);
 

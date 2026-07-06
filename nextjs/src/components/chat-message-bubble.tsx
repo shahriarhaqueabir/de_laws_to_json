@@ -51,7 +51,7 @@ export function ChatMessageBubble({
               {citedLaws.map((law, j) => (
                 <Link
                   key={j}
-                  href={`/laws/${law.law_key}`}
+                  href={`/laws/${encodeURIComponent(law.law_key)}`}
                   className="text-xs font-bold px-3 py-2 bg-white/5 border border-white/5 text-zinc-500 hover:bg-accent-gold/10 hover:text-accent-gold-bright hover:border-accent-gold/30 transition-all duration-500"
                 >
                   {law.law_key} {law.norm_id}
