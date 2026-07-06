@@ -24,6 +24,8 @@ from tqdm import tqdm
 
 from database.db import init_db, get_connection, DB_PATH
 
+from category_pipeline import classify_category
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -325,13 +327,13 @@ def process_file(xml_path: str) -> Optional[Dict]:
         return None
 
     raw_key = metadaten.get("jurabk", metadaten.get("amtabk", "unknown"))
-        if isinstance(raw_key, list):
-            raw_key = raw_key[0]
-        if not raw_key:
-            return None
-        raw_key = str(raw_key).strip()
-        if not raw_key:
-            return None
+    if isinstance(raw_key, list):
+        raw_key = raw_key[0]
+    if not raw_key:
+        return None
+    raw_key = str(raw_key).strip()
+    if not raw_key:
+        return None
 
     langue_tag = soup.find("langue")
     title = langue_tag.text if langue_tag else str(raw_key)
@@ -387,7 +389,9 @@ def write_law_to_db(conn: "sqlite3.Connection", key: str, data: Dict) -> None:
     title    = data.get("title", "") or ""
     source   = data.get("source", "") or ""
     last_ch  = data.get("last_changed", "") or ""
-    category = _categorize(title, key)
+    prediction = classify_category(title, key, title)
+    category = prediction.category
+    category_confidence = round(prediction.confidence, 4)
     authority    = _infer_authority(title, key)
     status       = _infer_status(title)
     jurisdiction = _infer_jurisdiction(key, title)
@@ -395,21 +399,23 @@ def write_law_to_db(conn: "sqlite3.Connection", key: str, data: Dict) -> None:
     # Upsert the law row
     conn.execute(
         """
-        INSERT INTO laws (key, title, alt_title, category, authority, status,
+        INSERT INTO laws (key, title, alt_title, category, category_confidence, authority, status,
                           jurisdiction, last_changed, source)
-        VALUES (:key, :title, '', :category, :authority, :status,
+        VALUES (:key, :title, '', :category, :category_confidence, :authority, :status,
                 :jurisdiction, :last_changed, :source)
         ON CONFLICT(key) DO UPDATE SET
-            title        = excluded.title,
-            category     = excluded.category,
-            authority    = excluded.authority,
-            status       = excluded.status,
-            jurisdiction = excluded.jurisdiction,
-            last_changed = excluded.last_changed,
-            source       = excluded.source
+            title                = excluded.title,
+            category             = excluded.category,
+            category_confidence  = excluded.category_confidence,
+            authority            = excluded.authority,
+            status               = excluded.status,
+            jurisdiction         = excluded.jurisdiction,
+            last_changed         = excluded.last_changed,
+            source               = excluded.source
         """,
         {
             "key": key, "title": title, "category": category,
+            "category_confidence": category_confidence,
             "authority": authority, "status": status,
             "jurisdiction": jurisdiction, "last_changed": last_ch, "source": source,
         },

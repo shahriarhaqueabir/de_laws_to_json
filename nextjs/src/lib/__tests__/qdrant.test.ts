@@ -52,7 +52,7 @@ describe("searchNorms", () => {
         text: "query: Kaufvertrag",
         model: "intfloat/multilingual-e5-small",
       },
-      limit: 100, // topK * 2 = 50 * 2 = 100
+      limit: 500, // topK * 10 for BM25 reranking pool
       offset: 0,
       filter: undefined,
       with_payload: true,
@@ -78,7 +78,7 @@ describe("searchNorms", () => {
         text: "query: Mietrecht Wohnung Miete Miete",
         model: "intfloat/multilingual-e5-small",
       },
-      limit: 100,
+      limit: 500,
       offset: 0,
       filter: { must: [{ key: "category", match: { value: "housing" } }] },
       with_payload: true,
@@ -136,10 +136,10 @@ describe("searchNorms", () => {
     const { searchNorms } = await import("../qdrant");
     await searchNorms("test", undefined, 5, 20);
 
-    // topK=5 → limit=10 (5*2), offset=20
+    // topK=5 → limit=50 (5*10), offset=20
     expect(mockQuery).toHaveBeenCalledWith("german_norms", {
       query: { text: "query: test", model: "intfloat/multilingual-e5-small" },
-      limit: 10,
+      limit: 50,
       offset: 20,
       filter: undefined,
       with_payload: true,

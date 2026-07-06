@@ -36,6 +36,7 @@ def init_db():
                     source      TEXT,
                     last_changed TEXT,
                     category    TEXT DEFAULT 'other',
+                    category_confidence REAL DEFAULT 0.0,
                     authority   TEXT DEFAULT 'Federal Law',
                     status      TEXT DEFAULT 'Active',
                     jurisdiction TEXT DEFAULT 'Germany (Federal)'
