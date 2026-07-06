@@ -10,7 +10,16 @@ import {
 
 export interface UseBrowserAIReturn {
   /** Send a prompt to the worker. Returns the generated text when complete. */
-  generate: (prompt: string, model?: string) => Promise<string>;
+  generate: (
+    prompt: string,
+    model?: string,
+    params?: {
+      temperature?: number;
+      max_tokens?: number;
+      top_p?: number;
+      top_k?: number;
+    },
+  ) => Promise<string>;
   /** True after the worker sends a "ready" status. */
   isReady: boolean;
   /** True while the worker is generating a response. */
