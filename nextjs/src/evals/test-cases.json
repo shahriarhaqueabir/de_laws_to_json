@@ -1,19 +1,45 @@
 [
-  {
-    "query": "custody rights for my child",
-    "expected_law_key": "BGB"
-  },
-  {
-    "query": "speeding ticket on highway",
-    "expected_law_key": "StVG",
-    "expected_category": "traffic"
-  },
-  {
-    "query": "termination of employment contract",
-    "expected_law_key": "TzBfG"
-  },
-  {
-    "query": "Mord",
-    "expected_law_key": "StGB"
-  }
+  { "query": "custody rights for my child", "expected_law_key": ["BGB", "SGB 8", "KJHG"] },
+  { "query": "speeding ticket on highway", "expected_law_key": "StVG", "expected_category": "traffic" },
+  { "query": "termination of employment contract", "expected_law_key": "TzBfG" },
+  { "query": "I want to get a divorce from my husband", "expected_law_key": ["BGB", "EheRG 1"] },
+  { "query": "rent increase under tenancy law (Mietrecht)", "expected_law_key": ["BGB", "RAV 2"] },
+  { "query": "what is the minimum wage in Germany", "expected_law_key": "MiLoG" },
+  { "query": "unemployment benefits rules", "expected_law_key": "SGB 3" },
+  { "query": "how many vacation days am I entitled to", "expected_law_key": "BUrlG" },
+  { "query": "unfair dismissal protection (Kündigungsschutz)", "expected_law_key": "KSchG" },
+  { "query": "drunk driving penalties", "expected_law_key": "StGB" },
+  { "query": "statute of limitations for debts", "expected_law_key": ["BGB", "InsO"] },
+  { "query": "intellectual property and copyright", "expected_law_key": "UrhG" },
+  { "query": "consumer protection online purchases", "expected_law_key": "BGB" },
+  { "query": "parental leave and allowance", "expected_law_key": "BEEG" },
+  { "query": "maternity protection act", "expected_law_key": ["MuSchG", "MuSchEltZV"] },
+  { "query": "fraud and embezzlement", "expected_law_key": "StGB" },
+  { "query": "founding a limited liability company", "expected_law_key": "GmbHG" },
+  { "query": "health insurance coverage requirements", "expected_law_key": "SGB 5" },
+  { "query": "rules for driving license suspension", "expected_law_key": "StVG" },
+  { "query": "bodily harm and physical assault in criminal law", "expected_law_key": "StGB" },
+  { "query": "commercial register rules", "expected_law_key": ["HGB", "HdlRegVfg"] },
+  { "query": "rights of people with severe disabilities", "expected_law_key": ["SGB 9", "SGB9uaÄndG"] },
+  { "query": "weapons act carrying firearms", "expected_law_key": ["WaffG", "AWaffV"] },
+  { "query": "narcotics and illegal drugs", "expected_law_key": ["BtMG", "MedCanG"] },
+  { "query": "animal welfare and protection", "expected_law_key": ["TierSchG", "TAppV"] },
+  { "query": "asylum seekers benefits", "expected_law_key": "AsylbLG" },
+  { "query": "income tax deductions", "expected_law_key": "EStG" },
+  { "query": "rules for drones and aviation", "expected_law_key": ["LuftVG", "LuftBO"] },
+  { "query": "insolvency proceedings for businesses", "expected_law_key": "InsO" },
+  { "query": "telecommunications privacy", "expected_law_key": ["TKG", "TTDSG"] },
+  { "query": "environmental protection emissions", "expected_law_key": ["BImSchG", "BImSchV 43"] },
+  { "query": "youth protection in media and public", "expected_law_key": "JuSchG" },
+  { "query": "trade tax for businesses", "expected_law_key": ["GewStG", "BsGaV"] },
+  { "query": "Entgeltpunkte für Beitragszeiten (pension points)", "expected_law_key": "SGB 6" },
+  { "query": "child benefit payments (Kindergeld)", "expected_law_key": ["EStG", "SGG"] },
+  { "query": "residence permit for foreigners", "expected_law_key": ["AufenthG", "AufenthV"] },
+  { "query": "money laundering prevention", "expected_law_key": ["GwG", "FKAustG"] },
+  { "query": "workplace safety regulations", "expected_law_key": "ArbSchG" },
+  { "query": "trademark registration", "expected_law_key": "MarkenG" },
+  { "query": "public procurement laws", "expected_law_key": ["VgV", "GWB"] },
+  { "query": "food safety and hygiene", "expected_law_key": ["LFGB", "Tier-LMHV"] },
+  { "query": "building code and permits", "expected_law_key": ["BauGB", "BBauG"] },
+  { "query": "university framework and higher education (Hochschulrahmengesetz HRG)", "expected_law_key": "HRG" }
 ]

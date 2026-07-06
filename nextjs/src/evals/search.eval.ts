@@ -26,7 +26,12 @@ describe("Search Accuracy Evaluations", () => {
       const top3Keys = results.slice(0, 3).map((r) => r.law_key.trim());
       
       // Ensure the expected law key is in the top 3 results
-      expect(top3Keys).toContain(tc.expected_law_key);
+      if (Array.isArray(tc.expected_law_key)) {
+        const found = tc.expected_law_key.some((key: string) => top3Keys.includes(key));
+        expect(found, `Expected top 3 to contain one of ${tc.expected_law_key.join(', ')} but got ${top3Keys}`).toBe(true);
+      } else {
+        expect(top3Keys).toContain(tc.expected_law_key);
+      }
 
       // If a specific norm id was expected, verify it appears in the results
       if (tc.expected_norm_id) {

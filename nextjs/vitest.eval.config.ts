@@ -3,8 +3,7 @@ import path from "path";
 import { loadEnvConfig } from "@next/env";
 
 const projectDir = process.cwd();
-process.env.NODE_ENV = "development";
-loadEnvConfig(projectDir);
+loadEnvConfig(projectDir, true);
 
 export default defineConfig({
   test: {
