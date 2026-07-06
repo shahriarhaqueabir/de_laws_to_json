@@ -1,5 +1,0 @@
-﻿.playwright-mcp/
-auth-page-snapshot.md
-nextjs/node_modules/.vite/
-*.pyc
-__pycache__/

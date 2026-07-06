@@ -78,6 +78,3 @@ temp/
 
 # Windows null devices
 nul
-
-# Supabase CLI local working directory (machine-local config)
-supabase/
