@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { ChatMode, CitedLaw, CloudProvider, ChatSettings } from "../lib/types";
+import { ANALYSIS_MODEL } from "../lib/model-constants";
 import { useBrowserAI } from "./useBrowserAI";
 import { stripThinkTags } from "../lib/prompt-format";
 
@@ -124,7 +125,7 @@ export function useChatStrategy({
               message: userMsg,
               context: contextStr,
               conversationId: conversationId || undefined,
-              model: settings.ollamaModel || undefined,
+              model: ANALYSIS_MODEL,
               language: "English",
               temperature: settings.ollamaParams?.temperature ?? 0.3,
               top_p: settings.ollamaParams?.top_p ?? 0.9,
@@ -163,7 +164,7 @@ export function useChatStrategy({
                       return updated;
                     });
                   }
-                } catch {}
+                } catch { }
               }
             }
           }

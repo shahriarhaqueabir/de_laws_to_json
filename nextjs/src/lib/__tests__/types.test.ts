@@ -96,7 +96,6 @@ describe("DEFAULT_CHAT_SETTINGS", () => {
     expect(settings).toHaveProperty("mode");
     expect(settings).toHaveProperty("language");
     expect(settings).toHaveProperty("brokerUrl");
-    expect(settings).toHaveProperty("ollamaModel");
     expect(settings).toHaveProperty("ollamaParams");
     expect(settings).toHaveProperty("provider");
     expect(settings).toHaveProperty("model");

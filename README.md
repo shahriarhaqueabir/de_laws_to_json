@@ -10,7 +10,7 @@ German Law Vault provides a comprehensive search engine and AI-guided legal assi
 [![Website](https://img.shields.io/badge/website-live-brightgreen?style=flat-square)](https://ai-assisted-german-law-shahriarhaqueabir.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg?style=flat-square)](https://nextjs.org)
 [![Laws](https://img.shields.io/badge/laws-6,000+-gold.svg?style=flat-square)](https://www.gesetze-im-internet.de/)
-[![Tests](https://img.shields.io/badge/tests-516%20passing-brightgreen.svg?style=flat-square)](nextjs/)
+[![Tests](https://img.shields.io/badge/tests-543%20passing-brightgreen.svg?style=flat-square)](nextjs/)
 [![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](.github/pull_request_template.md)
 [![Security](https://img.shields.io/badge/security-RLS%20%7C%20CSP%20%7C%20AES--256--GCM-purple.svg?style=flat-square)](docs/security-architecture.md)
 [![TypeScript](https://img.shields.io/badge/typescript-strict-blue.svg?style=flat-square)](nextjs/tsconfig.json)
@@ -21,11 +21,11 @@ German Law Vault provides a comprehensive search engine and AI-guided legal assi
 
 ## Screenshots
 
-| Search | AI Chat | Bookmark Folders |
-|--------|---------|-----------------|
-| ![Search](assets/Screenshot%201.png) | ![Chat](assets/Screenshot%202.png) | ![Folders](assets/Screenshot%204.png) |
+| Homepage | AI Chat | Search Results |
+|---------|---------|----------------|
+| ![Homepage](assets/screenshot-search.png) | ![Chat](assets/screenshot-chat.png) | ![Search Results](assets/screenshot-search-results.png) |
 | **Guidance** | **Law Viewer** | **Mobile** |
-| ![Guidance](assets/Screenshot%203.png) | ![Laws](assets/Screenshot%205.png) | ![Mobile](assets/Screenshot%201.png) |
+| ![Guidance](assets/screenshot-guidance.png) | ![Law Viewer](assets/screenshot-law-viewer.png) | ![Mobile](assets/screenshot-mobile.png) |
 
 ---
 

@@ -58,5 +58,6 @@ INSERT INTO public.remediation_playbooks (category, issue_type, steps) VALUES
   {"step": 3, "title": "Beweisanträge stellen", "description": "File motions for evidence (Beweisanträge) to introduce favorable evidence, witness testimony, or expert opinions.", "deadline_days": null, "type": "legal_action"},
   {"step": 4, "title": "Hauptverhandlung", "description": "Prepare for the main hearing. Your lawyer will present your defense, cross-examine witnesses, and make closing arguments.", "deadline_days": null, "type": "hearing"},
   {"step": 5, "title": "Rechtsmittel prüfen", "description": "If convicted, discuss appeal options with your lawyer: Berufung (appeal on facts and law) or Revision (appeal on law only) (§§ 312, 333 StPO).", "deadline_days": null, "type": "appeal", "statute": "§§ 312, 333 StPO"}
-]')
-ON CONFLICT (issue_type) DO NOTHING;
+]');
+-- ON CONFLICT removed because issue_type has no unique constraint.
+-- Seed runs against a fresh database after supabase db reset, so no duplicates possible.

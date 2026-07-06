@@ -12,6 +12,7 @@
 
 import type { AppLanguage, CloudProvider } from "./types";
 import type { CitedLaw } from "./types";
+import { ANALYSIS_MODEL } from "./model-constants";
 import type {
   FolderContext,
   FolderStatus,
@@ -75,7 +76,6 @@ export interface GenerateGuidanceParams {
   model: string;
   customEndpoint: string;
   brokerUrl?: string;
-  ollamaModel?: string;
 }
 
 export interface DocumentGenerationParams {
@@ -423,7 +423,6 @@ export function calculateDeadlineWarnings(
 
 async function callLocalBroker(
   brokerUrl: string,
-  ollamaModel: string | undefined,
   systemPrompt: string,
   userPrompt: string,
 ): Promise<string> {
@@ -434,7 +433,7 @@ async function callLocalBroker(
       body: JSON.stringify({
         message: userPrompt,
         context: systemPrompt,
-        model: ollamaModel || undefined,
+        model: ANALYSIS_MODEL,
         language: "English",
         temperature: 0.3,
         top_p: 0.9,
@@ -467,13 +466,11 @@ async function callAI(
   systemPrompt: string,
   userPrompt: string,
   brokerUrl?: string,
-  ollamaModel?: string,
 ): Promise<string> {
   switch (provider) {
     case "local":
       return callLocalBroker(
         brokerUrl || "http://localhost:9000",
-        ollamaModel,
         systemPrompt,
         userPrompt,
       );
@@ -540,7 +537,6 @@ export async function generateGuidancePaths(
     systemPrompt,
     userPrompt,
     params.brokerUrl,
-    params.ollamaModel,
   );
 
   const paths = parseGuidanceResponse(raw);

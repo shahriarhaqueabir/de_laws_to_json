@@ -12,6 +12,7 @@ import { isValidBrokerUrl, resolveBrokerUrl } from "../../../lib/broker";
 import { translateQueryToGerman } from "../../../lib/translate-server";
 import { detectCategory } from "../../../lib/category-detect";
 import { extractLawKeys, KNOWN_LAW_KEYS } from "../../../lib/law-keys";
+import { ANALYSIS_MODEL } from "../../../lib/model-constants";
 import {
   checkRateLimit,
   getClientIp,
@@ -38,7 +39,6 @@ const ChatBodySchema = z.object({
   model: z.string().optional(),
   customEndpoint: z.string().optional(),
   language: z.string().optional(),
-  ollamaModel: z.string().optional(),
   ollamaParams: OllamaParamsSchema,
 });
 
@@ -82,7 +82,6 @@ export async function POST(req: NextRequest) {
       model,
       customEndpoint,
       language,
-      ollamaModel,
       ollamaParams,
     } = parsed.data;
 
@@ -237,7 +236,7 @@ export async function POST(req: NextRequest) {
               message,
               context: contextStr,
               conversationId,
-              model: ollamaModel || undefined,
+              model: ANALYSIS_MODEL,
               language: langName,
               temperature: ollamaParams?.temperature ?? 0.3,
               top_p: ollamaParams?.top_p ?? 0.9,

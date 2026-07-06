@@ -11,9 +11,9 @@ vi.mock("../chat-context", () => {
       provider: "openai",
       model: "gpt-4o",
     },
-    updateSettings: () => {},
+    updateSettings: () => { },
     mode: "cloud",
-    setMode: () => {},
+    setMode: () => { },
   });
 
   return {
@@ -407,7 +407,6 @@ describe("NormViewer", () => {
             language: "en",
             mode: "local",
             brokerUrl: "http://localhost:8080",
-            ollamaModel: "llama3",
           }),
         }),
       );

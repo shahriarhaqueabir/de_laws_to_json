@@ -9,6 +9,7 @@ import { LANGUAGE_NAMES, type AppLanguage, type CloudProvider } from "../../../l
 import { errorResponse } from "../../../lib/api-utils";
 import { isValidBrokerUrl, resolveBrokerUrl } from "../../../lib/broker";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
+import { TRANSLATION_MODEL } from "../../../lib/model-constants";
 import {
   checkRateLimit,
   getClientIp,
@@ -67,7 +68,6 @@ const ExplainBodySchema = z.object({
   model: z.string().max(100).optional(),
   customEndpoint: z.string().max(500).optional(),
   brokerUrl: z.string().max(500).optional(),
-  ollamaModel: z.string().max(100).optional(),
   ollamaParams: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -150,7 +150,6 @@ export async function POST(req: NextRequest) {
       model,
       customEndpoint,
       brokerUrl: bodyBrokerUrl,
-      ollamaModel,
       ollamaParams,
     } = parsed.data;
 
@@ -204,7 +203,7 @@ export async function POST(req: NextRequest) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             message: explainPrompt,
-            model: "qwen2.5:1.5b-translate",
+            model: TRANSLATION_MODEL,
             language: langName,
             temperature: 0,
             max_tokens: 2048,
@@ -216,7 +215,7 @@ export async function POST(req: NextRequest) {
         // Broker unreachable — fall back to direct Ollama (port 11434)
         try {
           const ollamaBody = {
-            model: "qwen2.5:1.5b-translate",
+            model: TRANSLATION_MODEL,
             prompt: explainPrompt,
             stream: false,
             options: { temperature: 0, num_predict: 2048 },

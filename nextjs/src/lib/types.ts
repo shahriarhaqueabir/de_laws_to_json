@@ -124,7 +124,6 @@ export interface ChatSettings {
   language: AppLanguage;
   // Local AI
   brokerUrl: string;
-  ollamaModel: string;
   ollamaParams: OllamaParams;
   // Cloud AI
   provider: CloudProvider;
@@ -153,7 +152,6 @@ export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
   mode: "basic",
   language: "en",
   brokerUrl: "http://localhost:9000",
-  ollamaModel: "german-legal:latest",
   ollamaParams: DEFAULT_OLLAMA_PARAMS,
   provider: "openai",
   model: "gpt-4o-mini",

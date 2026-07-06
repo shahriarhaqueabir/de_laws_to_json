@@ -177,6 +177,7 @@ DROP POLICY IF EXISTS "conversations: read own/admin" ON public.conversations;
 DROP POLICY IF EXISTS "conversations: insert own/admin" ON public.conversations;
 DROP POLICY IF EXISTS "conversations: update own/admin" ON public.conversations;
 DROP POLICY IF EXISTS "conversations: delete own/admin" ON public.conversations;
+DROP POLICY IF EXISTS "users own conversations" ON public.conversations;
 
 CREATE POLICY "users own conversations"
   ON public.conversations FOR ALL
@@ -188,6 +189,7 @@ DROP POLICY IF EXISTS "messages: read own/admin" ON public.messages;
 DROP POLICY IF EXISTS "messages: insert own/admin" ON public.messages;
 DROP POLICY IF EXISTS "messages: update own/admin" ON public.messages;
 DROP POLICY IF EXISTS "messages: delete own/admin" ON public.messages;
+DROP POLICY IF EXISTS "users own messages" ON public.messages;
 
 CREATE POLICY "users own messages"
   ON public.messages FOR ALL
@@ -203,6 +205,7 @@ DROP POLICY IF EXISTS "bookmarks: read own/admin" ON public.bookmarks;
 DROP POLICY IF EXISTS "bookmarks: insert own/admin" ON public.bookmarks;
 DROP POLICY IF EXISTS "bookmarks: update own/admin" ON public.bookmarks;
 DROP POLICY IF EXISTS "bookmarks: delete own/admin" ON public.bookmarks;
+DROP POLICY IF EXISTS "users own bookmarks" ON public.bookmarks;
 
 CREATE POLICY "users own bookmarks"
   ON public.bookmarks FOR ALL
@@ -214,6 +217,8 @@ DROP POLICY IF EXISTS "norm_explanations: read own/admin" ON public.norm_explana
 DROP POLICY IF EXISTS "norm_explanations: insert own/admin" ON public.norm_explanations;
 DROP POLICY IF EXISTS "norm_explanations: update own/admin" ON public.norm_explanations;
 DROP POLICY IF EXISTS "norm_explanations: delete own/admin" ON public.norm_explanations;
+DROP POLICY IF EXISTS "norm_explanations are public" ON public.norm_explanations;
+DROP POLICY IF EXISTS "norm_explanations insert" ON public.norm_explanations;
 
 CREATE POLICY "norm_explanations are public"
   ON public.norm_explanations FOR SELECT

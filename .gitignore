@@ -182,10 +182,6 @@ examples/
 # Archived legacy code (not part of the app)
 # -----------------------------------------------------------------------------
 _archive/
-assets/*.png
-assets/*.jpg
-assets/*.jpeg
-assets/*.gif
 Documentation and AI Instructions/
 
 # Additional backup folders
@@ -293,17 +289,29 @@ agent-output*
 # Gitleaks security scan reports
 gitleaks-report*
 
-# Local Documentation and ADRs
-docs/
+# Agent-specific documentation (not for public repo)
+docs/superpowers/
 
 # Local model configuration files
 Modelfile*
 hf-transformers-models.md
 
+# Agent config files (not for public repo)
+CLAUDE.md
+
 # Agent plan ignores
 .gitignore_plans
+
+# Data exports and ad-hoc scripts (regenerable)
+nextjs/laws.json
+nextjs/laws.csv
+nextjs/laws_raw.txt
+nextjs/laws_export_err.txt
+nextjs/tmp_*
+nextjs/sql/
+supabase/_*.sql
+supabase/_*.js
 
 # Windows null devices
 NUL
 nul
-/docs/

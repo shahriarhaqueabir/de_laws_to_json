@@ -100,7 +100,7 @@ All hooks live in `.githooks/` (configured via `git config core.hooksPath .githo
 - Script: `.githooks/post-push` — rebuilds the codebase knowledge graph after every `git push`
 - Runs `graphify extract` with the configured GGUF model via llama.cpp
 - Falls back to AST-only `graphify update` if the LLM server is unreachable
-- **LLM**: `hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M` served at `http://localhost:8080/v1`
+- **LLM**: `Jackrong/Qwopus3.5-9B-Coder` served at `http://localhost:8080/v1`
 - To start the model server:
   ```bash
   llama-server -m path/to/model.gguf --port 8080
@@ -149,7 +149,7 @@ graphify query "<question>"                               # Query the built grap
 graphify hook status                                     # Check hook installation
 
 # Run llama.cpp server for graphify LLM
-# llama-server -m path/to/hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M.gguf --port 8080
+# llama-server -m path/to/Jackrong/Qwopus3.5-9B-Coder.gguf --port 8080
 ```
 
 ## Key Conventions

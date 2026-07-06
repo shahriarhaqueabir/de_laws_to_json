@@ -22,6 +22,7 @@ import {
   BROWSER_MODELS,
   LANGUAGE_LABELS,
 } from "../../lib/types";
+import { REQUIRED_LOCAL_MODELS } from "../../lib/model-constants";
 
 const MODE_ICONS: Record<ChatMode, typeof Plug> = {
   local: Plug,
@@ -114,11 +115,8 @@ export default function SettingsPage() {
             if (data.models?.length) {
               setAvailableModels(data.models);
               // Auto-select first model if current one isn't available
-              if (
-                settings.ollamaModel &&
-                !data.models.includes(settings.ollamaModel)
-              ) {
-                updateSettings({ ollamaModel: data.models[0] });
+              if (data.models?.length) {
+                setAvailableModels(data.models);
               }
             }
           } else {
@@ -133,7 +131,7 @@ export default function SettingsPage() {
     check();
     const interval = setInterval(check, 10000);
     return () => clearInterval(interval);
-  }, [settings.mode, settings.brokerUrl, settings.ollamaModel]);
+  }, [settings.mode, settings.brokerUrl]);
 
   const update = (patch: Partial<ChatSettings>) => {
     updateSettings(patch);
@@ -146,40 +144,30 @@ export default function SettingsPage() {
     setTestResult(null);
     try {
       if (settings.mode === "local") {
-        setBrokerStarting(true);
-        setTestResult("Starting broker...");
-
-        // Step 1: Try starting the broker if it's not running
+        // Lightweight test — just check health and show models
         try {
-          const startRes = await fetch("/api/broker/manage", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "start" }),
+          const res = await fetch(`${settings.brokerUrl}/health`, {
+            signal: AbortSignal.timeout(3000),
           });
-          const startData = await startRes.json();
-          if (startData.status === "error") {
-            // Non-fatal: broker might already be running or managed externally
-            console.warn(
-              "[Settings] Broker auto-start note:",
-              startData.message,
+          if (res.ok) {
+            setBrokerOk(true);
+            const data = await res.json();
+            const modelList = data.models?.length
+              ? data.models.join(", ")
+              : "active";
+            setTestResult(`✓ Connected — Models: ${modelList}`);
+          } else {
+            setBrokerOk(false);
+            setTestResult(
+              "Not connected — use 'Start Ollama Connection' first",
             );
           }
-        } catch (startErr) {
-          console.warn("[Settings] Broker auto-start failed:", startErr);
-        }
-
-        // Step 2: Wait briefly for broker to boot
-        await new Promise((r) => setTimeout(r, 2000));
-        setBrokerStarting(false);
-
-        // Step 3: Test the connection
-        const res = await fetch(`${settings.brokerUrl}/health`);
-        if (res.ok) {
-          setBrokerOk(true);
-        } else {
+        } catch {
           setBrokerOk(false);
+          setTestResult(
+            "Not connected — use 'Start Ollama Connection' first",
+          );
         }
-        setTestResult(res.ok ? "Connected ✓" : `Error: ${res.status}`);
       } else if (settings.mode === "cloud") {
         if (!hasStoredKey && !newApiKey) {
           setTestResult("API key required");
@@ -247,6 +235,80 @@ export default function SettingsPage() {
       );
     } finally {
       setTesting(false);
+    }
+  };
+
+  const handleStartConnection = async () => {
+    setBrokerStarting(true);
+    setTestResult(null);
+    try {
+      setTestResult("Checking Ollama status...");
+
+      // Step 1: Check full status
+      const statusRes = await fetch("/api/broker/manage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "status" }),
+      });
+      const statusData = await statusRes.json();
+
+      // Step 2: Warn if Ollama is not running
+      if (!statusData.ollama_running) {
+        setTestResult(
+          "⚠️ Ollama is not running. Please start it with:\n  ollama serve\n\nThen click again.",
+        );
+        setBrokerOk(false);
+        setBrokerStarting(false);
+        return;
+      }
+
+      // Step 3: Check for missing models
+      const missingModels = REQUIRED_LOCAL_MODELS.filter(
+        (m) => !statusData.installed_models.includes(m),
+      );
+      if (missingModels.length > 0) {
+        setTestResult(
+          `Downloading: ${missingModels.join(", ")} (this may take several minutes)...`,
+        );
+      }
+
+      // Step 4: Start broker (pulls missing models + boots)
+      const startRes = await fetch("/api/broker/manage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "start" }),
+      });
+      const startData = await startRes.json();
+
+      if (startData.modelStatus?.ok === false) {
+        console.warn("[Settings] Model prep note:", startData.modelStatus.message);
+      }
+
+      // Step 5: Wait briefly for broker health
+      await new Promise((r) => setTimeout(r, 2000));
+
+      // Step 6: Final health check
+      const healthRes = await fetch(`${settings.brokerUrl}/health`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (healthRes.ok) {
+        setBrokerOk(true);
+        const healthData = await healthRes.json();
+        const modelList = healthData.models?.length
+          ? healthData.models.join(", ")
+          : "active";
+        setTestResult(`✓ Connected — Models: ${modelList}`);
+      } else {
+        setBrokerOk(false);
+        setTestResult("Broker started but health check failed");
+      }
+    } catch (err: unknown) {
+      setTestResult(
+        `Error: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      setBrokerOk(false);
+    } finally {
+      setBrokerStarting(false);
     }
   };
 
@@ -571,54 +633,26 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
-                  Ollama Model
+                  Required local models
                 </label>
-                {availableModels ? (
-                  <div className="relative">
-                    <select
-                      value={settings.ollamaModel}
-                      onChange={(e) => update({ ollamaModel: e.target.value })}
-                      className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm appearance-none cursor-pointer"
-                    >
-                      {availableModels.map((m) => (
-                        <option
-                          key={m}
-                          value={m}
-                          className="bg-[#0a0a0a] text-white"
-                        >
-                          {m}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </div>
+                <div className="space-y-3 rounded border border-white/10 bg-white/[0.02] p-4">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-accent-gold-bright">
+                      Analysis model
+                    </p>
+                    <p className="mt-1 font-mono text-sm text-zinc-300">
+                      german-legal:latest
+                    </p>
                   </div>
-                ) : brokerOk === false ? (
-                  <input
-                    type="text"
-                    value={settings.ollamaModel}
-                    onChange={(e) => update({ ollamaModel: e.target.value })}
-                    placeholder="e.g. qwen2.5:1.5b"
-                    className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-all font-mono text-sm"
-                  />
-                ) : (
-                  <div className="w-full px-4 py-3 border border-white/10 bg-white/5 text-zinc-500 font-mono text-sm animate-pulse">
-                    Loading models...
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-accent-gold-bright">
+                      Translation model
+                    </p>
+                    <p className="mt-1 font-mono text-sm text-zinc-300">
+                      qwen2.5:1.5b-translate
+                    </p>
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
@@ -650,45 +684,81 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="p-4 bg-accent-gold/5 border border-accent-gold/20 flex items-start gap-4">
-              <ShieldAlert className="w-5 h-5 text-accent-gold mt-0.5" />
-              <div>
-                <p className="text-xs font-black text-accent-gold-body uppercase tracking-[0.2em] mb-1">
-                  Auto-Managed
-                </p>
-                <p className="text-xs text-zinc-400 font-bold leading-relaxed">
-                  The broker starts automatically when you click{" "}
-                  <span className="text-white">Test Connection</span>. Ensure
-                  you have <span className="text-white">Ollama</span> running on
-                  your machine before connecting.
-                </p>
-              </div>
+            {/* Info panel */}
+            <div className="p-4 border border-accent-gold/20 bg-accent-gold/[0.03]">
+              <p className="text-xs font-black text-accent-gold-bright uppercase tracking-[0.2em] mb-2">
+                What happens when you start:
+              </p>
+              <ol className="space-y-1.5">
+                <li className="text-xs text-zinc-400 flex items-start gap-2">
+                  <span className="text-accent-gold-bright font-black shrink-0">1.</span>
+                  Checks if <span className="font-bold text-zinc-300">Ollama</span> is running on your machine
+                </li>
+                <li className="text-xs text-zinc-400 flex items-start gap-2">
+                  <span className="text-accent-gold-bright font-black shrink-0">2.</span>
+                  Verifies required models are installed
+                </li>
+                <li className="text-xs text-zinc-400 flex items-start gap-2">
+                  <span className="text-accent-gold-bright font-black shrink-0">3.</span>
+                  Downloads any missing models (may take several minutes)
+                </li>
+                <li className="text-xs text-zinc-400 flex items-start gap-2">
+                  <span className="text-accent-gold-bright font-black shrink-0">4.</span>
+                  Starts the local AI broker
+                </li>
+                <li className="text-xs text-zinc-400 flex items-start gap-2">
+                  <span className="text-accent-gold-bright font-black shrink-0">5.</span>
+                  You&apos;re ready to chat
+                </li>
+              </ol>
             </div>
 
-            <div className="flex items-center gap-3 text-xs font-black uppercase tracking-widest">
-              <span className="text-zinc-400">Status:</span>
-              {brokerStarting ? (
-                <span className="text-zinc-500 flex items-center gap-2">
-                  <div className="w-1 h-1 rounded-full bg-zinc-600 animate-pulse" />
-                  Starting broker...
-                </span>
-              ) : brokerOk === null ? (
-                <span className="text-zinc-500 flex items-center gap-2">
-                  <div className="w-1 h-1 rounded-full bg-zinc-600 animate-pulse" />
-                  Checking...
-                </span>
-              ) : brokerOk ? (
-                <span className="flex items-center gap-2 text-accent-gold-bright">
-                  <div className="w-1.5 h-1.5 rounded-full bg-accent-gold-bright shadow-[0_0_8px_var(--accent-gold-bright)]" />
-                  Connected
-                </span>
-              ) : (
-                <span className="flex items-center gap-2 text-red-500">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-                  Offline
-                </span>
-              )}
-              {brokerOk && (
+            {/* Two-button row */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleStartConnection}
+                disabled={brokerStarting || testing}
+                className="px-6 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-xs hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
+              >
+                {brokerStarting
+                  ? "Starting..."
+                  : "Start Ollama Connection"}
+              </button>
+              <button
+                onClick={handleTestConnection}
+                disabled={testing || brokerStarting}
+                className="px-6 py-3 border border-white/20 text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-white/5 disabled:opacity-20 transition-all duration-500"
+              >
+                {testing ? "Testing..." : "Test Connection"}
+              </button>
+            </div>
+
+            {/* Status display */}
+            {testResult && (
+              <div
+                className={`p-4 border text-sm font-bold ${testResult.includes("\u2713")
+                  ? "border-accent-gold/20 bg-accent-gold/5 text-accent-gold-bright"
+                  : testResult.includes("Error") || testResult.includes("failed") || testResult.includes("not running")
+                    ? "border-red-900/40 bg-red-950/20 text-red-400"
+                    : "border-zinc-800 bg-zinc-900/50 text-zinc-300"
+                  }`}
+              >
+                <div className="flex items-center gap-3">
+                  {brokerStarting ? (
+                    <div className="w-2 h-2 rounded-full bg-zinc-600 animate-pulse" />
+                  ) : brokerOk ? (
+                    <div className="w-2 h-2 rounded-full bg-accent-gold-bright shadow-[0_0_8px_var(--accent-gold-bright)]" />
+                  ) : (
+                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                  )}
+                  <span className="whitespace-pre-line">{testResult}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Stop button */}
+            {brokerOk && (
+              <div className="flex items-center gap-3">
                 <button
                   onClick={async () => {
                     try {
@@ -699,14 +769,14 @@ export default function SettingsPage() {
                       });
                     } catch { }
                     setBrokerOk(false);
-                    setTestResult("Stopped");
+                    setTestResult("Broker stopped");
                   }}
-                  className="ml-4 px-4 py-1.5 border border-red-900/40 text-red-400 hover:bg-red-950/20 transition-colors text-[11px] font-black uppercase tracking-widest"
+                  className="px-4 py-1.5 border border-red-900/40 text-red-400 hover:bg-red-950/20 transition-colors text-[11px] font-black uppercase tracking-widest"
                 >
                   Stop Broker
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             <p className="text-xs text-zinc-400 font-bold italic border-l border-accent-gold/20 pl-4">
               Note: {MODE_STATUS_NOTE.local}
@@ -997,8 +1067,7 @@ export default function SettingsPage() {
       )}
 
       {/* ── Test Connection Button ── */}
-      {(settings.mode === "local" ||
-        settings.mode === "cloud" ||
+      {(settings.mode === "cloud" ||
         settings.mode === "browser") && (
           <div className="flex items-center gap-6 mb-16">
             <button

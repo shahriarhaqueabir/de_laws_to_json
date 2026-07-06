@@ -519,7 +519,6 @@ const spec = {
           model: { type: "string" },
           customEndpoint: { type: "string" },
           language: { type: "string" },
-          ollamaModel: { type: "string" },
           ollamaParams: {
             type: "object",
             properties: {

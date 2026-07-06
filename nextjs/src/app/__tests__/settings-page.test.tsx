@@ -119,8 +119,7 @@ vi.mock("../../components/chat-context", () => ({
     settings: {
       mode: "basic",
       language: "en",
-      localBrokerUrl: "http://localhost:9000",
-      ollamaModel: "llama3",
+      brokerUrl: "http://localhost:9000",
       browserModel: "HuggingFaceTB/SmolLM2-360M-Instruct",
       apiKey: "",
       provider: "openai",
@@ -208,5 +207,27 @@ describe("SettingsPage", () => {
     expect(
       screen.getByPlaceholderText(/e.g. gpt-4o-mini/i),
     ).toBeInTheDocument();
+  });
+
+  it("hides manual model entry in local mode and shows the required local models", () => {
+    vi.mocked(useChat).mockReturnValue({
+      settings: {
+        ...DEFAULT_CHAT_SETTINGS,
+        mode: "local",
+        brokerUrl: "http://localhost:9000",
+      },
+      updateSettings: vi.fn(),
+      mode: "local",
+      setMode: vi.fn(),
+    });
+
+    render(<SettingsPage />);
+
+    expect(screen.queryByText(/ollama model/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/required local models/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/german-legal:latest/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/qwen2.5:1.5b-translate/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/start ollama connection/i)).toBeInTheDocument();
+    expect(screen.getByText(/test connection/i)).toBeInTheDocument();
   });
 });

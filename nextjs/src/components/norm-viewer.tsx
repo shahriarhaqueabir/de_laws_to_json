@@ -47,7 +47,6 @@ export default function NormViewer({
     mode,
     language: langSetting,
     brokerUrl,
-    ollamaModel,
     provider,
     model,
     customEndpoint,
@@ -122,7 +121,6 @@ export default function NormViewer({
           model,
           customEndpoint,
           brokerUrl,
-          ollamaModel,
           ollamaParams,
         }),
       });
@@ -151,7 +149,6 @@ export default function NormViewer({
     mode,
     langSetting,
     brokerUrl,
-    ollamaModel,
     normId,
     lawKey,
     title,

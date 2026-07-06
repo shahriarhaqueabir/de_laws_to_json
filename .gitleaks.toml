@@ -67,7 +67,10 @@ paths = [
     ".*\\.next/.*",
     ".*\\.worktrees/.*",
     # One-off scripts and test infrastructure (env var names, not secrets)
-    ".*scripts/.*",
+    ".*scripts/sync-qdrant-categories.*",
+    ".*scripts/verify-qdrant-categories.*",
+    ".*scripts/export-laws.*",
+    ".*scripts/ingest_official_",
     ".*tests/.*",
     # Graphify AST cache — env var references in Python AST trees, not secrets
     ".*graphify-out/cache/.*",

@@ -13,6 +13,7 @@ import {
 import { decryptApiKey } from "@/lib/encryption";
 import { sanitizeErrorMessage } from "@/lib/sanitize";
 import { isValidBrokerUrl } from "@/lib/broker";
+import { ANALYSIS_MODEL } from "@/lib/model-constants";
 import { translateFromGerman } from "@/lib/translate-server";
 import {
   checkRateLimit,
@@ -52,7 +53,6 @@ const GuidanceRequestSchema = z.object({
   model: z.string().default("gpt-4o-mini"),
   mode: z.string().optional(),
   brokerUrl: z.string().optional(),
-  ollamaModel: z.string().optional(),
 });
 
 // ── Execute SQL for guidance_paths insert ──────────────────────────────────
@@ -137,7 +137,6 @@ export async function POST(req: NextRequest) {
       model,
       mode,
       brokerUrl,
-      ollamaModel,
     } = parsed.data;
 
     // 1. Get API key from Supabase (if user is signed in)
@@ -192,10 +191,9 @@ export async function POST(req: NextRequest) {
         qdrantContext,
         provider: "local",
         apiKey: "",
-        model: ollamaModel || "",
+        model: ANALYSIS_MODEL,
         customEndpoint: "",
         brokerUrl,
-        ollamaModel,
       };
 
       const paths = await generateGuidancePaths(params);
