@@ -22,13 +22,24 @@ vi.mock("../../components/auth-context", () => ({
   }),
 }));
 
-vi.mock("../../components/chat-context", () => ({
-  useChat: () => ({
+vi.mock("../../components/chat-context", () => {
+  const React = require("react");
+  const ChatContext = React.createContext({
     settings: { language: "en" },
-    updateSettings: vi.fn(),
-  }),
-  ChatProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
+    updateSettings: () => {},
+    mode: "cloud",
+    setMode: () => {},
+  });
+
+  return {
+    ChatContext,
+    useChat: () => ({
+      settings: { language: "en" },
+      updateSettings: vi.fn(),
+    }),
+    ChatProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
 
 import AuthPage from "../auth/page";
 

@@ -35,7 +35,7 @@ interface ChatContextType {
   setMode: (m: ChatMode) => void;
 }
 
-const ChatContext = createContext<ChatContextType | undefined>(undefined);
+export const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 function loadSavedSettings(): ChatSettings | null {
   try {
@@ -51,21 +51,31 @@ function loadSavedSettings(): ChatSettings | null {
       }
       // SSRF mitigation: reject non-localhost broker URLs
       loaded.brokerUrl = sanitizeBrokerUrl(loaded.brokerUrl);
+
+      // Deep merge with defaults to ensure all fields (including nested ones) exist
+      const merged: ChatSettings = {
+        ...DEFAULT_CHAT_SETTINGS,
+        ...loaded,
+        ollamaParams: {
+          ...DEFAULT_CHAT_SETTINGS.ollamaParams,
+          ...(loaded.ollamaParams || {}),
+        },
+      };
+
       // Ensure system prompt is synced if empty in storage
-      if (!loaded.ollamaParams?.system_prompt) {
-        loaded.ollamaParams = {
-          ...(loaded.ollamaParams || DEFAULT_CHAT_SETTINGS.ollamaParams),
-          system_prompt: SYSTEM_PROMPT,
-        };
+      if (!merged.ollamaParams.system_prompt) {
+        merged.ollamaParams.system_prompt = SYSTEM_PROMPT;
       }
-      return loaded;
+      return merged;
     }
   } catch {}
   return null;
 }
 
 function buildDefaultSettings(): ChatSettings {
-  const base = { ...DEFAULT_CHAT_SETTINGS };
+  // Use a deep copy to prevent reference sharing with DEFAULT_CHAT_SETTINGS.ollamaParams
+  const base: ChatSettings = JSON.parse(JSON.stringify(DEFAULT_CHAT_SETTINGS));
+
   if (!base.ollamaParams.system_prompt) {
     base.ollamaParams.system_prompt = SYSTEM_PROMPT;
   }

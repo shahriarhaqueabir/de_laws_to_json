@@ -5,21 +5,14 @@
  * The active language comes from ChatSettings. Falls back to English, then raw key.
  */
 
-import { useCallback } from "react";
-import { useChat } from "../components/chat-context";
+import { useCallback, useContext } from "react";
+import { ChatContext } from "../components/chat-context";
 import type { AppLanguage } from "../lib/types";
 import { LANGUAGE_MAP } from "../lib/i18n";
 
 export function useLanguage() {
-  let language: AppLanguage = "en";
-
-  // useChat may throw if called outside ChatProvider (e.g., test env)
-  try {
-    const { settings } = useChat();
-    language = settings.language || "en";
-  } catch {
-    language = "en";
-  }
+  const context = useContext(ChatContext);
+  const language: AppLanguage = context?.settings?.language || "en";
 
   /**
    * Look up a UI string by key.

@@ -2,19 +2,35 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-vi.mock("../chat-context", () => ({
-  useChat: () => ({
+vi.mock("../chat-context", () => {
+  const React = require("react");
+  const ChatContext = React.createContext({
     settings: {
       mode: "cloud",
       language: "en",
       provider: "openai",
       model: "gpt-4o",
     },
-    setSettings: vi.fn(),
-  }),
-  ChatProvider: ({ children }: { children: React.ReactNode }) =>
-    children ?? null,
-}));
+    updateSettings: () => {},
+    mode: "cloud",
+    setMode: () => {},
+  });
+
+  return {
+    ChatContext,
+    useChat: () => ({
+      settings: {
+        mode: "cloud",
+        language: "en",
+        provider: "openai",
+        model: "gpt-4o",
+      },
+      setSettings: vi.fn(),
+    }),
+    ChatProvider: ({ children }: { children: React.ReactNode }) =>
+      children ?? null,
+  };
+});
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),

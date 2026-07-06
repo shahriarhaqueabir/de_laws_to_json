@@ -86,7 +86,18 @@ async function getGenerator(
 }
 
 self.addEventListener("message", async (event: MessageEvent) => {
-  const { id, task, prompt, text: inputText, language, model } = event.data;
+  const {
+    id,
+    task,
+    prompt,
+    text: inputText,
+    language,
+    model,
+    temperature,
+    max_tokens,
+    top_p,
+    top_k,
+  } = event.data;
   const modelToUse = model || DEFAULT_MODEL;
 
   try {
@@ -140,13 +151,18 @@ self.addEventListener("message", async (event: MessageEvent) => {
       return;
     }
 
-    // Use 12k max new tokens for long-form legal analysis.
+    // Use 12k max new tokens for long-form legal analysis as default.
     // Qwen3-0.6B supports up to 32k; Gemma 3 270M supports ~8k.
-    const maxTokens = isGemmaModel(modelToUse) ? 8192 : 12288;
+    const defaultMax = isGemmaModel(modelToUse) ? 8192 : 12288;
+    const finalMax = max_tokens || defaultMax;
+    const finalTemp = temperature ?? 0.3;
+
     const output = await gen(prompt, {
-      max_new_tokens: maxTokens,
-      temperature: 0.3,
-      do_sample: true,
+      max_new_tokens: finalMax,
+      temperature: finalTemp,
+      top_p: top_p ?? 0.9,
+      top_k: top_k ?? 40,
+      do_sample: finalTemp > 0,
     });
 
     // text-generation includes the input prompt in generated_text

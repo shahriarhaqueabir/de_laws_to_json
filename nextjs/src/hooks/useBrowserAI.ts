@@ -156,7 +156,16 @@ export function useBrowserAI(enabled: boolean = true): UseBrowserAIReturn {
   }, [enabled]);
 
   const generate = useCallback(
-    async (prompt: string, model?: string): Promise<string> => {
+    async (
+      prompt: string,
+      model?: string,
+      params?: {
+        temperature?: number;
+        max_tokens?: number;
+        top_p?: number;
+        top_k?: number;
+      },
+    ): Promise<string> => {
       const worker = workerRef.current;
       if (!worker) {
         const msg = "Browser AI worker not available.";
@@ -175,6 +184,10 @@ export function useBrowserAI(enabled: boolean = true): UseBrowserAIReturn {
           id: crypto.randomUUID(),
           prompt,
           model,
+          temperature: params?.temperature,
+          max_tokens: params?.max_tokens,
+          top_p: params?.top_p,
+          top_k: params?.top_k,
         });
       });
     },

@@ -458,16 +458,63 @@ export default function SettingsPage() {
                 </label>
                 <input
                   type="number"
-                  value={settings.ollamaParams.max_tokens}
+                  value={settings.ollamaParams.max_tokens || ""}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    update({
+                      ollamaParams: {
+                        ...settings.ollamaParams,
+                        max_tokens: isNaN(val) ? 0 : val,
+                      },
+                    });
+                  }}
+                  className="w-full px-4 py-2 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 transition-colors font-mono text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
+                  Top P ({settings.ollamaParams.top_p})
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={settings.ollamaParams.top_p}
                   onChange={(e) =>
                     update({
                       ollamaParams: {
                         ...settings.ollamaParams,
-                        max_tokens: parseInt(e.target.value),
+                        top_p: parseFloat(e.target.value),
                       },
                     })
                   }
-                  className="w-full px-4 py-2 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 transition-colors font-mono text-sm"
+                  className="w-full accent-accent-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
+                  Top K ({settings.ollamaParams.top_k})
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={settings.ollamaParams.top_k}
+                  onChange={(e) =>
+                    update({
+                      ollamaParams: {
+                        ...settings.ollamaParams,
+                        top_k: parseInt(e.target.value),
+                      },
+                    })
+                  }
+                  className="w-full accent-accent-gold"
                 />
               </div>
             </div>
