@@ -18,7 +18,6 @@ export const DE: Record<string, string> = {
   "guidance.title": "Rechtsberatung",
   "guidance.describe": "Beschreiben Sie Ihre Situation",
   "guidance.analyze": "Analyse",
-  "guidance.no_folder": "Kein Ordner ausgewählt",
   "guidance.history": "Geschichte",
   "common.error": "Fehler",
   "nav.sign_in": "Anmelden",
