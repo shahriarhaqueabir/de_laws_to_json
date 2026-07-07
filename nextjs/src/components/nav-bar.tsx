@@ -22,6 +22,7 @@ import {
   Scale,
   Menu,
   X,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "./auth-context";
 import { useChat } from "./chat-context";
@@ -80,6 +81,7 @@ export default function NavBar() {
 
   const navItems = [
     { href: "/", label: t("nav.search"), icon: Search },
+    { href: "/laws", label: t("nav.laws"), icon: BookOpen },
     { href: "/chat", label: t("nav.chat"), icon: MessageSquare },
     { href: "/guidance", label: t("nav.guidance"), icon: Compass },
     { href: "/bookmarks", label: t("nav.bookmarks"), icon: Bookmark },
@@ -107,17 +109,17 @@ export default function NavBar() {
 
   return (
     <nav className="sticky top-6 z-50 w-full px-6" aria-label="Main navigation">
-      <div className="max-w-5xl mx-auto glass-panel-heavy shadow-premium px-6 py-2 border-white/5">
+      <div className="max-w-5xl mx-auto glass-panel-heavy shadow-premium px-4 sm:px-6 py-2 border-white/5">
         <div className="flex justify-between items-center h-12">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-3 group">
-              <Scale className="w-5 h-5 text-accent-gold transition-transform duration-500 group-hover:rotate-12" />
-              <span className="font-serif font-bold text-lg tracking-tight text-white hidden sm:block">
+          <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-3 xl:gap-5 shrink min-w-0">
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+              <Scale className="w-5 h-5 text-accent-gold transition-transform duration-500 group-hover:rotate-12 shrink-0" />
+              <span className="font-serif font-bold text-lg tracking-tight text-white hidden lg:block">
                 Vault
               </span>
             </Link>
 
-            <div className="hidden sm:flex sm:items-center sm:gap-2">
+            <div className="hidden sm:flex sm:items-center gap-px sm:gap-0.5 lg:gap-1.5 shrink">
               {navItems.map((item) => {
                 const isActive =
                   pathname === item.href ||
@@ -126,11 +128,10 @@ export default function NavBar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-3 py-1.5 text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-300 active:translate-y-[1px] relative group ${
-                      isActive
-                        ? "text-accent-gold-body"
-                        : "text-zinc-500 hover:text-white"
-                    }`}
+                    className={`px-0.5 sm:px-1 lg:px-2 xl:px-3 py-1.5 text-[0.5rem] sm:text-[0.55rem] md:text-[0.6rem] lg:text-xs font-bold uppercase tracking-[0.01em] sm:tracking-[0.05em] md:tracking-[0.1em] lg:tracking-[0.15em] whitespace-nowrap transition-colors duration-300 active:translate-y-[1px] relative group shrink-0 ${isActive
+                      ? "text-accent-gold-body"
+                      : "text-zinc-500 hover:text-white"
+                      }`}
                   >
                     {item.label}
                     {isActive && (
@@ -202,11 +203,10 @@ export default function NavBar() {
                           key={item.href}
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
-                          className={`flex items-center gap-4 px-4 py-3.5 text-sm font-medium rounded-lg transition-all duration-300 ${
-                            isActive
-                              ? "bg-white/[0.04] text-accent-gold-bright"
-                              : "text-zinc-500 hover:bg-white/5 hover:text-white"
-                          }`}
+                          className={`flex items-center gap-4 px-4 py-3.5 text-sm font-medium rounded-lg transition-all duration-300 ${isActive
+                            ? "bg-white/[0.04] text-accent-gold-bright"
+                            : "text-zinc-500 hover:bg-white/5 hover:text-white"
+                            }`}
                         >
                           <Icon className="w-5 h-5" />
                           <span>{item.label}</span>
@@ -232,10 +232,10 @@ export default function NavBar() {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 shrink-0">
             <Link
               href={user ? "/settings" : "/auth"}
-              className="flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-colors duration-300 text-zinc-500 hover:text-white"
+              className="flex items-center gap-1 md:gap-2 px-1 md:px-2 lg:px-3 py-2 text-[9px] sm:text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors duration-300 text-zinc-500 hover:text-white shrink-0"
               title={user?.email ?? ""}
             >
               {user ? (
@@ -270,10 +270,10 @@ export default function NavBar() {
                 onKeyDown={(e) => e.key === "Escape" && setLangOpen(false)}
                 aria-haspopup="true"
                 aria-expanded={langOpen}
-                className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-zinc-600 hover:text-zinc-300 transition-colors duration-300 border border-transparent hover:border-white/10"
+                className="flex items-center gap-1 px-1 sm:px-1.5 md:px-2.5 lg:px-3 py-2.5 text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.05em] sm:tracking-[0.1em] lg:tracking-[0.2em] text-zinc-600 hover:text-zinc-300 transition-colors duration-300 border border-transparent hover:border-white/10 shrink-0"
               >
                 <Globe className="w-3.5 h-3.5 shrink-0" />
-                <span className="tracking-[0.3em]">{currentLang}</span>
+                <span className="tracking-[0.15em] lg:tracking-[0.3em]">{currentLang}</span>
                 <ChevronDown className="w-2.5 h-2.5 opacity-40" />
               </button>
 
@@ -304,11 +304,10 @@ export default function NavBar() {
                             updateSettings({ language: code });
                             setLangOpen(false);
                           }}
-                          className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
-                            isActive
-                              ? "bg-white/[0.04] text-accent-gold-bright"
-                              : "text-zinc-500 hover:bg-white/5 hover:text-white"
-                          }`}
+                          className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${isActive
+                            ? "bg-white/[0.04] text-accent-gold-bright"
+                            : "text-zinc-500 hover:bg-white/5 hover:text-white"
+                            }`}
                         >
                           <span className="flex-1 tracking-normal normal-case text-sm">
                             {label}
@@ -331,10 +330,10 @@ export default function NavBar() {
                 onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
                 aria-haspopup="true"
                 aria-expanded={open}
-                className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs font-black uppercase tracking-[0.2em] transition-colors duration-300 border border-white/5 ${meta.bg} ${meta.accentVar} hover:bg-white/10 hover:border-white/10`}
+                className={`flex items-center gap-1 md:gap-2 px-1 lg:px-2 xl:px-3 py-2.5 min-h-[44px] text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.03em] sm:tracking-[0.05em] lg:tracking-[0.15em] transition-colors duration-300 border border-white/5 ${meta.bg} ${meta.accentVar} hover:bg-white/10 hover:border-white/10 shrink-0`}
               >
                 <ModeIcon className="w-3 h-3" />
-                <span className="hidden sm:inline md:inline">
+                <span className="hidden lg:inline">
                   {t(meta.tKey)}
                 </span>
                 <ChevronDown className="w-2.5 h-2.5 opacity-40" />
@@ -365,11 +364,10 @@ export default function NavBar() {
                           <button
                             key={m}
                             onClick={() => switchMode(m)}
-                            className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${
-                              isActive
-                                ? mm.accentVar + " bg-white/[0.04]"
-                                : "text-zinc-500 hover:bg-white/5 hover:text-white"
-                            }`}
+                            className={`w-full flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-left transition-all duration-300 ${isActive
+                              ? mm.accentVar + " bg-white/[0.04]"
+                              : "text-zinc-500 hover:bg-white/5 hover:text-white"
+                              }`}
                           >
                             <MI
                               className={`w-4 h-4 ${isActive ? mm.accentVar : "text-zinc-400"}`}
@@ -396,7 +394,7 @@ export default function NavBar() {
             </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </div >
+    </nav >
   );
 }

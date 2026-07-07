@@ -68,8 +68,10 @@ describe("GET /api/laws", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.data.results).toHaveLength(2);
-    expect(body.data.total).toBe(2);
+    expect(body.data).toHaveLength(2);
+    expect(body.total).toBe(2);
+    expect(body.page).toBe(1);
+    expect(body.totalPages).toBe(1);
   });
 
   it("filters laws by category", async () => {
@@ -84,8 +86,8 @@ describe("GET /api/laws", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.data.results).toHaveLength(1);
-    expect(body.data.results[0].key).toBe("StGB");
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0].key).toBe("StGB");
   });
 
   it("returns pagination with total count", async () => {
@@ -97,8 +99,8 @@ describe("GET /api/laws", () => {
     const res = await GET(req);
     const body = await res.json();
 
-    expect(body.data.total).toBe(100);
-    expect(body.data.results).toHaveLength(1);
+    expect(body.total).toBe(100);
+    expect(body.data).toHaveLength(1);
   });
 
   it("returns 500 on Supabase error", async () => {
@@ -111,7 +113,7 @@ describe("GET /api/laws", () => {
     const body = await res.json();
 
     expect(res.status).toBe(500);
-    expect(body.error.code).toBe("DB_ERROR");
+    expect(body.error.code).toBe("LAWS_ERROR");
     expect(body.error.message).toBe("Failed to fetch laws");
   });
 
@@ -125,6 +127,7 @@ describe("GET /api/laws", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.data.results).toEqual([]);
+    expect(body.data).toEqual([]);
+    expect(body.total).toBe(0);
   });
 });

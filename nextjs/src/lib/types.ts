@@ -60,7 +60,7 @@ export const MODE_LABELS: Record<
   basic: {
     label: "Basic Search",
     description:
-      "Searches laws and shows relevant paragraphs. No AI generation. Translations use the same browser-based Qwen model as Browser AI mode.",
+      "Searches laws and shows relevant paragraphs. No AI generation. No translation — switch to Browser AI, Cloud AI, or Local AI for multilingual support.",
   },
 };
 

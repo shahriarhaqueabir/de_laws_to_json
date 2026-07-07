@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+
 import Link from "next/link";
 import {
   Home,
@@ -16,8 +16,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { useLanguage } from "../hooks/useLanguage";
-import { translateViaQwen } from "../lib/translate-via-qwen";
-import { LANGUAGE_NAMES, type AppLanguage } from "../lib/types";
+import type { AppLanguage } from "../lib/types";
 
 interface Category {
   key: string;
@@ -229,39 +228,7 @@ function CategoryCard({
   accentColor: string;
 }) {
   const { language } = useLanguage();
-  const [translated, setTranslated] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const staticLabel = cat.labels[language] || cat.labels.en;
-
-  useEffect(() => {
-    // Don't translate German to German
-    if (language === "de") {
-      setTranslated(null);
-      return;
-    }
-
-    let cancelled = false;
-    setLoading(true);
-
-    translateViaQwen(cat.name, LANGUAGE_NAMES[language] || "English")
-      .then((result) => {
-        if (!cancelled) {
-          setTranslated(result);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setTranslated(null);
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [cat.name, language]);
+  const label = cat.labels[language] || cat.labels.en;
 
   return (
     <div className="text-center">
@@ -269,7 +236,7 @@ function CategoryCard({
         className={`w-6 h-6 mx-auto mb-4 text-zinc-600 group-hover:${accentColor} transition-colors duration-500`}
       />
       <h3 className="font-serif font-bold text-white text-[13px] tracking-tight mb-1">
-        {loading ? staticLabel : translated || staticLabel}
+        {label}
       </h3>
       <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
         {cat.name}
