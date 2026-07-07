@@ -90,6 +90,8 @@ docs/adr/                       # Architecture Decision Records
 
 All hooks live in `.githooks/` (configured via `git config core.hooksPath .githooks`).
 
+**Note:** `.githooks/` is in `.gitignore` — hooks are local-only and must be created+installed per developer. CI secret scanning (`secrets-scan.yml`) catches secrets on every push/PR regardless.
+
 ### Pre-commit: Secret Scanning
 - Script: `.githooks/pre-commit` — scans staged changes with gitleaks
 - Config: `.gitleaks.toml` — project-specific rules for Supabase, Qdrant, OpenAI keys
