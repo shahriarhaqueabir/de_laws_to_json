@@ -230,7 +230,7 @@ export async function GET(req: NextRequest) {
               type: "websearch",
               config: "german",
             })
-            .limit(10) as unknown as Promise<{
+            .limit(50) as unknown as Promise<{
               data: { key: string; title: string; category: string }[] | null;
               error: any;
             }>);
@@ -308,7 +308,7 @@ export async function GET(req: NextRequest) {
 
       // Timeout after 10s to prevent hanging requests
       const catResults = await Promise.race([
-        supabase.from("laws").select("*").eq("category", category).limit(20),
+        supabase.from("laws").select("*").eq("category", category).limit(200),
         new Promise<never>((_, reject) =>
           setTimeout(
             () =>
