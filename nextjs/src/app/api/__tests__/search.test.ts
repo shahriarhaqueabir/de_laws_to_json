@@ -186,15 +186,15 @@ describe("GET /api/search", () => {
     expect(mockSearchNorms).toHaveBeenCalledWith("test", undefined, 50, 0);
   });
 
-  it("returns empty results when no query or category provided", async () => {
+  it("returns 422 when no query or category provided", async () => {
     const { GET } = await import("../search/route");
     const req = makeRequest("/api/search");
     const res = await GET(req);
     const body = await res.json();
 
-    expect(res.status).toBe(200);
-    expect(body.results).toHaveLength(0);
-    expect(body.total).toBe(0);
+    expect(res.status).toBe(422);
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+    expect(body.error.message).toContain("Either a search query");
   });
 
   it("returns 500 on Qdrant failure", async () => {

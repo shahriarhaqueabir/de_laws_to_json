@@ -74,6 +74,15 @@ export async function GET(req: NextRequest) {
   const { q: query, category, lang, page } = parsed.data;
   const safeQuery = (query || "").trim();
 
+  // Require either a search query or a category filter
+  if (!safeQuery && !category) {
+    return errorResponse(
+      "VALIDATION_ERROR",
+      "Either a search query (q) or a category filter (category) is required. Browse all laws at GET /api/laws.",
+      422,
+    );
+  }
+
   // Rate limiting
   const ip = getClientIp(req);
   const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
