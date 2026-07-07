@@ -108,10 +108,10 @@ export default function NavBar() {
   const ModeIcon = meta.icon;
 
   return (
-    <nav className="sticky top-6 z-50 w-full px-6" aria-label="Main navigation">
-      <div className="max-w-5xl mx-auto glass-panel-heavy shadow-premium px-4 sm:px-6 py-2 border-white/5">
-        <div className="flex justify-between items-center h-12">
-          <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-3 xl:gap-5 shrink min-w-0">
+    <nav className="sticky top-6 z-50 w-full px-4 sm:px-6" aria-label="Main navigation">
+      <div className="max-w-5xl mx-auto glass-panel-heavy shadow-premium px-3 sm:px-6 py-2 border-white/5">
+        <div className="flex justify-between items-center h-11 sm:h-12">
+          <div className="flex items-center gap-px sm:gap-0.5 md:gap-1 lg:gap-3 xl:gap-5 shrink min-w-0">
             <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
               <Scale className="w-5 h-5 text-accent-gold transition-transform duration-500 group-hover:rotate-12 shrink-0" />
               <span className="font-serif font-bold text-lg tracking-tight text-white hidden lg:block">
@@ -119,7 +119,7 @@ export default function NavBar() {
               </span>
             </Link>
 
-            <div className="hidden sm:flex sm:items-center gap-px sm:gap-0.5 lg:gap-1.5 shrink">
+            <div className="hidden sm:flex sm:items-center gap-[1px] sm:gap-[2px] md:gap-1 lg:gap-1.5 overflow-hidden">
               {navItems.map((item) => {
                 const isActive =
                   pathname === item.href ||
@@ -128,7 +128,7 @@ export default function NavBar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-0.5 sm:px-1 lg:px-2 xl:px-3 py-1.5 text-[0.5rem] sm:text-[0.55rem] md:text-[0.6rem] lg:text-xs font-bold uppercase tracking-[0.01em] sm:tracking-[0.05em] md:tracking-[0.1em] lg:tracking-[0.15em] whitespace-nowrap transition-colors duration-300 active:translate-y-[1px] relative group shrink-0 ${isActive
+                    className={`px-[2px] sm:px-[3px] md:px-[5px] lg:px-2 xl:px-3 py-1.5 text-[clamp(0.38rem,1.1vw,0.5rem)] sm:text-[clamp(0.4rem,1.2vw,0.55rem)] md:text-[clamp(0.5rem,1.3vw,0.6rem)] lg:text-xs font-bold uppercase tracking-[0.01em] sm:tracking-[0.02em] md:tracking-[0.05em] lg:tracking-[0.15em] whitespace-nowrap transition-colors duration-300 active:translate-y-[1px] relative group shrink min-w-0 ${isActive
                       ? "text-accent-gold-body"
                       : "text-zinc-500 hover:text-white"
                       }`}
@@ -232,10 +232,10 @@ export default function NavBar() {
             )}
           </div>
 
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 shrink-0">
+          <div className="flex items-center gap-px sm:gap-0.5 md:gap-1 lg:gap-2 shrink-0">
             <Link
               href={user ? "/settings" : "/auth"}
-              className="flex items-center gap-1 md:gap-2 px-1 md:px-2 lg:px-3 py-2 text-[9px] sm:text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors duration-300 text-zinc-500 hover:text-white shrink-0"
+              className="flex items-center gap-1 md:gap-2 px-1 md:px-1.5 lg:px-3 py-2 text-[clamp(0.35rem,0.9vw,0.45rem)] sm:text-[clamp(0.4rem,1vw,0.5rem)] md:text-[clamp(0.45rem,1.1vw,0.55rem)] lg:text-xs font-bold uppercase tracking-widest transition-colors duration-300 text-zinc-500 hover:text-white shrink-0"
               title={user?.email ?? ""}
             >
               {user ? (
@@ -270,7 +270,7 @@ export default function NavBar() {
                 onKeyDown={(e) => e.key === "Escape" && setLangOpen(false)}
                 aria-haspopup="true"
                 aria-expanded={langOpen}
-                className="flex items-center gap-1 px-1 sm:px-1.5 md:px-2.5 lg:px-3 py-2.5 text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.05em] sm:tracking-[0.1em] lg:tracking-[0.2em] text-zinc-600 hover:text-zinc-300 transition-colors duration-300 border border-transparent hover:border-white/10 shrink-0"
+                className="flex items-center gap-1 px-1 sm:px-1 md:px-1.5 lg:px-3 py-2.5 text-[clamp(0.35rem,0.9vw,0.45rem)] sm:text-[clamp(0.4rem,1vw,0.5rem)] md:text-[clamp(0.45rem,1.1vw,0.55rem)] lg:text-xs font-black uppercase tracking-[0.02em] sm:tracking-[0.05em] md:tracking-[0.1em] lg:tracking-[0.2em] text-zinc-600 hover:text-zinc-300 transition-colors duration-300 border border-transparent hover:border-white/10 shrink-0"
               >
                 <Globe className="w-3.5 h-3.5 shrink-0" />
                 <span className="tracking-[0.15em] lg:tracking-[0.3em]">{currentLang}</span>
@@ -330,7 +330,7 @@ export default function NavBar() {
                 onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
                 aria-haspopup="true"
                 aria-expanded={open}
-                className={`flex items-center gap-1 md:gap-2 px-1 lg:px-2 xl:px-3 py-2.5 min-h-[44px] text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.03em] sm:tracking-[0.05em] lg:tracking-[0.15em] transition-colors duration-300 border border-white/5 ${meta.bg} ${meta.accentVar} hover:bg-white/10 hover:border-white/10 shrink-0`}
+                className={`flex items-center gap-1 md:gap-2 px-1 lg:px-2 xl:px-3 py-2.5 min-h-[44px] text-[clamp(0.35rem,0.9vw,0.45rem)] sm:text-[clamp(0.4rem,1vw,0.5rem)] md:text-[clamp(0.45rem,1.1vw,0.55rem)] lg:text-xs font-black uppercase tracking-[0.02em] sm:tracking-[0.03em] md:tracking-[0.05em] lg:tracking-[0.15em] transition-colors duration-300 border border-white/5 ${meta.bg} ${meta.accentVar} hover:bg-white/10 hover:border-white/10 shrink-0`}
               >
                 <ModeIcon className="w-3 h-3" />
                 <span className="hidden lg:inline">

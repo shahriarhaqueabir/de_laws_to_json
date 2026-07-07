@@ -339,3 +339,6 @@ supabase/_phase2_remaining.sql
 # Windows null devices
 NUL
 nul
+
+.vercel
+.env*
