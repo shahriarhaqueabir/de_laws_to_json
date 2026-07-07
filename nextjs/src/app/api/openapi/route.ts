@@ -1,4 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+const PRODUCTION_URL = "https://ai-assisted-german-law.vercel.app";
+const LOCAL_URL = "http://localhost:3000";
 
 const spec = {
   openapi: "3.0.3",
@@ -8,13 +11,6 @@ const spec = {
     description:
       "REST API for searching, explaining, and getting guidance on German federal laws.",
   },
-  servers: [
-    { url: "http://localhost:3000", description: "Local development" },
-    {
-      url: "https://ai-assisted-german-law.vercel.app",
-      description: "Production",
-    },
-  ],
   paths: {
     "/api/search": {
       get: {
@@ -567,6 +563,21 @@ const spec = {
   },
 };
 
-export async function GET() {
-  return NextResponse.json(spec);
+export async function GET(req: NextRequest) {
+  const host = req.headers.get("host") || "localhost:3000";
+  const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
+  const currentUrl = `${protocol}://${host}`;
+
+  // Dynamically build servers list — current host first so Swagger UI defaults to it
+  const servers = [
+    { url: currentUrl, description: host.includes("localhost") ? "Local development" : "Current deployment" },
+    { url: PRODUCTION_URL, description: "Production" },
+  ];
+
+  // Only add localhost if it's not already the current URL
+  if (currentUrl !== LOCAL_URL) {
+    servers.push({ url: LOCAL_URL, description: "Local development" });
+  }
+
+  return NextResponse.json({ ...spec, servers });
 }
