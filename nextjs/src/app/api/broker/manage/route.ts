@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import { errorResponse } from "@/lib/api-utils";
 import { sanitizeErrorMessage } from "@/lib/sanitize";
-import { REQUIRED_LOCAL_MODELS } from "@/lib/model-constants";
+import { RECOMMENDED_LOCAL_MODELS } from "@/lib/model-constants";
 
 // ── Process tracking ──
 // globalThis survives HMR/route re-bundling — use it to share PID across routes.
@@ -91,7 +91,7 @@ async function ensureRequiredModels(): Promise<{ ok: boolean; message: string }>
       };
     }
 
-    const missingModels = REQUIRED_LOCAL_MODELS.filter(
+    const missingModels = (RECOMMENDED_LOCAL_MODELS as readonly string[]).filter(
       (model) => !status.installedModels.some((m) => m.startsWith(model) || m.includes(model)),
     );
 
@@ -116,7 +116,7 @@ async function ensureRequiredModels(): Promise<{ ok: boolean; message: string }>
       }
     }
 
-    return { ok: true, message: `Downloaded required models: ${REQUIRED_LOCAL_MODELS.join(", ")}` };
+    return { ok: true, message: `Downloaded required models: ${RECOMMENDED_LOCAL_MODELS.join(", ")}` };
   } catch (error) {
     return {
       ok: false,
@@ -139,8 +139,9 @@ async function checkOllamaStatus(): Promise<{ running: boolean; installedModels:
     }
     const data = (await res.json()) as { models?: Array<{ name: string }> };
     const availableModels = (data.models || []).map((m: { name: string }) => m.name);
-    const installedModels = REQUIRED_LOCAL_MODELS.filter((m) =>
-      availableModels.some((am: string) => am.startsWith(m) || am.includes(m)),
+    const installedModels = (RECOMMENDED_LOCAL_MODELS as readonly string[]).filter(
+      (m) =>
+        availableModels.some((am: string) => am.startsWith(m) || am.includes(m)),
     );
     return { running: true, installedModels: [...installedModels] };
   } catch {

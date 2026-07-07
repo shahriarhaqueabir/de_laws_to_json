@@ -222,9 +222,13 @@ export default function NormViewer({
                   case "local":
                     return t("norm.translating_local");
                   default:
-                    return t("norm.translating");
+                    // Basic mode never reaches this function (fetchExplanation returns early)
+                    return null;
                 }
               })();
+
+              /* Only render the pill if we have a mode name to display */
+              if (!modeName) return null;
 
               return (
                 <span className="text-xs font-black uppercase tracking-widest text-green-400/80 flex items-center gap-2">

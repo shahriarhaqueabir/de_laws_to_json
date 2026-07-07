@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  useRef,
-  useState,
-  useCallback,
-  useEffect,
-  startTransition,
-} from "react";
+import { useState, useCallback, useEffect, startTransition } from "react";
+import { browserWorker, WorkerStatusEvent } from "../lib/worker-manager";
 
 export interface UseBrowserAIReturn {
   /** Send a prompt to the worker. Returns the generated text when complete. */
@@ -35,24 +30,18 @@ export interface UseBrowserAIReturn {
 }
 
 /**
- * useBrowserAI — Creates and manages a Transformers.js web worker for
- * client-side text generation.
+ * useBrowserAI — React bindings for the shared BrowserWorkerManager.
  *
- * When `enabled` is false (e.g. chat mode changed away from "browser"),
- * the worker is terminated and resources are freed.
+ * Unlike the previous implementation that owned its own Worker instance,
+ * this hook subscribes to events from the shared singleton. The worker
+ * stays alive as long as any consumer is active, preventing duplicate
+ * model downloads.
  *
- * The returned `generate()` function returns a Promise that resolves with
- * the generated text. The `response` state variable is also set for
- * reactive consumers.
+ * When `enabled` is false the hook desubscribes but does NOT terminate
+ * the worker — other consumers (translateViaQwen) may still need it.
  */
 export function useBrowserAI(enabled: boolean = true): UseBrowserAIReturn {
-  const workerRef = useRef<Worker | null>(null);
-  const pendingRef = useRef<{
-    resolve: (v: string) => void;
-    reject: (e: unknown) => void;
-  } | null>(null);
-
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(() => browserWorker.isReady);
   const [isGenerating, setIsGenerating] = useState(false);
   const [response, setResponse] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -61,107 +50,52 @@ export function useBrowserAI(enabled: boolean = true): UseBrowserAIReturn {
 
   useEffect(() => {
     if (!enabled) {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
-      }
       startTransition(() => {
         setIsReady(false);
         setIsGenerating(false);
         setStatus(null);
       });
-      pendingRef.current?.reject(new Error("Worker disabled"));
-      pendingRef.current = null;
       return;
     }
 
-    // Guard: don't create a second worker if one already exists
-    if (workerRef.current) return;
+    // Ensure the worker exists (safe no-op if already created)
+    browserWorker.ensureReady();
 
-    const worker = new Worker(
-      new URL("../workers/chat.worker.ts", import.meta.url),
-      { type: "module" },
-    );
-
-    worker.onmessage = (event: MessageEvent) => {
-      const { status: s, output, error: workerError, ...rest } = event.data;
-
-      switch (s) {
+    const unsubscribe = browserWorker.subscribe((event: WorkerStatusEvent) => {
+      switch (event.type) {
         case "ready":
-          setIsReady(true);
-          setIsGenerating(false);
-          setStatus("AI model ready");
+          startTransition(() => {
+            setIsReady(true);
+            setIsGenerating(false);
+            setStatus("AI model ready");
+          });
           break;
 
-        case "progress": {
-          // Transformers.js progress_callback may put its own status field
-          // in the data, overwriting the outer "progress" label.
-          // Treat any progress-like message the same way.
-          const pct = rest.total
-            ? Math.round((rest.loaded / rest.total) * 100)
-            : typeof rest.progress === "number"
-              ? Math.round(rest.progress * 100)
-              : 0;
-          setProgress(pct / 100);
-          setStatus(pct > 0 ? `Loading model... ${pct}%` : "Loading model...");
-          break;
-        }
-
+        case "progress":
         case "download": {
-          const pct = rest.total
-            ? Math.round((rest.loaded / rest.total) * 100)
+          const pct = event.total
+            ? Math.round((event.loaded! / event.total) * 100)
             : 0;
-          setProgress(pct / 100);
-          setStatus(`Downloading core... ${pct}%`);
+          startTransition(() => {
+            setProgress(pct / 100);
+            setStatus(
+              pct > 0 ? `Loading model... ${pct}%` : "Loading model...",
+            );
+          });
           break;
         }
-
-        case "complete":
-          setResponse(output || "");
-          setIsGenerating(false);
-          setProgress(1);
-          setStatus(null);
-          pendingRef.current?.resolve(output || "");
-          pendingRef.current = null;
-          break;
 
         case "error":
-          setError(workerError || "Unknown worker error");
-          setIsGenerating(false);
-          setStatus(null);
-          pendingRef.current?.reject(
-            new Error(workerError || "Unknown worker error"),
-          );
-          pendingRef.current = null;
+          startTransition(() => {
+            setError(event.message);
+            setIsGenerating(false);
+            setStatus(null);
+          });
           break;
       }
-    };
+    });
 
-    worker.onerror = (err: ErrorEvent) => {
-      const msg = err.message || "Worker error";
-      setError(msg);
-      setIsGenerating(false);
-      setStatus(null);
-      pendingRef.current?.reject(new Error(msg));
-      pendingRef.current = null;
-    };
-
-    workerRef.current = worker;
-
-    // Send init signal to start model download
-    worker.postMessage({ prompt: "INIT_ONLY", id: "init" });
-
-    return () => {
-      worker.terminate();
-      workerRef.current = null;
-      // If there's a pending promise, silently resolve it with empty
-      // string to avoid unhandled rejections. The caller can check
-      // isReady/isGenerating to detect the worker was torn down.
-      if (pendingRef.current) {
-        pendingRef.current.resolve("");
-      }
-      pendingRef.current = null;
-    };
+    return unsubscribe;
   }, [enabled]);
 
   const generate = useCallback(
@@ -175,30 +109,25 @@ export function useBrowserAI(enabled: boolean = true): UseBrowserAIReturn {
         top_k?: number;
       },
     ): Promise<string> => {
-      const worker = workerRef.current;
-      if (!worker) {
-        const msg = "Browser AI worker not available.";
-        setError(msg);
-        return msg;
-      }
-
       setError(null);
       setResponse("");
       setIsGenerating(true);
       setProgress(0);
 
-      return new Promise<string>((resolve, reject) => {
-        pendingRef.current = { resolve, reject };
-        worker.postMessage({
-          id: crypto.randomUUID(),
-          prompt,
-          model,
-          temperature: params?.temperature,
-          max_tokens: params?.max_tokens,
-          top_p: params?.top_p,
-          top_k: params?.top_k,
-        });
-      });
+      try {
+        const result = await browserWorker.generate(prompt, model, params);
+        setResponse(result);
+        setIsGenerating(false);
+        setProgress(1);
+        setStatus(null);
+        return result;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        setIsGenerating(false);
+        setStatus(null);
+        return msg;
+      }
     },
     [],
   );

@@ -226,8 +226,8 @@ describe("POST /api/chat", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.response).toContain("local AI broker is offline");
-    expect(body.response).toContain("broker.py");
+    expect(body.response).toContain("your local AI is offline");
+    expect(body.response).toContain("ollama serve");
     expect(body.brokerAvailable).toBe(false);
   });
 

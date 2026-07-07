@@ -45,7 +45,7 @@ export const MODE_LABELS: Record<
 > = {
   local: {
     label: "Local AI",
-    description: "Uses Ollama on your machine via the local broker. Two models: 'german-legal' (6.6GB) for full legal analysis/guidance, and 'qwen2.5:1.5b-translate' (1GB) for fast section translations.",
+    description: "Connects directly to Ollama running on your machine (ollama serve). Works from any device — your browser reaches your local Ollama via localhost:11434. Use any Ollama model; recommended: 'german-legal' (6.6GB) for legal analysis, 'qwen2.5:1.5b-translate' (1GB) for translations.",
   },
   cloud: {
     label: "Cloud AI",
@@ -151,7 +151,7 @@ export const BROWSER_MODELS = [
 export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
   mode: "basic",
   language: "en",
-  brokerUrl: "http://localhost:9000",
+  brokerUrl: "http://localhost:11434",
   ollamaParams: DEFAULT_OLLAMA_PARAMS,
   provider: "openai",
   model: "gpt-4o-mini",

@@ -8,7 +8,7 @@ import type { ChatMode, CloudProvider, CitedLaw } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
 import { decryptApiKey } from "../../../lib/encryption";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
-import { isValidBrokerUrl, resolveBrokerUrl } from "../../../lib/broker";
+import { isValidBrokerUrl, resolveBrokerUrl, buildOllamaChatBody } from "../../../lib/broker";
 import { translateQueryToGerman } from "../../../lib/translate-server";
 import { detectCategory } from "../../../lib/category-detect";
 import { extractLawKeys, KNOWN_LAW_KEYS } from "../../../lib/law-keys";
@@ -226,41 +226,79 @@ export async function POST(req: NextRequest) {
 
     switch (mode) {
       case "local": {
-        // Mode 1: Local Ollama via broker
+        // Mode 1: Local Ollama — try broker first (backward compat),
+        // then fall back to direct Ollama API
         try {
           const langName = "English";
-          const brokerRes = await fetch(`${BROKER_URL}/api/chat`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+          let ollamaRes: Response;
+          let usedBroker = false;
+
+          // Try broker first (legacy port 9000)
+          try {
+            const brokerUrl = process.env.NEXT_PUBLIC_BROKER_URL || "http://localhost:9000";
+            ollamaRes = await fetch(`${brokerUrl}/api/chat`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                message,
+                context: contextStr,
+                conversationId,
+                model: model || ANALYSIS_MODEL,
+                language: langName,
+                temperature: ollamaParams?.temperature ?? 0.3,
+                top_p: ollamaParams?.top_p ?? 0.9,
+                top_k: ollamaParams?.top_k ?? 40,
+                max_tokens: ollamaParams?.max_tokens ?? 8192,
+                system_prompt: ollamaParams?.system_prompt || undefined,
+              }),
+              signal: AbortSignal.timeout(10000),
+            });
+            usedBroker = true;
+          } catch {
+            // Broker unreachable — try direct Ollama
+            console.warn("[Chat API] Broker unreachable, trying direct Ollama...");
+            const ollamaBody = buildOllamaChatBody({
               message,
               context: contextStr,
-              conversationId,
-              model: ANALYSIS_MODEL,
+              model: model || ANALYSIS_MODEL,
+              systemPrompt: ollamaParams?.system_prompt,
               language: langName,
-              temperature: ollamaParams?.temperature ?? 0.3,
-              top_p: ollamaParams?.top_p ?? 0.9,
-              top_k: ollamaParams?.top_k ?? 40,
-              max_tokens: ollamaParams?.max_tokens ?? 8192,
-              system_prompt: ollamaParams?.system_prompt || undefined,
-            }),
-            signal: AbortSignal.timeout(120000),
-          });
+              temperature: ollamaParams?.temperature,
+              top_p: ollamaParams?.top_p,
+              top_k: ollamaParams?.top_k,
+              max_tokens: ollamaParams?.max_tokens,
+              stream: false,
+            });
+            ollamaRes = await fetch("http://localhost:11434/api/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(ollamaBody),
+              signal: AbortSignal.timeout(120000),
+            });
+          }
 
-          if (brokerRes.ok) {
-            const data = await brokerRes.json();
+          if (!ollamaRes.ok) {
+            throw new Error(`Ollama returned ${ollamaRes.status}`);
+          }
+
+          const data = await ollamaRes.json();
+
+          if (usedBroker) {
+            // Broker format: { response: "..." }
             response = data.response;
             brokerAvailable = true;
           } else {
-            throw new Error("Broker returned error");
+            // Ollama direct format: { message: { content: "..." } }
+            response = data?.message?.content || data?.response || "";
+            brokerAvailable = true;
           }
-        } catch (brokerErr) {
-          console.warn("[Chat API] Broker call failed:", brokerErr);
+        } catch (err) {
+          console.warn("[Chat API] All local AI paths failed:", err);
           response =
-            `I found ${norms.length} relevant paragraphs, but your local AI broker is offline.\n\n` +
-            `To use Local AI mode, start the broker:\n` +
-            `\`\`\`bash\ncd broker && python broker.py\n\`\`\`\n\n` +
-            `Or switch to another chat mode in Settings.\n\n` +
+            `I found ${norms.length} relevant paragraphs, but your local AI is offline.\n\n` +
+            `To use Local AI mode, ensure **Ollama** is running:\n` +
+            `\`\`\`bash\nollama serve\n\`\`\`\n\n` +
+            `Then try again. You can also switch to Browser AI or Cloud AI in Settings.\n\n` +
             `**Relevant laws found:**\n` +
             citedLaws
               .map((l) => `- **${l.law_key}** ${l.norm_id} — ${l.law_title}`)

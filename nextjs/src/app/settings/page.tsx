@@ -22,7 +22,8 @@ import {
   BROWSER_MODELS,
   LANGUAGE_LABELS,
 } from "../../lib/types";
-import { REQUIRED_LOCAL_MODELS } from "../../lib/model-constants";
+import { RECOMMENDED_LOCAL_MODELS } from "../../lib/model-constants";
+import { browserWorker } from "../../lib/worker-manager";
 
 const MODE_ICONS: Record<ChatMode, typeof Plug> = {
   local: Plug,
@@ -192,40 +193,27 @@ export default function SettingsPage() {
             : `Error: ${data.error?.message || data.error || res.status}`,
         );
       } else if (settings.mode === "browser") {
-        // Test browser model download/init
+        // Test browser model download/init via the shared worker
         setTestResult("Testing connection...");
-        const worker = new Worker(
-          new URL("../../workers/chat.worker.ts", import.meta.url),
-          { type: "module" },
-        );
 
-        const result = await new Promise<string>((resolve, reject) => {
-          worker.onmessage = (e) => {
-            if (e.data.status === "download" || e.data.status === "progress") {
-              if (e.data.loaded && e.data.total) {
-                setTestResult(
-                  `Downloading model... ${Math.round((e.data.loaded / e.data.total) * 100)}%`,
-                );
-              }
-            } else if (
-              e.data.status === "ready" ||
-              e.data.status === "complete"
-            ) {
-              resolve("Model ready ✓");
-            } else if (e.data.status === "error") {
-              reject(new Error(e.data.error));
-            }
-          };
-          worker.onerror = (err) => reject(err);
-          worker.postMessage({
-            id: "test",
-            prompt: "INIT_ONLY",
-            model: settings.browserModel,
-          });
+        // Subscribe to progress updates during the test
+        const unsub = browserWorker.subscribe((event) => {
+          if (
+            (event.type === "progress" || event.type === "download") &&
+            event.total
+          ) {
+            setTestResult(
+              `Downloading model... ${Math.round((event.loaded! / event.total) * 100)}%`,
+            );
+          }
         });
 
-        setTestResult(result);
-        worker.terminate();
+        try {
+          await browserWorker.testConnection(settings.browserModel);
+          setTestResult("Model ready \u2713");
+        } finally {
+          unsub();
+        }
       } else {
         setTestResult("Mode active");
       }
@@ -263,7 +251,7 @@ export default function SettingsPage() {
       }
 
       // Step 3: Check for missing models
-      const missingModels = REQUIRED_LOCAL_MODELS.filter(
+      const missingModels = RECOMMENDED_LOCAL_MODELS.filter(
         (m) => !statusData.installed_models.includes(m),
       );
       if (missingModels.length > 0) {
@@ -613,7 +601,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4 mb-8">
             <Plug className="w-5 h-5 text-accent-gold" />
             <h2 className="font-serif font-bold text-xl text-white">
-              Local Node Configuration
+              Local Ollama Configuration
             </h2>
           </div>
 
@@ -621,7 +609,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
-                  Broker URL
+                  Ollama URL
                 </label>
                 <input
                   type="text"
@@ -633,101 +621,109 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
-                  Required local models
+                  Model
                 </label>
-                <div className="space-y-3 rounded border border-white/10 bg-white/[0.02] p-4">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-accent-gold-bright">
-                      Analysis model
-                    </p>
-                    <p className="mt-1 font-mono text-sm text-zinc-300">
-                      german-legal:latest
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-accent-gold-bright">
-                      Translation model
-                    </p>
-                    <p className="mt-1 font-mono text-sm text-zinc-300">
-                      qwen2.5:1.5b-translate
-                    </p>
-                  </div>
-                </div>
+                {availableModels && availableModels.length > 0 ? (
+                  <select
+                    value={settings.model || RECOMMENDED_LOCAL_MODELS[0]}
+                    onChange={(e) => update({ model: e.target.value })}
+                    className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-colors font-bold text-sm"
+                  >
+                    {availableModels.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={settings.model || RECOMMENDED_LOCAL_MODELS[0]}
+                    onChange={(e) => update({ model: e.target.value })}
+                    placeholder="e.g. german-legal:latest"
+                    className="w-full px-4 py-3 border border-white/10 bg-white/5 text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold focus:border-accent-gold/40 focus:bg-white/10 transition-colors font-mono text-sm"
+                  />
+                )}
               </div>
             </div>
 
-            {/* Model purpose labels */}
+            {/* Recommended models info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 border border-white/10 bg-white/[0.02]">
                 <p className="text-xs font-black text-accent-gold-bright uppercase tracking-[0.2em] mb-1">
-                  Translation Model
+                  Recommended — Translation
                 </p>
                 <p className="text-xs font-bold font-mono text-zinc-300 mb-2">
                   qwen2.5:1.5b-translate (1GB)
                 </p>
                 <p className="text-xs text-zinc-500 leading-relaxed">
-                  Used for fast section-by-section translations in all 9 languages.
-                  Runs with temperature 0 for precision.
+                  Lightweight model for fast section-by-section translations in all 9 languages.
+                  Runs with temperature 0 for precision. Pull with:
+                  <code className="block mt-1 text-accent-gold-body font-mono">ollama pull qwen2.5:1.5b-translate</code>
                 </p>
               </div>
               <div className="p-4 border border-white/10 bg-white/[0.02]">
                 <p className="text-xs font-black text-amber-400 uppercase tracking-[0.2em] mb-1">
-                  Analysis Model
+                  Recommended — Analysis
                 </p>
                 <p className="text-xs font-bold font-mono text-zinc-300 mb-2">
                   german-legal:latest (6.6GB)
                 </p>
                 <p className="text-xs text-zinc-500 leading-relaxed">
-                  Used for in-depth legal guidance, multi-step reasoning, citation
-                  analysis, and outcome prediction.
+                  Full legal guidance model with multi-step reasoning, citation analysis,
+                  and outcome prediction. Includes German law guardrails via Modelfile.
+                  Pull with:
+                  <code className="block mt-1 text-accent-gold-body font-mono">ollama pull german-legal:latest</code>
                 </p>
               </div>
             </div>
 
-            {/* Info panel */}
+            {/* Any model note */}
             <div className="p-4 border border-accent-gold/20 bg-accent-gold/[0.03]">
               <p className="text-xs font-black text-accent-gold-bright uppercase tracking-[0.2em] mb-2">
-                What happens when you start:
+                Use Any Ollama Model
+              </p>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                You can use any Ollama-compatible model — not just the recommended ones.
+                The model field above auto-populates from your installed models when Ollama is connected.
+                Just make sure the model is pulled (<code className="text-accent-gold-body font-mono">ollama pull &lt;name&gt;</code>)
+                and enter its name in the field.
+              </p>
+            </div>
+
+            {/* Connection panel */}
+            <div className="p-4 border border-accent-gold/20 bg-accent-gold/[0.03]">
+              <p className="text-xs font-black text-accent-gold-bright uppercase tracking-[0.2em] mb-2">
+                Connection Steps:
               </p>
               <ol className="space-y-1.5">
                 <li className="text-xs text-zinc-400 flex items-start gap-2">
                   <span className="text-accent-gold-bright font-black shrink-0">1.</span>
-                  Checks if <span className="font-bold text-zinc-300">Ollama</span> is running on your machine
+                  Ensure <span className="font-bold text-zinc-300">Ollama</span> is running:
+                  <code className="block mt-0.5 ml-4 text-accent-gold-body font-mono">ollama serve</code>
                 </li>
                 <li className="text-xs text-zinc-400 flex items-start gap-2">
                   <span className="text-accent-gold-bright font-black shrink-0">2.</span>
-                  Verifies required models are installed
+                  Pull your model(s):
+                  <code className="block mt-0.5 ml-4 text-accent-gold-body font-mono">ollama pull german-legal:latest</code>
                 </li>
                 <li className="text-xs text-zinc-400 flex items-start gap-2">
                   <span className="text-accent-gold-bright font-black shrink-0">3.</span>
-                  Downloads any missing models (may take several minutes)
+                  Click <span className="font-bold text-zinc-300">Test Connection</span> below
                 </li>
                 <li className="text-xs text-zinc-400 flex items-start gap-2">
                   <span className="text-accent-gold-bright font-black shrink-0">4.</span>
-                  Starts the local AI broker
-                </li>
-                <li className="text-xs text-zinc-400 flex items-start gap-2">
-                  <span className="text-accent-gold-bright font-black shrink-0">5.</span>
-                  You&apos;re ready to chat
+                  Select your model from the dropdown and start chatting
                 </li>
               </ol>
             </div>
 
-            {/* Two-button row */}
+            {/* Button row */}
             <div className="flex items-center gap-4">
               <button
-                onClick={handleStartConnection}
-                disabled={brokerStarting || testing}
-                className="px-6 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-xs hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
-              >
-                {brokerStarting
-                  ? "Starting..."
-                  : "Start Ollama Connection"}
-              </button>
-              <button
                 onClick={handleTestConnection}
-                disabled={testing || brokerStarting}
-                className="px-6 py-3 border border-white/20 text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-white/5 disabled:opacity-20 transition-all duration-500"
+                disabled={testing}
+                className="px-6 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-xs hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
               >
                 {testing ? "Testing..." : "Test Connection"}
               </button>
@@ -744,7 +740,7 @@ export default function SettingsPage() {
                   }`}
               >
                 <div className="flex items-center gap-3">
-                  {brokerStarting ? (
+                  {testing ? (
                     <div className="w-2 h-2 rounded-full bg-zinc-600 animate-pulse" />
                   ) : brokerOk ? (
                     <div className="w-2 h-2 rounded-full bg-accent-gold-bright shadow-[0_0_8px_var(--accent-gold-bright)]" />
@@ -753,28 +749,6 @@ export default function SettingsPage() {
                   )}
                   <span className="whitespace-pre-line">{testResult}</span>
                 </div>
-              </div>
-            )}
-
-            {/* Stop button */}
-            {brokerOk && (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={async () => {
-                    try {
-                      await fetch("/api/broker/manage", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ action: "stop" }),
-                      });
-                    } catch { }
-                    setBrokerOk(false);
-                    setTestResult("Broker stopped");
-                  }}
-                  className="px-4 py-1.5 border border-red-900/40 text-red-400 hover:bg-red-950/20 transition-colors text-[11px] font-black uppercase tracking-widest"
-                >
-                  Stop Broker
-                </button>
               </div>
             )}
 

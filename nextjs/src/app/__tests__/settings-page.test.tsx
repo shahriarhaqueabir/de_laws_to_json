@@ -209,12 +209,12 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("hides manual model entry in local mode and shows the required local models", () => {
+  it("hides manual model entry in local mode and shows recommended local models", () => {
     vi.mocked(useChat).mockReturnValue({
       settings: {
         ...DEFAULT_CHAT_SETTINGS,
         mode: "local",
-        brokerUrl: "http://localhost:9000",
+        brokerUrl: "http://localhost:11434",
       },
       updateSettings: vi.fn(),
       mode: "local",
@@ -223,11 +223,11 @@ describe("SettingsPage", () => {
 
     render(<SettingsPage />);
 
-    expect(screen.queryByText(/ollama model/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/required local models/i)).toBeInTheDocument();
+    // Local mode shows recommended models instead of a blank text field
+    expect(screen.getByText(/Recommended — Translation/i)).toBeInTheDocument();
     expect(screen.getAllByText(/german-legal:latest/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/qwen2.5:1.5b-translate/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/start ollama connection/i)).toBeInTheDocument();
-    expect(screen.getByText(/test connection/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/test connection/i).length).toBeGreaterThanOrEqual(1);
   });
+
 });

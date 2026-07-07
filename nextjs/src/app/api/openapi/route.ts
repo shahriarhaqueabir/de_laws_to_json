@@ -98,6 +98,69 @@ const spec = {
         },
       },
     },
+    "/api/laws": {
+      get: {
+        tags: ["Laws"],
+        summary: "List all laws with pagination and optional filtering",
+        parameters: [
+          {
+            name: "page",
+            in: "query",
+            schema: { type: "integer", default: 1, minimum: 1, maximum: 500 },
+            description: "Page number (max 500)",
+          },
+          {
+            name: "limit",
+            in: "query",
+            schema: { type: "integer", default: 50, minimum: 1, maximum: 1000 },
+            description: "Results per page (max 1000)",
+          },
+          {
+            name: "category",
+            in: "query",
+            schema: { type: "string" },
+            description: "Filter by category key (e.g. labor, housing)",
+          },
+          {
+            name: "search",
+            in: "query",
+            schema: { type: "string" },
+            description: "Search by title, key, or alt_title (ILike match)",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Paginated list of laws",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          key: { type: "string" },
+                          title: { type: "string" },
+                          alt_title: { type: "string" },
+                          category: { type: "string" },
+                        },
+                      },
+                    },
+                    total: { type: "integer" },
+                    page: { type: "integer" },
+                    limit: { type: "integer" },
+                    totalPages: { type: "integer" },
+                  },
+                },
+              },
+            },
+          },
+          "500": { description: "Failed to fetch laws" },
+        },
+      },
+    },
     "/api/diagnostics": {
       get: {
         tags: ["System"],
@@ -568,13 +631,17 @@ export async function GET(req: NextRequest) {
   const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
   const currentUrl = `${protocol}://${host}`;
 
-  // Dynamically build servers list — current host first so Swagger UI defaults to it
+  // Production is always the default server in the list
   const servers = [
-    { url: currentUrl, description: host.includes("localhost") ? "Local development" : "Current deployment" },
     { url: PRODUCTION_URL, description: "Production" },
   ];
 
-  // Only add localhost if it's not already the current URL
+  // Add current host as second option (only if different from production)
+  if (currentUrl !== PRODUCTION_URL) {
+    servers.push({ url: currentUrl, description: "Current deployment" });
+  }
+
+  // Add localhost as third option
   if (currentUrl !== LOCAL_URL) {
     servers.push({ url: LOCAL_URL, description: "Local development" });
   }

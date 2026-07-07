@@ -16,7 +16,7 @@ function isValidBrokerUrl(url: string): boolean {
 
 function sanitizeBrokerUrl(
   url: string,
-  fallback: string = "http://localhost:9000",
+  fallback: string = "http://localhost:11434",
 ): string {
   if (isValidBrokerUrl(url)) return url;
   // Also allow empty/undefined (use default)
@@ -42,12 +42,12 @@ function loadSavedSettings(): ChatSettings | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const loaded = JSON.parse(raw);
-      // Auto-migrate legacy ports to new 9000 standard
+      // Auto-migrate legacy broker URLs to direct Ollama port
       if (
         loaded.brokerUrl === "http://localhost:9090" ||
-        loaded.brokerUrl === "http://localhost:11434"
+        loaded.brokerUrl === "http://localhost:9000"
       ) {
-        loaded.brokerUrl = "http://localhost:9000";
+        loaded.brokerUrl = "http://localhost:11434";
       }
       // SSRF mitigation: reject non-localhost broker URLs
       loaded.brokerUrl = sanitizeBrokerUrl(loaded.brokerUrl);
@@ -68,7 +68,7 @@ function loadSavedSettings(): ChatSettings | null {
       }
       return merged;
     }
-  } catch {}
+  } catch { }
   return null;
 }
 

@@ -118,7 +118,7 @@ describe("ChatProvider", () => {
     });
 
     expect(screen.getByTestId("broker-url")).toHaveTextContent(
-      "http://localhost:9000",
+      "http://localhost:11434",
     );
   });
 
@@ -158,7 +158,7 @@ describe("ChatProvider", () => {
     );
   });
 
-  it("auto-migrates legacy broker URLs to port 9000", async () => {
+  it("auto-migrates legacy broker URLs to port 11434", async () => {
     mockStore["glv_chat_settings"] = JSON.stringify({
       mode: "local",
       brokerUrl: "http://localhost:9090",
@@ -172,12 +172,12 @@ describe("ChatProvider", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("broker-url")).toHaveTextContent(
-        "http://localhost:9000",
+        "http://localhost:11434",
       );
     });
   });
 
-  it("auto-migrates http://localhost:11434 to port 9000", async () => {
+  it("keeps http://localhost:11434 as-is (already the default)", async () => {
     mockStore["glv_chat_settings"] = JSON.stringify({
       mode: "local",
       brokerUrl: "http://localhost:11434",
@@ -191,7 +191,7 @@ describe("ChatProvider", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("broker-url")).toHaveTextContent(
-        "http://localhost:9000",
+        "http://localhost:11434",
       );
     });
   });
@@ -211,7 +211,7 @@ describe("ChatProvider", () => {
     // Should fall back to default
     await waitFor(() => {
       expect(screen.getByTestId("broker-url")).toHaveTextContent(
-        "http://localhost:9000",
+        "http://localhost:11434",
       );
     });
   });
@@ -245,7 +245,7 @@ describe("ChatProvider", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("broker-url")).toHaveTextContent(
-        "http://localhost:9000",
+        "http://localhost:11434",
       );
     });
 
@@ -272,7 +272,7 @@ describe("ChatProvider", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("broker-url")).toHaveTextContent(
-        "http://localhost:9000",
+        "http://localhost:11434",
       );
     });
 
@@ -280,7 +280,7 @@ describe("ChatProvider", () => {
 
     // Broker URL should remain default due to SSRF sanitization
     expect(screen.getByTestId("broker-url")).toHaveTextContent(
-      "http://localhost:9000",
+      "http://localhost:11434",
     );
   });
 
@@ -309,7 +309,7 @@ describe("ChatProvider", () => {
 
 describe("useChat", () => {
   it("throws when used outside ChatProvider", () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
 
     function BadComponent() {
       useChat();

@@ -1,73 +1,74 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+// Hoisted mutable state used by the mock factory — survives vi.mock hoisting
+const mockState = vi.hoisted(() => ({
+  subscribe: vi.fn(() => vi.fn()),
+  ensureReady: vi.fn(),
+  generate: vi.fn(),
+  isReady: false,
+}));
+
+vi.mock("../../lib/worker-manager", () => ({
+  browserWorker: mockState,
+}));
+
 import { useBrowserAI } from "../useBrowserAI";
-
-// Provides access to the latest MockWorkerInstance created by MockWorker.
-let latestWorker: MockWorker;
-
-class MockWorker {
-  onmessage: ((e: MessageEvent) => void) | null = null;
-  onerror: ((e: ErrorEvent) => void) | null = null;
-  postMessage = vi.fn();
-  terminate = vi.fn();
-  addEventListener = vi.fn();
-  removeEventListener = vi.fn();
-
-  constructor() {
-    latestWorker = this;
-  }
-}
 
 describe("useBrowserAI", () => {
   beforeEach(() => {
-    latestWorker = undefined as unknown as MockWorker;
-    vi.stubGlobal("Worker", MockWorker);
+    vi.clearAllMocks();
+    mockState.subscribe.mockReturnValue(vi.fn());
+    mockState.isReady = false;
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
-  it("creates a worker on mount", () => {
-    const { result } = renderHook(() => useBrowserAI());
-    expect(result.current.isReady).toBe(false);
-    expect(latestWorker).toBeDefined();
-    // Should send init signal
-    expect(latestWorker.postMessage).toHaveBeenCalledWith({
-      prompt: "INIT_ONLY",
-      id: "init",
-    });
+  it("subscribes to worker manager on mount", () => {
+    renderHook(() => useBrowserAI());
+    expect(mockState.ensureReady).toHaveBeenCalledOnce();
+    expect(mockState.subscribe).toHaveBeenCalledOnce();
   });
 
-  it("does not create a worker when disabled", () => {
+  it("does not subscribe when disabled", () => {
     renderHook(() => useBrowserAI(false));
-    expect(latestWorker).toBeUndefined();
+    expect(mockState.ensureReady).not.toHaveBeenCalled();
+    expect(mockState.subscribe).not.toHaveBeenCalled();
   });
 
-  it("sets isReady when worker sends ready status", async () => {
+  it("sets isReady when worker sends ready status via subscriber callback", () => {
+    let subscriber: ((event: { type: string }) => void) | null = null;
+    mockState.subscribe.mockImplementation(
+      (fn: (event: { type: string }) => void) => {
+        subscriber = fn;
+        return vi.fn();
+      },
+    );
+
     const { result } = renderHook(() => useBrowserAI());
 
     act(() => {
-      latestWorker.onmessage?.({ data: { status: "ready" } } as MessageEvent);
+      subscriber!({ type: "ready" });
     });
 
     expect(result.current.isReady).toBe(true);
-    expect(result.current.isGenerating).toBe(false);
     expect(result.current.status).toBe("AI model ready");
   });
 
-  it("sets isGenerating during generation", async () => {
+  it("uses existing isReady if worker already ready", () => {
+    mockState.isReady = true;
+
     const { result } = renderHook(() => useBrowserAI());
 
-    // Ready the worker
-    act(() => {
-      latestWorker.onmessage?.({ data: { status: "ready" } } as MessageEvent);
-    });
+    expect(result.current.isReady).toBe(true);
+  });
 
-    // Reset mock to track only the generate call
-    latestWorker.postMessage.mockClear();
+  it("sets isGenerating during generation", async () => {
+    mockState.generate.mockResolvedValue("response text");
 
-    expect(result.current.isGenerating).toBe(false);
+    const { result } = renderHook(() => useBrowserAI());
 
     let promise: Promise<string>;
     act(() => {
@@ -75,109 +76,110 @@ describe("useBrowserAI", () => {
     });
 
     expect(result.current.isGenerating).toBe(true);
-    expect(latestWorker.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ prompt: "test prompt" }),
+
+    await act(async () => {
+      await promise;
+    });
+
+    expect(result.current.isGenerating).toBe(false);
+  });
+
+  it("returns generated text on completion", async () => {
+    mockState.generate.mockResolvedValue("response text");
+
+    const { result } = renderHook(() => useBrowserAI());
+
+    let output: string;
+    await act(async () => {
+      output = await result.current.generate("test prompt");
+    });
+
+    expect(output!).toBe("response text");
+    expect(result.current.response).toBe("response text");
+    expect(mockState.generate).toHaveBeenCalledWith(
+      "test prompt",
+      undefined,
+      undefined,
     );
   });
 
-  it("returns generated text on completion via promise", async () => {
-    const { result } = renderHook(() => useBrowserAI());
-
-    // Ready the worker
-    act(() => {
-      latestWorker.onmessage?.({ data: { status: "ready" } } as MessageEvent);
-    });
-
-    latestWorker.postMessage.mockClear();
-
-    let promise: Promise<string>;
-    act(() => {
-      promise = result.current.generate("test");
-    });
-
-    act(() => {
-      latestWorker.onmessage?.({
-        data: { status: "complete", output: "response text" },
-      } as MessageEvent);
-    });
-
-    const output = await promise!;
-    expect(output).toBe("response text");
-    expect(result.current.isGenerating).toBe(false);
-    expect(result.current.response).toBe("response text");
-  });
-
   it("sets error on worker error", async () => {
+    mockState.generate.mockRejectedValue(new Error("Model load failed"));
+
     const { result } = renderHook(() => useBrowserAI());
 
-    act(() => {
-      latestWorker.onmessage?.({
-        data: { status: "error", error: "Model load failed" },
-      } as MessageEvent);
+    await act(async () => {
+      const msg = await result.current.generate("test prompt");
+      expect(msg).toBe("Model load failed");
     });
 
     expect(result.current.error).toBe("Model load failed");
     expect(result.current.isGenerating).toBe(false);
   });
 
-  it("rejects promise on worker error", async () => {
+  it("sets error when subscriber receives error event", () => {
+    let subscriber: ((event: { type: string; message?: string }) => void) | null =
+      null;
+    mockState.subscribe.mockImplementation(
+      (fn: (event: { type: string; message?: string }) => void) => {
+        subscriber = fn;
+        return vi.fn();
+      },
+    );
+
     const { result } = renderHook(() => useBrowserAI());
 
     act(() => {
-      latestWorker.onmessage?.({ data: { status: "ready" } } as MessageEvent);
+      subscriber!({ type: "error", message: "Worker crashed" });
     });
 
-    latestWorker.postMessage.mockClear();
-
-    let promise: Promise<string>;
-    act(() => {
-      promise = result.current.generate("test");
-    });
-
-    act(() => {
-      latestWorker.onmessage?.({
-        data: { status: "error", error: "Model load failed" },
-      } as MessageEvent);
-    });
-
-    await expect(promise!).rejects.toThrow("Model load failed");
-    expect(result.current.isGenerating).toBe(false);
+    expect(result.current.error).toBe("Worker crashed");
   });
 
-  it("terminates worker on unmount", async () => {
-    const { unmount, result } = renderHook(() => useBrowserAI());
+  it("unsubscribes on unmount", () => {
+    const unsubscribe = vi.fn();
+    mockState.subscribe.mockReturnValue(unsubscribe);
 
-    // Start a generation so there's a pending promise. Catch the
-    // rejection that will fire on unmount cleanup.
-    const genPromise = result.current.generate("test").catch(() => {});
-
+    const { unmount } = renderHook(() => useBrowserAI());
     unmount();
-    await genPromise;
 
-    expect(latestWorker.terminate).toHaveBeenCalledOnce();
+    expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
-  it("returns fallback message when worker is null", async () => {
-    const { result } = renderHook(() => useBrowserAI(false));
+  it("resets state when disabled after being enabled", () => {
+    const { rerender, result } = renderHook(
+      (enabled: boolean) => useBrowserAI(enabled),
+      { initialProps: true },
+    );
 
-    const output = await result.current.generate("test");
-    expect(output).toBe("Browser AI worker not available.");
+    expect(mockState.subscribe).toHaveBeenCalledOnce();
+
+    rerender(false);
+
+    expect(result.current.isReady).toBe(false);
+    expect(result.current.isGenerating).toBe(false);
+    expect(result.current.status).toBeNull();
   });
 
-  it("tracks download progress", () => {
+  it("passes model and params to generate", async () => {
+    mockState.generate.mockResolvedValue("output");
+
     const { result } = renderHook(() => useBrowserAI());
 
-    act(() => {
-      latestWorker.onmessage?.({
-        data: {
-          status: "download",
-          loaded: 256,
-          total: 1024,
-        },
-      } as MessageEvent);
+    await act(async () => {
+      await result.current.generate("prompt", "custom-model", {
+        temperature: 0.7,
+        max_tokens: 100,
+        top_p: 0.9,
+        top_k: 40,
+      });
     });
 
-    expect(result.current.progress).toBeGreaterThan(0);
-    expect(result.current.status).toContain("25%");
+    expect(mockState.generate).toHaveBeenCalledWith("prompt", "custom-model", {
+      temperature: 0.7,
+      max_tokens: 100,
+      top_p: 0.9,
+      top_k: 40,
+    });
   });
 });
