@@ -82,27 +82,36 @@ function runOllamaCommand(args: string[], timeoutMs = 60_000): Promise<{ ok: boo
 
 async function ensureRequiredModels(): Promise<{ ok: boolean; message: string }> {
   try {
-    const listResult = await runOllamaCommand(["list"], 20_000);
-    if (!listResult.ok) {
+    // Check installed models via HTTP API instead of subprocess
+    const status = await checkOllamaStatus();
+    if (!status.running) {
       return {
         ok: false,
-        message: listResult.stderr || "Could not inspect installed Ollama models",
+        message: "Ollama is not running on " + OLLAMA_API_URL,
       };
     }
 
-    const installedModels = listResult.stdout;
-    const missingModels = REQUIRED_LOCAL_MODELS.filter((model) => !installedModels.includes(model));
+    const missingModels = REQUIRED_LOCAL_MODELS.filter(
+      (model) => !status.installedModels.some((m) => m.startsWith(model) || m.includes(model)),
+    );
 
     if (missingModels.length === 0) {
       return { ok: true, message: "Required local models are already available" };
     }
 
     for (const model of missingModels) {
-      const pullResult = await runOllamaCommand(["pull", model], 1_800_000);
-      if (!pullResult.ok) {
+      // Pull model via HTTP API
+      const pullRes = await fetch(`${OLLAMA_API_URL}/api/pull`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: model, stream: false }),
+        signal: AbortSignal.timeout(1_800_000),
+      });
+      if (!pullRes.ok) {
+        const errBody = await pullRes.text().catch(() => "");
         return {
           ok: false,
-          message: `Failed to download ${model}: ${pullResult.stderr || pullResult.stdout}`,
+          message: `Failed to download ${model}: ${errBody || pullRes.statusText}`,
         };
       }
     }
@@ -116,14 +125,22 @@ async function ensureRequiredModels(): Promise<{ ok: boolean; message: string }>
   }
 }
 
+const OLLAMA_API_URL = process.env.OLLAMA_API_URL || "http://localhost:11434";
+
 async function checkOllamaStatus(): Promise<{ running: boolean; installedModels: string[] }> {
   try {
-    const listResult = await runOllamaCommand(["list"], 10_000);
-    if (!listResult.ok) {
+    // Use HTTP API instead of spawning a subprocess — works reliably across
+    // all platforms (Windows, macOS, Linux) without requiring ollama in PATH.
+    const res = await fetch(`${OLLAMA_API_URL}/api/tags`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) {
       return { running: false, installedModels: [] };
     }
+    const data = (await res.json()) as { models?: Array<{ name: string }> };
+    const availableModels = (data.models || []).map((m: { name: string }) => m.name);
     const installedModels = REQUIRED_LOCAL_MODELS.filter((m) =>
-      listResult.stdout.includes(m),
+      availableModels.some((am: string) => am.startsWith(m) || am.includes(m)),
     );
     return { running: true, installedModels: [...installedModels] };
   } catch {
