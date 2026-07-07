@@ -19,10 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
 
-    defaults:
-      run:
-        working-directory: nextjs
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,6 +32,7 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        working-directory: nextjs
 
       - name: Deploy to Vercel
         run: npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
