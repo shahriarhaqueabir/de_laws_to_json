@@ -12,3 +12,7 @@ alter table public.laws add column if not exists search_vector tsvector
 
 create index if not exists idx_laws_search_vector
   on public.laws using gin (search_vector);
+
+-- Composite index for queries that filter by category AND full-text search
+create index if not exists idx_laws_category_search_vector
+  on public.laws (category, search_vector);

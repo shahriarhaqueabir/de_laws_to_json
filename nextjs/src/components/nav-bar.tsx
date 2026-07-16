@@ -29,6 +29,7 @@ import { useChat } from "./chat-context";
 import type { ChatMode, AppLanguage } from "../lib/types";
 import { LANGUAGE_LABELS } from "../lib/types";
 import { useLanguage } from "../hooks/useLanguage";
+import { SystemStatus } from "./system-status";
 
 const MODE_META: Record<
   ChatMode,
@@ -378,7 +379,7 @@ export default function NavBar() {
                         );
                       },
                     )}
-                    <div className="border-t border-white/5 mt-3 pt-3 px-4">
+                    <div className="border-t border-white/5 mt-3 pt-3 px-4 flex items-center justify-between">
                       <Link
                         href="/settings"
                         onClick={() => setOpen(false)}
@@ -387,6 +388,7 @@ export default function NavBar() {
                         <Settings className="w-3 h-3" />
                         {t("nav.settings")}
                       </Link>
+                      <SystemStatus compact />
                     </div>
                   </div>
                 </>

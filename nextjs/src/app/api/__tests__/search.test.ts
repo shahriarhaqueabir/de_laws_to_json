@@ -17,6 +17,9 @@ const mockSupabaseChain = vi.hoisted(() => {
       limit: vi.fn(() => thenable),
       single: vi.fn(() => thenable),
       insert: vi.fn().mockResolvedValue({ error: null }),
+      or: vi.fn(() => thenable),
+      textSearch: vi.fn(() => thenable),
+      in: vi.fn(() => thenable),
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
     });
   };
@@ -44,6 +47,11 @@ vi.mock("next/headers", () => ({
 
 vi.mock("@/lib/qdrant", () => ({
   searchNorms: mockSearchNorms,
+}));
+
+vi.mock("@/lib/translate-server", () => ({
+  translateQueryToGerman: vi.fn((q: string) => Promise.resolve(q)),
+  translateFromGerman: vi.fn((q: string) => Promise.resolve(q)),
 }));
 
 function makeRequest(url: string): NextRequest {

@@ -1,5 +1,4 @@
 // src/lib/i18n/ru.ts — Russian UI Strings
-import { EN } from "./en";
 
 export const RU: Record<string, string> = {
   "search.loading": "Поиск...",
@@ -12,12 +11,12 @@ export const RU: Record<string, string> = {
   "search.init": "Инициализация Среды Поиска...",
   "laws.loading": "Дешифрование Закона...",
   "laws.not_found": "Закон не найден или не может быть загружен.",
-  "laws.norms_empty": "Фрагменты законов не индексированы в нейропамяти.",
+  "laws.norms_empty":
+    "Фрагменты законов не индексированы в нейропамяти.",
   "guidance.loading": "Анализ Ситуации...",
   "guidance.title": "Юридическое Совещание",
   "guidance.describe": "Опишите Вашу Ситуацию",
   "guidance.analyze": "Анализировать",
-  "guidance.no_folder": "Не выбран папка",
   "guidance.history": "История",
   "common.error": "Ошибка Операции",
   "nav.sign_in": "Войти",
@@ -70,6 +69,7 @@ export const RU: Record<string, string> = {
   "onboarding.continue": "Продолжить",
   "onboarding.step_language": "Язык",
   "onboarding.step_mode": "Режим AI",
+  "onboarding.step_setup": "Настройка",
   "onboarding.step_features": "Функции",
   "onboarding.step_complete": "Вы готовы",
   "onboarding.api_key_q": "Есть ли у вас ключ API для OpenAI или Anthropic?",
@@ -99,6 +99,36 @@ export const RU: Record<string, string> = {
   "onboarding.resume": "Продолжить, где вы оставили это",
   "onboarding.view_guide": "Посмотреть Руководство по Настройке",
   "onboarding.completed_on": "Вы завершили настройку {date}",
+  "onboarding.back": "Назад",
+  "onboarding.skip_config": "Пропустить настройку",
+  "onboarding.welcome_desc": "Ваш доступ к более чем 6 000 федеральных законов Германии с AI-поиском, переводом и юридическими консультациями на 9 языках.",
+  "onboarding.mode_select_title": "Выберите Режим AI",
+  "onboarding.mode_select_desc": "Выберите, как вы хотите взаимодействовать с немецким правом. Вы можете изменить это в любое время в Настройках.",
+  "onboarding.config_title": "Настройка {mode}",
+  "onboarding.config_desc": "Настройте подключение {mode} перед началом работы.",
+  "onboarding.config_cloud": "Введите свой ключ API OpenAI, Anthropic или совместимый. Ваш ключ шифруется и хранится на нашем сервере.",
+  "onboarding.config_local": "Подключитесь к Ollama на вашем компьютере. Брокер работает по указанному URL, или напрямую к Ollama на порту 11434.",
+  "onboarding.config_browser": "Браузерный AI запускает модель Qwen3-0.6B (~570 МБ загрузка) полностью в вашем браузере через Web Workers. Полностью конфиденциально — данные не покидают ваше устройство.",
+  "onboarding.config_basic": "Настройка не требуется. Ищите среди 6000+ законов и читайте отрывки напрямую. Переводы используют ту же браузерную модель, что и Браузерный AI.",
+  "onboarding.api_key_placeholder": "sk-...",
+  "onboarding.paste": "Вставить",
+  "onboarding.test_connection": "Проверить соединение",
+  "onboarding.cloud_key_note": "Ключ шифруется и хранится на сервере. Никогда не передается третьим лицам.",
+  "onboarding.local_broker_label": "URL брокера",
+  "onboarding.local_model_label": "Модель",
+  "onboarding.local_status_checking": "Проверка...",
+  "onboarding.local_status_connected": "Подключено",
+  "onboarding.local_status_offline": "Офлайн — убедитесь, что Ollama запущен",
+  "onboarding.summary_title": "Сводка настроек",
+  "onboarding.summary_desc": "Вы готовы к изучению немецкого права. Вот ваша конфигурация.",
+  "onboarding.mode_local": "Локальный AI",
+  "onboarding.mode_cloud": "Облачный AI",
+  "onboarding.mode_browser": "Браузерный AI",
+  "onboarding.mode_basic": "Базовый поиск",
+  "onboarding.mode_local_detail": "Две модели: 'german-legal' (6.6 ГБ) для полного юридического анализа и 'qwen2.5:1.5b-translate' (1 ГБ) для быстрых переводов. Полностью офлайн.",
+  "onboarding.mode_cloud_detail": "Используйте свой собственный ключ API (OpenAI, Anthropic). Лучшее качество и самые быстрые ответы. Вы контролируете расходы.",
+  "onboarding.mode_browser_detail": "Запускает Qwen3-0.6B в вашем браузере (~570 МБ загрузка). Полностью конфиденциально — данные не покидают ваше устройство. Все 9 языков.",
+  "onboarding.mode_basic_detail": "Ищите среди 6000+ законов и читайте отрывки напрямую. Без AI-генерации — вы сами интерпретируете результаты. Всегда доступно, без настройки.",
   "gate.sign_in": "Войти, чтобы использовать эту функцию",
   "gate.api_key":
     "Настроить ключ API в Настройках, чтобы использовать эту функцию",
@@ -123,4 +153,195 @@ export const RU: Record<string, string> = {
   "home.mode_local_desc":
     "Подключайтесь к Ollama на вашем компьютере через локальный брокер. Полностью офлайн, данные не покидают вашу сеть.",
   "home.get_started": "Начать работу",
+
+  /* ── Search Bar strings ── */
+  "search_bar.mode_search": "Поиск законов",
+  "search_bar.mode_analyze": "AI-анализ",
+
+  /* ── Guidance page strings ── */
+  "guidance.page_title": "Юридическое Совещание",
+  "guidance.page_subtitle": "Разберитесь в вашей ситуации",
+  "guidance.folder_label": "Папка дела (необязательно)",
+  "guidance.loading_folder": "Загрузка...",
+  "guidance.no_folder": "— Не выбран папка —",
+  "guidance.situation_label": "Опишите вашу ситуацию",
+  "guidance.situation_placeholder":
+    "Опишите вашу юридическую ситуацию подробно. Укажите соответствующие факты, даты, участвующие стороны и любые действия, которые вы уже предприняли. Вы можете писать на любом языке — немецком, английском, турецком, арабском, французском, испанском, польском, украинском или русском.",
+  "guidance.situation_hint":
+    "AI сверяет федеральные законы Германии с вашими закладками и контекстом папки.",
+  "guidance.analyzing": "Анализ вашей ситуации...",
+  "guidance.submit": "Получить консультацию",
+  "guidance.error_title": "Ошибка генерации консультации",
+  "guidance.error_retry": "Повторить",
+  "guidance.empty_title": "Юридическая консультация",
+  "guidance.empty_desc":
+    "Опишите вашу ситуацию выше, и AI проанализирует все 6000+ федеральных законов Германии, сверит с вашими закладками и папками дел, и вернет 3-5 конкретных путей исхода с оценкой риска, стоимостью и пошаговыми инструкциями.",
+  "guidance.empty_feature_risk": "Значки риска",
+  "guidance.empty_feature_cost": "Оценка стоимости",
+  "guidance.empty_feature_laws": "Цитируемые законы",
+  "guidance.empty_feature_docs": "Генерация документов",
+  "guidance.success_hint":
+    "Это возможные пути на основе немецкого права. У каждого пути разные риски, стоимость и сроки. Нажмите на путь, чтобы развернуть его и увидеть пошаговые инструкции. Вы не привязаны ни к одному выбору — это просто чтобы помочь вам понять ваши варианты.",
+  "guidance.your_paths": "Ваши возможные пути",
+  "guidance.cost_breakdown": "Разбивка стоимости",
+  "guidance.paths_shown": "Показано {n} из 5 путей",
+  "guidance.est_cost": "Примерная стоимость",
+  "guidance.cost_court_fees": "Судебные издержки (GKG)",
+  "guidance.cost_lawyer_fees": "Гонорар адвоката (RVG)",
+  "guidance.cost_total_risk": "Общий риск (при проигрыше)",
+  "guidance.cost_basis":
+    "На основе Streitwert в €{n} (упрощенный расчет RVG/GKG). Фактические затраты могут отличаться.",
+  "guidance.cited_laws": "Использованные законы",
+  "guidance.cited_click": "Нажмите на закон, чтобы прочитать его полный текст",
+  "guidance.gen_doc": "Создать проект документа",
+  "guidance.gen_doc_progress": "Создание документа...",
+  "guidance.gen_doc_disclaimer":
+    "Это проект на основе вашей ситуации. Проконсультируйтесь с адвокатом (Rechtsanwalt) перед официальным использованием.",
+  "guidance.detailed_analysis": "Детальный анализ",
+  "guidance.step_plan": "Пошаговый план",
+  "guidance.quick_tip": "Быстрый совет",
+  "guidance.risk_hint": "Причина: {reason}",
+  "guidance.remember":
+    "Эта консультация предоставляется только в информационных целях. Для получения конкретной юридической консультации обратитесь к лицензированному немецкому адвокату (Rechtsanwalt).",
+  "guidance.save_archives": "Сохранить соответствующие законы в Архив",
+  "guidance.gen_doc_require_folder":
+    "Сначала создайте папку дела для генерации документов.",
+  "guidance.gen_doc_require_folder_desc":
+    "Выберите или создайте папку из выпадающего списка выше, затем попробуйте снова.",
+
+  /* ── Risk / probability / timeline labels ── */
+  "guidance.risk_low": "Вероятно благоприятно — низкий риск",
+  "guidance.risk_medium": "Неопределенно — умеренный риск",
+  "guidance.risk_high": "Значительные препятствия — высокий риск",
+  "guidance.risk_hint_low":
+    "У этого пути хорошие шансы на успех. Закон на вашей стороне, и затраты управляемы.",
+  "guidance.risk_hint_medium":
+    "Этот путь может пойти как в одну, так и в другую сторону. Воспринимайте это как рассчитанный риск — есть хорошие аргументы с обеих сторон. Адвокат поможет вам оценить фактические шансы.",
+  "guidance.risk_hint_high":
+    "Этот путь — борьба в гору. Закон или факты затрудняют победу. Прежде чем идти по этому пути, получите профессиональную юридическую консультацию, чтобы понять, с чем вы столкнетесь.",
+  "guidance.prob_very_promising": "Очень многообещающе",
+  "guidance.prob_promising": "Многообещающе",
+  "guidance.prob_uncertain": "Неопределенно",
+  "guidance.prob_difficult": "Сложно",
+  "guidance.prob_very_difficult": "Очень сложно",
+  "guidance.timeline_2_6_weeks":
+    "Это довольно быстро. В немецком праве досудебные шаги обычно занимают столько времени.",
+  "guidance.timeline_3_12_months":
+    "Судебные дела в Германии требуют времени. Не волнуйтесь — большинство дел урегулируются до суда.",
+  "guidance.timeline_1_4_weeks":
+    "Это очень быстро. Суды действуют быстро только по срочным делам (Eilverfahren).",
+  "guidance.timeline_fallback":
+    "Сроки в немецких судебных процессах варьируются. Адвокат может дать вам более точную оценку для вашего конкретного дела.",
+
+  /* ── Guidance history page strings ── */
+  "guidance_history.title": "История консультаций",
+  "guidance_history.subtitle": "Анализ дела",
+  "guidance_history.count": "{n} сессий",
+  "guidance_history.sign_in_title": "Требуется вход",
+  "guidance_history.sign_in_desc":
+    "Войдите, чтобы просмотреть историю консультаций. Сессии автоматически сохраняются при анализе дела, если вы вошли в систему.",
+  "guidance_history.sign_in_btn": "Войти",
+  "guidance_history.loading": "Загрузка сессий",
+  "guidance_history.empty_title": "Еще нет сессий консультаций",
+  "guidance_history.empty_desc":
+    "Опишите вашу юридическую ситуацию, и AI сгенерирует 3-5 путей исхода. Сессии сохраняются автоматически, когда вы вошли в систему.",
+  "guidance_history.empty_cta": "Проанализировать ситуацию",
+  "guidance_history.delete": "Удалить сессию",
+  "guidance_history.deleting": "Удаление...",
+  "guidance_history.previous": "Назад",
+  "guidance_history.next": "Вперед",
+  "guidance_history.page_info": "Страница {current} из {total}",
+  "guidance_history.untitled": "Сессия без названия",
+  "guidance_history.incident": "Инцидент: {date}",
+  "guidance_history.path": "Путь {n}: {title}",
+  "guidance_history.confirm_delete":
+    "Удалить эту сессию консультации и все ее пути исхода?",
+
+  /* ── Chat page strings ── */
+  "chat.limitation_basic":
+    "Базовый поиск — ищет законы и показывает соответствующие отрывки. Без AI-анализа.",
+  "chat.limitation_browser":
+    "Браузерный AI — загружает модель ~1 ГБ при первом использовании. Полностью конфиденциально.",
+  "chat.limitation_cloud":
+    "Облачный AI — использует ваш собственный ключ API. Оплата осуществляется вашим провайдером.",
+  "chat.limitation_local":
+    "Локальный AI — работает только когда broker.py и Ollama запущены на вашем компьютере.",
+  "chat.conversations": "Диалоги",
+  "chat.new_conversation": "Новый диалог",
+  "chat.type_message": "Введите ваш юридический вопрос...",
+  "chat.config_hint": "Пожалуйста, настройте параметры AI для использования этой функции.",
+
+  /* ── Folder modal strings ── */
+  "folder.title": "Новая папка дела",
+  "folder.edit_title": "Редактировать папку дела",
+  "folder.name_label": "Название папки",
+  "folder.name_placeholder": "например, Дело о незаконном увольнении",
+  "folder.desc_label": "Описание",
+  "folder.desc_placeholder": "Краткое описание дела",
+  "folder.category_label": "Категория",
+  "folder.status_label": "Статус",
+  "folder.incident_date": "Дата инцидента",
+  "folder.incident_hint": "AI рассчитывает сроки на основе этой даты",
+  "folder.deadline_date": "Крайний срок",
+  "folder.deadline_hint": "AI предупреждает, когда приближается этот срок",
+  "folder.dispute_value": "Стоимость спора (Streitwert) — EUR",
+  "folder.dispute_hint": "Используется для оценки стоимости (RVG/GKG)",
+  "folder.opposing_party": "Противная сторона",
+  "folder.opposing_hint": "AI проверяет особые защиты (KSchG, BDSG и т.д.)",
+  "folder.opposing_placeholder": "например, Работодатель, Арендодатель",
+  "folder.court_name": "Название суда",
+  "folder.court_placeholder": "например, Arbeitsgericht Berlin",
+  "folder.case_number": "Номер дела (Aktenzeichen)",
+  "folder.case_placeholder": "например, 5 Ca 1234/24",
+  "folder.notes_label": "Заметки (контекст для AI)",
+  "folder.notes_placeholder":
+    "Добавьте дополнительный контекст о вашем деле. AI читает это при генерации консультации.",
+  "folder.notes_hint":
+    "Свободный текст — AI читает это при генерации путей исхода",
+  "folder.cancel": "Отмена",
+  "folder.save": "Сохранить папку",
+  "folder.saving": "Сохранение...",
+  "folder.name_required": "Требуется название папки.",
+  "folder.save_error": "Не удалось сохранить папку",
+  "folder.basic_info": "Основная информация",
+  "folder.timeline_value": "Сроки и стоимость",
+  "folder.parties_court": "Стороны и суд",
+
+  /* ── Norm viewer strings ── */
+  "norm.section": "Раздел {id}",
+  "norm.translating_browser": "Перевод через браузерный AI…",
+  "norm.translating_cloud": "Перевод через облачный AI…",
+  "norm.translating_local": "Перевод через локальный AI…",
+  "norm.translating": "Перевод…",
+  "norm.german_original": "Оригинал на немецком",
+  "norm.translation_unavailable":
+    "Перевод недоступен — настройте AI в Настройках",
+  "norm.translated_to": "Переведено на {lang}",
+  "norm.show_translation": "Показать перевод",
+  "norm.show_german": "Показать оригинал на немецком",
+  "norm.analyzing": "Анализ закона...",
+  "norm.translate": "Перевести на {lang}",
+  "norm.gate_translate": "Переключитесь на режим AI в Настройках для перевода законов",
+  "norm.translation_official": "Официальный перевод",
+  "norm.translation_ai": "AI-перевод",
+  "norm.content_summary": "Сводка",
+  "norm.content_context": "Контекст",
+  "norm.content_steps": "Шаги",
+  "norm.disclaimer": "Vault Intelligence — Предварительный необязывающий отчет",
+
+  /* ── Law detail page strings ── */
+  "law_detail.back": "Назад",
+  "law_detail.key_badge": "{key}",
+  "law_detail.status": "Статус",
+  "law_detail.authority": "Орган власти",
+  "law_detail.modified": "Изменен",
+  "law_detail.density": "Плотность",
+  "law_detail.sections": "{n} разделов",
+  "law_detail.framework": "Законодательная база",
+  "law_detail.save": "Сохранить",
+  "law_detail.saved": "Сохранено",
+  "law_detail.save_anon":
+    "Закладка сохранена локально. Войдите для синхронизации между устройствами.",
+  "law_detail.archive_entry": "Архивная запись удалена",
+  "law_detail.loading": "Дешифрование закона...",
 };

@@ -6,6 +6,11 @@ import { errorResponse } from "../../../../lib/api-utils";
 import { sanitizeErrorMessage } from "../../../../lib/sanitize";
 import { COLLECTION } from "../../../../lib/qdrant";
 import { QdrantClient } from "@qdrant/js-client-rest";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_SEARCH_RATE_LIMIT,
+} from "../../../../lib/rate-limiter";
 
 function getQdrant(): QdrantClient | null {
   const url = process.env.QDRANT_URL;
@@ -21,6 +26,21 @@ export async function GET(
   { params }: { params: Promise<{ key: string }> },
 ) {
   try {
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests",
+        429,
+undefined,
+rateLimitHeaders,
+      );
+    }
+
     const { key } = await params;
 
     // Trim law keys — database may have trailing spaces from legacy data

@@ -2,21 +2,7 @@
 -- Adds English metadata columns to laws and identifies official
 -- translations in the explanations cache.
 
--- 1. Ensure norm_explanations table exists (Self-healing from missing 00002)
-CREATE TABLE IF NOT EXISTS public.norm_explanations (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  norm_id     TEXT NOT NULL,
-  law_key     TEXT NOT NULL,
-  lang        TEXT NOT NULL DEFAULT 'en',
-  translation TEXT NOT NULL DEFAULT '',
-  summary     TEXT NOT NULL DEFAULT '',
-  implications TEXT NOT NULL DEFAULT '',
-  next_steps  TEXT NOT NULL DEFAULT '',
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (norm_id, lang)
-);
-
--- 2. Extend Laws table
+-- 1. Extend Laws table
 ALTER TABLE public.laws
 ADD COLUMN IF NOT EXISTS title_en TEXT DEFAULT '',
 ADD COLUMN IF NOT EXISTS official_translation_url TEXT;

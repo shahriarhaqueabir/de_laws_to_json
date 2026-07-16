@@ -74,7 +74,7 @@ DECLARE
   deleted_count INTEGER;
 BEGIN
   DELETE FROM public.rate_limits
-  WHERE window_start < now() - (window_minutes || ' minutes')::INTERVAL;
+  WHERE window_start < now() - make_interval(mins => window_minutes);
   GET DIAGNOSTICS deleted_count = ROW_COUNT;
   RETURN deleted_count;
 END;
@@ -105,7 +105,7 @@ DECLARE
   result JSONB;
 BEGIN
   -- Calculate current window start
-  v_window_start := date_trunc('milliseconds', v_now) - (p_window_ms || ' milliseconds')::INTERVAL;
+  v_window_start := date_trunc('milliseconds', v_now) - make_interval(secs => p_window_ms::double precision / 1000);
 
   -- Try to insert a new row (first request in window)
   INSERT INTO public.rate_limits (ip_hash, endpoint, count, window_start)
@@ -116,7 +116,7 @@ BEGIN
   INTO v_count, v_reset_at;
 
   -- Calculate reset time
-  v_reset_at := v_reset_at + (p_window_ms || ' milliseconds')::INTERVAL;
+  v_reset_at := v_reset_at + make_interval(secs => p_window_ms::double precision / 1000);
 
   IF v_count > p_max_requests THEN
     -- Rate limited

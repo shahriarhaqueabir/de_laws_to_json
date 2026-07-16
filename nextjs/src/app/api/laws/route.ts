@@ -3,6 +3,11 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { getServerClient } from "../../../lib/supabase-server";
 import { errorResponse } from "../../../lib/api-utils";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_SEARCH_RATE_LIMIT,
+} from "../../../lib/rate-limiter";
 
 const QuerySchema = z.object({
   page: z
@@ -25,6 +30,21 @@ const QuerySchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests",
+        429,
+undefined,
+rateLimitHeaders,
+      );
+    }
+
     const rawParams = {
       page: req.nextUrl.searchParams.get("page") || undefined,
       limit: req.nextUrl.searchParams.get("limit") || undefined,

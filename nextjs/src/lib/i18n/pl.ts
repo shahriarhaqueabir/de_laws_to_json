@@ -1,5 +1,4 @@
 // src/lib/i18n/pl.ts — Polish UI Strings
-import { EN } from "./en";
 
 export const PL: Record<string, string> = {
   "search.loading": "Szukanie...",
@@ -72,6 +71,7 @@ export const PL: Record<string, string> = {
   "onboarding.continue": "Kontynuuj",
   "onboarding.step_language": "Język",
   "onboarding.step_mode": "Tryb AI",
+  "onboarding.step_setup": "Konfiguracja",
   "onboarding.step_features": "Możliwości",
   "onboarding.step_complete": "Zakończono",
   "onboarding.api_key_q": "Masz klucz API dla OpenAI lub Anthropic?",
@@ -101,6 +101,36 @@ export const PL: Record<string, string> = {
   "onboarding.resume": "Kontynuuj gdzie zostawiszście",
   "onboarding.view_guide": "Widok przewodnika",
   "onboarding.completed_on": "Zakończono ustawianie {date}",
+  "onboarding.back": "Wstecz",
+  "onboarding.skip_config": "Pomiń konfigurację",
+  "onboarding.welcome_desc": "Twoja brama do ponad 6000 niemieckich ustaw federalnych z wyszukiwarką AI, tłumaczeniami i poradami prawnymi w 9 językach.",
+  "onboarding.mode_select_title": "Wybierz swój tryb AI",
+  "onboarding.mode_select_desc": "Wybierz, jak chcesz korzystać z niemieckiego prawa. Możesz to zmienić w każdej chwili w Ustawieniach.",
+  "onboarding.config_title": "Konfiguruj {mode}",
+  "onboarding.config_desc": "Skonfiguruj połączenie {mode} przed rozpoczęciem.",
+  "onboarding.config_cloud": "Wprowadź klucz API OpenAI, Anthropic lub kompatybilny. Twój klucz jest szyfrowany i bezpiecznie przechowywany na naszym serwerze.",
+  "onboarding.config_local": "Połącz się z Ollamą na swoim komputerze. Broker działa pod podanym adresem URL, albo Ollama bezpośrednio na porcie 11434.",
+  "onboarding.config_browser": "AI przeglądarkowe uruchamia model Qwen3-0.6B (~570MB pobierania) całkowicie w przeglądarce przez Web Workers. W pełni prywatne — żadne dane nie opuszczają Twojego urządzenia.",
+  "onboarding.config_basic": "Nie wymaga konfiguracji. Przeglądaj wszystkie 6000+ ustaw i czytaj fragmenty bezpośrednio. Tłumaczenia korzystają z tego samego modelu przeglądarkowego co AI w Przeglądarce.",
+  "onboarding.api_key_placeholder": "sk-...",
+  "onboarding.paste": "Wklej",
+  "onboarding.test_connection": "Testuj połączenie",
+  "onboarding.cloud_key_note": "Klucz jest szyfrowany i przechowywany na serwerze. Nigdy nie jest przesyłany do stron trzecich.",
+  "onboarding.local_broker_label": "URL brokera",
+  "onboarding.local_model_label": "Model",
+  "onboarding.local_status_checking": "Sprawdzanie...",
+  "onboarding.local_status_connected": "Połączono",
+  "onboarding.local_status_offline": "Offline — upewnij się, że Ollama jest uruchomiona",
+  "onboarding.summary_title": "Podsumowanie konfiguracji",
+  "onboarding.summary_desc": "Jesteś gotowy do eksploracji niemieckiego prawa. Oto Twoja konfiguracja.",
+  "onboarding.mode_local": "Lokalne AI",
+  "onboarding.mode_cloud": "AI w Chmurze",
+  "onboarding.mode_browser": "AI w Przeglądarce",
+  "onboarding.mode_basic": "Wyszukiwanie Podstawowe",
+  "onboarding.mode_local_detail": "Dwa modele: 'german-legal' (6.6GB) do pełnej analizy prawnej i 'qwen2.5:1.5b-translate' (1GB) do szybkich tłumaczeń. W pełni offline.",
+  "onboarding.mode_cloud_detail": "Przynieś własny klucz API (OpenAI, Anthropic). Najlepsza jakość i najszybsze odpowiedzi. Ty kontrolujesz koszty.",
+  "onboarding.mode_browser_detail": "Uruchamia Qwen3-0.6B w przeglądarce (~570MB pobierania). W pełni prywatny — żadne dane nie opuszczają Twojego urządzenia. Wszystkie 9 języków.",
+  "onboarding.mode_basic_detail": "Przeszukaj 6000+ ustaw i czytaj fragmenty bezpośrednio. Bez generowania AI — Ty interpretujesz wyniki. Zawsze dostępne, bez konfiguracji.",
   "gate.sign_in": "Zaloguj się, aby skorzystać z tej funkcji",
   "gate.api_key":
     "Skonfiguruj klucz API w ustawieniach, aby skorzystać z tej funkcji",
@@ -124,4 +154,194 @@ export const PL: Record<string, string> = {
   "home.mode_local_desc":
     "Połącz się z Ollama na swoim komputerze przez lokalny broker. Całkowicie offline, żadne dane nie opuszczają Twojej sieci.",
   "home.get_started": "Rozpocznij",
+
+  /* ── Search Bar strings ── */
+  "search_bar.mode_search": "Wyszukiwanie ustaw",
+  "search_bar.mode_analyze": "Analiza AI",
+
+  /* ── Guidance page strings ── */
+  "guidance.page_title": "Rady prawne",
+  "guidance.page_subtitle": "Przeanalizuj swoją sytuację",
+  "guidance.folder_label": "Folder sprawy (opcjonalnie)",
+  "guidance.loading_folder": "Ładowanie...",
+  "guidance.situation_label": "Opisz swoją sytuację",
+  "guidance.situation_placeholder":
+    "Opisz swoją sytuację prawną szczegółowo. Podaj istotne fakty, daty, strony oraz działania, które już podjąłeś. Możesz pisać w dowolnym języku — niemieckim, angielskim, tureckim, arabskim, francuskim, hiszpańskim, polskim, ukraińskim lub rosyjskim.",
+  "guidance.situation_hint":
+    "AI porównuje niemieckie ustawy federalne z Twoimi zakładkami i kontekstem folderu.",
+  "guidance.analyzing": "Analizowanie Twojej sytuacji...",
+  "guidance.submit": "Uzyskaj poradę",
+  "guidance.error_title": "Generowanie porady nie powiodło się",
+  "guidance.error_retry": "Spróbuj ponownie",
+  "guidance.empty_title": "Rady prawne",
+  "guidance.empty_desc":
+    "Opisz swoją sytuację powyżej, a AI przeanalizuje wszystkie 6000+ niemieckich ustaw federalnych, porówna z Twoimi zakładkami i folderami spraw, a następnie zwróci 3-5 konkretnych ścieżek postępowania z oceną ryzyka, szacunkowymi kosztami i szczegółowymi krokami.",
+  "guidance.empty_feature_risk": "Ocena ryzyka",
+  "guidance.empty_feature_cost": "Szacunkowe koszty",
+  "guidance.empty_feature_laws": "Przywołane ustawy",
+  "guidance.empty_feature_docs": "Generowanie dokumentów",
+  "guidance.success_hint":
+    "To są możliwe drogi postępowania na podstawie niemieckiego prawa. Każda ścieżka ma inne ryzyko, koszty i harmonogramy. Kliknij na ścieżkę, aby ją rozwinąć i zobaczyć instrukcje krok po kroku. Nie jesteś związany żadnym wyborem — to tylko pomoc w zrozumieniu opcji.",
+  "guidance.your_paths": "Możliwe ścieżki postępowania",
+  "guidance.cost_breakdown": "Szczegóły kosztów",
+  "guidance.paths_shown": "Pokazano {n} z 5 ścieżek",
+  "guidance.est_cost": "Szac. koszt",
+  "guidance.cost_court_fees": "Opłaty sądowe (GKG)",
+  "guidance.cost_lawyer_fees": "Koszty adwokackie (RVG)",
+  "guidance.cost_total_risk": "Całkowite ryzyko (w przypadku przegranej)",
+  "guidance.cost_basis":
+    "Na podstawie Streitwert €{n} (uproszczona kalkulacja RVG/GKG). Rzeczywiste koszty mogą się różnić.",
+  "guidance.cited_laws": "Wykorzystane ustawy",
+  "guidance.cited_click": "Kliknij ustawę, aby przeczytać jej pełny tekst",
+  "guidance.gen_doc": "Generuj projekt dokumentu",
+  "guidance.gen_doc_progress": "Generowanie dokumentu...",
+  "guidance.gen_doc_disclaimer":
+    "To jest projekt na podstawie Twojej sytuacji. Zleć prawnikowi (Rechtsanwalt) jego sprawdzenie przed oficjalnym użyciem.",
+  "guidance.detailed_analysis": "Szczegółowa analiza",
+  "guidance.step_plan": "Plan krok po kroku",
+  "guidance.quick_tip": "Szybka wskazówka",
+  "guidance.risk_hint": "Dlaczego: {reason}",
+  "guidance.remember":
+    "Niniejsza porada ma charakter wyłącznie informacyjny. W celu uzyskania konkretnej porady prawnej skonsultuj się z licencjonowanym niemieckim adwokatem (Rechtsanwalt).",
+  "guidance.save_archives": "Zapisz istotne ustawy w swoich archiwach",
+  "guidance.gen_doc_require_folder":
+    "Najpierw utwórz folder sprawy, aby wygenerować dokumenty.",
+  "guidance.gen_doc_require_folder_desc":
+    "Wybierz lub utwórz folder z rozwijanej listy powyżej, a następnie spróbuj ponownie.",
+
+  /* ── Risk / probability / timeline labels ── */
+  "guidance.risk_low": "Prawdopodobnie korzystne — niskie ryzyko",
+  "guidance.risk_medium": "Niepewne — umiarkowane ryzyko",
+  "guidance.risk_high": "Znaczne przeszkody — wysokie ryzyko",
+  "guidance.risk_hint_low":
+    "Ta ścieżka ma duże szanse na pomyślne zakończenie. Prawo jest po Twojej stronie, a koszty są do opanowania.",
+  "guidance.risk_hint_medium":
+    "Ta ścieżka może pójść w każdą stronę. Potraktuj to jako wyliczone ryzyko — istnieją dobre argumenty po obu stronach. Prawnik może pomóc Ci ocenić rzeczywiste szanse.",
+  "guidance.risk_hint_high":
+    "Ta ścieżka to walka pod górę. Przepisy lub fakty utrudniają wygraną. Zanim wybierzesz tę drogę, zasięgnij profesjonalnej porady prawnej, aby zrozumieć, z czym się mierzysz.",
+  "guidance.prob_very_promising": "Bardzo obiecujące",
+  "guidance.prob_promising": "Obiecujące",
+  "guidance.prob_uncertain": "Niepewne",
+  "guidance.prob_difficult": "Trudne",
+  "guidance.prob_very_difficult": "Bardzo trudne",
+  "guidance.timeline_2_6_weeks":
+    "To dość szybko. W niemieckim prawie czynności pozasądowe zwykle przebiegają w tym tempie.",
+  "guidance.timeline_3_12_months":
+    "Sprawy sądowe w Niemczech wymagają czasu. Nie martw się — większość spraw kończy się ugodą przed rozprawą.",
+  "guidance.timeline_1_4_weeks":
+    "To bardzo szybko. Sądy działają szybko tylko w sprawach pilnych (Eilverfahren).",
+  "guidance.timeline_fallback":
+    "Harmonogramy w niemieckich postępowaniach prawnych są różne. Prawnik może udzielić bardziej precyzyjnej oceny dla Twojej konkretnej sprawy.",
+
+  /* ── Guidance history page strings ── */
+  "guidance_history.title": "Historia porad",
+  "guidance_history.subtitle": "Analiza spraw",
+  "guidance_history.count": "{n} sesji",
+  "guidance_history.sign_in_title": "Wymagane logowanie",
+  "guidance_history.sign_in_desc":
+    "Zaloguj się, aby wyświetlić historię porad. Sesje są automatycznie zapisywane, gdy przeprowadzasz analizę sprawy będąc zalogowanym.",
+  "guidance_history.sign_in_btn": "Zaloguj się",
+  "guidance_history.loading": "Ładowanie sesji",
+  "guidance_history.empty_title": "Brak sesji porad",
+  "guidance_history.empty_desc":
+    "Opisz swoją sytuację prawną, a AI wygeneruje 3-5 ścieżek postępowania. Sesje są automatycznie zapisywane, gdy jesteś zalogowany.",
+  "guidance_history.empty_cta": "Przeanalizuj sytuację",
+  "guidance_history.delete": "Usuń sesję",
+  "guidance_history.deleting": "Usuwanie...",
+  "guidance_history.previous": "Poprzednia",
+  "guidance_history.next": "Następna",
+  "guidance_history.page_info": "Strona {current} z {total}",
+  "guidance_history.untitled": "Sesja bez tytułu",
+  "guidance_history.incident": "Zdarzenie: {date}",
+  "guidance_history.path": "Ścieżka {n}: {title}",
+  "guidance_history.confirm_delete":
+    "Usunąć tę sesję porady i wszystkie jej ścieżki postępowania?",
+
+  /* ── Chat page strings ── */
+  "chat.limitation_basic":
+    "Wyszukiwanie podstawowe — przeszukuje ustawy i pokazuje istotne fragmenty. Bez analizy AI.",
+  "chat.limitation_browser":
+    "AI w przeglądarce — pobiera model ~1GB przy pierwszym użyciu. W pełni prywatne.",
+  "chat.limitation_cloud":
+    "AI w chmurze — używa Twojego własnego klucza API. Płatność według taryfy dostawcy.",
+  "chat.limitation_local":
+    "Lokalne AI — działa tylko gdy broker.py i Ollama są uruchomione na Twoim komputerze.",
+  "chat.conversations": "Konwersacje",
+  "chat.new_conversation": "Nowa konwersacja",
+  "chat.type_message": "Wpisz swoje pytanie prawne...",
+  "chat.config_hint": "Proszę skonfigurować ustawienia AI, aby korzystać z tej funkcji.",
+
+  /* ── Folder modal strings ── */
+  "folder.title": "Nowy folder sprawy",
+  "folder.edit_title": "Edytuj folder sprawy",
+  "folder.name_label": "Nazwa folderu",
+  "folder.name_placeholder": "Np. sprawa o nieuzasadnione zwolnienie",
+  "folder.desc_label": "Opis",
+  "folder.desc_placeholder": "Krótki opis sprawy",
+  "folder.category_label": "Kategoria",
+  "folder.status_label": "Status",
+  "folder.incident_date": "Data zdarzenia",
+  "folder.incident_hint": "AI oblicza terminy na podstawie tej daty",
+  "folder.deadline_date": "Termin",
+  "folder.deadline_hint": "AI ostrzega, gdy ten termin się zbliża",
+  "folder.dispute_value": "Wartość sporu (Streitwert) — EUR",
+  "folder.dispute_hint": "Używane do szacowania kosztów (RVG/GKG)",
+  "folder.opposing_party": "Strona przeciwna",
+  "folder.opposing_hint": "AI sprawdza szczególne ochrony (KSchG, BDSG itp.)",
+  "folder.opposing_placeholder": "Np. pracodawca, wynajmujący",
+  "folder.court_name": "Nazwa sądu",
+  "folder.court_placeholder": "Np. Arbeitsgericht Berlin",
+  "folder.case_number": "Sygnatura akt (Aktenzeichen)",
+  "folder.case_placeholder": "Np. 5 Ca 1234/24",
+  "folder.notes_label": "Notatki (kontekst dla AI)",
+  "folder.notes_placeholder":
+    "Dodaj dodatkowy kontekst dotyczący swojej sprawy. AI czyta to podczas generowania porad.",
+  "folder.notes_hint":
+    "Dowolny tekst — AI czyta to podczas generowania ścieżek porad",
+  "folder.cancel": "Anuluj",
+  "folder.save": "Zapisz folder",
+  "folder.saving": "Zapisywanie...",
+  "folder.name_required": "Nazwa folderu jest wymagana.",
+  "folder.save_error": "Nie udało się zapisać folderu",
+  "folder.basic_info": "Podstawowe informacje",
+  "folder.timeline_value": "Harmonogram i wartość",
+  "folder.parties_court": "Strony i sąd",
+
+  /* ── Norm viewer strings ── */
+  "norm.section": "Sekcja {id}",
+  "norm.translating_browser": "Tłumaczenie przez AI przeglądarkowe…",
+  "norm.translating_cloud": "Tłumaczenie przez AI w chmurze…",
+  "norm.translating_local": "Tłumaczenie przez lokalne AI…",
+  "norm.translating": "Tłumaczenie…",
+  "norm.german_original": "Oryginał niemiecki",
+  "norm.translation_unavailable":
+    "Tłumaczenie niedostępne — skonfiguruj AI w Ustawieniach",
+  "norm.translated_to": "Przetłumaczone na {lang}",
+  "norm.show_translation": "Pokaż tłumaczenie",
+  "norm.show_german": "Pokaż oryginał niemiecki",
+  "norm.analyzing": "Analizowanie ustawy...",
+  "norm.translate": "Tłumacz na {lang}",
+  "norm.gate_translate": "Przełącz na tryb AI w Ustawieniach, aby tłumaczyć ustawy",
+  "norm.translation_official": "Tłumaczenie urzędowe",
+  "norm.translation_ai": "Tłumaczenie AI",
+  "norm.content_summary": "Podsumowanie",
+  "norm.content_context": "Kontekst",
+  "norm.content_steps": "Kroki",
+  "norm.disclaimer": "Vault Intelligence — Wstępny raport niewiążący",
+
+  /* ── Law detail page strings ── */
+  "law_detail.back": "Wstecz",
+  "law_detail.key_badge": "{key}",
+  "law_detail.status": "Status",
+  "law_detail.authority": "Organ",
+  "law_detail.modified": "Zmodyfikowano",
+  "law_detail.density": "Gęstość",
+  "law_detail.sections": "{n} sekcji",
+  "law_detail.framework": "Ramy prawne",
+  "law_detail.save": "Zapisz",
+  "law_detail.saved": "Zapisano",
+  "law_detail.save_anon":
+    "Zakładka zapisana lokalnie. Zaloguj się, aby synchronizować między urządzeniami.",
+  "law_detail.archive_entry": "Usunięto wpis z archiwum",
+  "law_detail.loading": "Rozszyfrowywanie ustawy...",
 };

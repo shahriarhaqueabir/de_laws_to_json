@@ -89,19 +89,24 @@ function validateEndpointUrl(url: string): string {
 
     const hostname = parsed.hostname.toLowerCase();
 
+    // Allow local endpoints when explicitly opted in (e.g. local Ollama/LM Studio)
+    // WARNING: Only enable in local/dev environments. Never enable in production.
+    const allowLocal = process.env.ALLOW_LOCAL_AI_ENDPOINTS === "true";
+
     // Block loopback / localhost
     if (
-      hostname === "localhost" ||
-      hostname === "127.0.0.1" ||
-      hostname === "[::1]" ||
-      hostname === "0.0.0.0"
+      !allowLocal &&
+      (hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname === "[::1]" ||
+        hostname === "0.0.0.0")
     ) {
       throw new Error("Endpoint must not point to localhost");
     }
 
     // Block private IPv4 ranges
     const ipv4Match = hostname.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
-    if (ipv4Match) {
+    if (ipv4Match && !allowLocal) {
       const first = parseInt(ipv4Match[1], 10);
       const second = parseInt(ipv4Match[2], 10);
       if (

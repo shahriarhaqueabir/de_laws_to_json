@@ -91,6 +91,21 @@ BEGIN
       FOR EACH ROW
       EXECUTE FUNCTION public.set_updated_at();
   END IF;
+
+  -- ── bookmarks ──
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'bookmarks'
+  ) AND EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'bookmarks' AND column_name = 'updated_at'
+  ) THEN
+    DROP TRIGGER IF EXISTS trg_bookmarks_updated_at ON public.bookmarks;
+    CREATE TRIGGER trg_bookmarks_updated_at
+      BEFORE UPDATE ON public.bookmarks
+      FOR EACH ROW
+      EXECUTE FUNCTION public.set_updated_at();
+  END IF;
 END
 $$;
 

@@ -52,7 +52,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  serverExternalPackages: ["@huggingface/transformers"],
+  serverExternalPackages: [],
 };
 
 export default withBundleAnalyzer(nextConfig);

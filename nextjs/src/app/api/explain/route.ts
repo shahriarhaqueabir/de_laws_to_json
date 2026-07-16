@@ -7,7 +7,7 @@ import { generateNormExplanation } from "../../../lib/chat";
 import { decryptApiKey } from "../../../lib/encryption";
 import { LANGUAGE_NAMES, type AppLanguage, type CloudProvider } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
-import { isValidBrokerUrl, resolveBrokerUrl } from "../../../lib/broker";
+import { resolveBrokerUrl } from "../../../lib/ollama";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
 import { TRANSLATION_MODEL } from "../../../lib/model-constants";
 import {
@@ -190,113 +190,76 @@ export async function POST(req: NextRequest) {
 
     // 2. Generate via AI
     if (mode === "local") {
-      const brokerUrl = resolveBrokerUrl(bodyBrokerUrl);
+      const ollamaUrl = resolveBrokerUrl(bodyBrokerUrl);
       const langName = LANGUAGE_NAMES[lang as AppLanguage] || "English";
-
       const explainPrompt = `Translate this German legal text to ${langName}. ONLY the translation, nothing else. No thinking, no analysis, no JSON, no notes.\n\n${content}`;
 
-      let brokerRes: Response;
-      let usedDirectOllama = false;
       try {
-        brokerRes = await fetch(`${brokerUrl}/api/chat`, {
+        const res = await fetch(`${ollamaUrl}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: explainPrompt,
             model: TRANSLATION_MODEL,
-            language: langName,
-            temperature: 0,
-            max_tokens: 2048,
-          }),
-          signal: AbortSignal.timeout(15000),
-        });
-      } catch (fetchErr) {
-        console.error("[Explain] Broker fetch failed, trying direct Ollama:", fetchErr);
-        // Broker unreachable — fall back to direct Ollama (port 11434)
-        try {
-          const ollamaBody = {
-            model: TRANSLATION_MODEL,
-            prompt: explainPrompt,
+            messages: [{ role: "user", content: explainPrompt }],
             stream: false,
             options: { temperature: 0, num_predict: 2048 },
-          };
-          const directRes = await fetch("http://localhost:11434/api/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(ollamaBody),
-            signal: AbortSignal.timeout(30000),
-          });
-          if (!directRes.ok) {
-            throw new Error(`Ollama returned ${directRes.status}`);
+          }),
+          signal: AbortSignal.timeout(30000),
+        });
+
+        if (!res.ok) throw new Error(`Ollama returned ${res.status}`);
+        const data = await res.json();
+        const translation = extractPlainTranslation(data?.message?.content || "");
+
+        // Cache in Supabase
+        try {
+          const adminSupabase = createAdminClient();
+          if (translation && translation.length > 10) {
+            await adminSupabase.from("norm_explanations").insert({
+              norm_id: normCacheId,
+              law_key: lawKey,
+              lang,
+              translation,
+              summary: "",
+              implications: "",
+              next_steps: "",
+            }).maybeSingle();
           }
-          const rawData = await directRes.json();
-          brokerRes = {
-            ok: true,
-            json: async () => ({ response: rawData.response }),
-          } as Response;
-          usedDirectOllama = true;
-        } catch (ollamaErr) {
-          console.error("[Explain] Direct Ollama also failed:", ollamaErr);
-          return NextResponse.json({
-            norm_id: normId,
-            law_key: lawKey,
-            law_title: lawTitle || "",
-            lang,
-            translation: "",
-            summary: "Local AI unavailable. Ensure Ollama is running (ollama serve) on port 11434, or start the broker on port 9000.",
-            implications: "",
-            next_steps: "",
-            disclaimer: "",
-          });
+        } catch (cacheErr) {
+          console.warn("[Explain] Failed to cache local translation:", cacheErr);
+          // Non-fatal
         }
+
+        const elapsed = Date.now() - startTime;
+        console.log(
+          `[Explain] Local translation (${lang}) for ${normCacheId}: ${elapsed}ms`,
+        );
+
+        return NextResponse.json({
+          norm_id: normId,
+          law_key: lawKey,
+          law_title: lawTitle || "",
+          lang,
+          translation,
+          summary: "",
+          implications: "",
+          next_steps: "",
+          disclaimer: "",
+        });
+      } catch (err) {
+        console.error("[Explain] Local AI failed:", err);
+        return NextResponse.json({
+          norm_id: normId,
+          law_key: lawKey,
+          law_title: lawTitle || "",
+          lang,
+          translation: "",
+          summary: "Local AI unavailable. Ensure Ollama is running on port 11434 (ollama serve).",
+          implications: "",
+          next_steps: "",
+          disclaimer: "",
+        });
       }
-
-      if (!brokerRes.ok) {
-        throw new Error("Broker returned error");
-      }
-
-      const data = await brokerRes.json();
-      const translation = extractPlainTranslation(data.response);
-
-      if (usedDirectOllama) {
-        console.log("[Explain] Translation via direct Ollama (port 11434)");
-      }
-
-      // Cache in Supabase
-      try {
-        const adminSupabase = createAdminClient();
-        if (translation && translation.length > 10) {
-          await adminSupabase.from("norm_explanations").insert({
-            norm_id: normCacheId,
-            law_key: lawKey,
-            lang,
-            translation,
-            summary: "",
-            implications: "",
-            next_steps: "",
-          }).maybeSingle();
-        }
-      } catch (cacheErr) {
-        console.warn("[Explain] Failed to cache local translation:", cacheErr);
-        // Non-fatal
-      }
-
-      const elapsed = Date.now() - startTime;
-      console.log(
-        `[Explain] Local translation (${lang}) for ${normCacheId}: ${elapsed}ms`,
-      );
-
-      return NextResponse.json({
-        norm_id: normId,
-        law_key: lawKey,
-        law_title: lawTitle || "",
-        lang,
-        translation,
-        summary: "",
-        implications: "",
-        next_steps: "",
-        disclaimer: "",
-      });
     }
 
     // Resolve API key from server-side storage only

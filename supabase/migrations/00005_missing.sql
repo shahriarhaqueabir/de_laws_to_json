@@ -1,0 +1,2 @@
+-- Migration 00005 was pulled (see 00007 for cleanup).
+-- This tombstone keeps the sequence intact.

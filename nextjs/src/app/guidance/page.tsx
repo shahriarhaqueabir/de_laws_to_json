@@ -20,11 +20,14 @@ import { SkeletonList } from "../../components/ui/skeleton";
 import type { FolderFormData } from "../../components/folder-modal";
 import type { GuidancePath, FolderContext } from "../../lib/guidance-types";
 import { FOLDER_STATUS_LABELS } from "../../lib/guidance-types";
+import { parseGuidanceResponse, attachCostEstimates } from "../../lib/guidance";
+import { ANALYSIS_MODEL } from "../../lib/model-constants";
 import { getFolders, createFolder } from "../../lib/bookmarks-v2";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useAuth } from "../../components/auth-context";
 import { useChat } from "../../components/chat-context";
 import { FeatureGate } from "../../components/feature-gate";
+import { SystemStatus } from "../../components/system-status";
 
 // ── Page Component ─────────────────────────────────────────────────────────
 
@@ -87,48 +90,146 @@ export default function GuidancePage() {
     setError(null);
     setPaths(null);
 
+    const mode = settings.mode;
+
     try {
-      const body: Record<string, unknown> = {
-        situation: situation.trim(),
-        language,
-        provider: "openai",
-        model: "gpt-4o-mini",
-      };
-
-      // Add folder context if selected
-      if (selectedFolderData) {
-        body.folder_id = selectedFolderData.id;
-        body.folder_context = {
-          id: selectedFolderData.id,
-          name: selectedFolderData.name,
-          category: selectedFolderData.category,
-          incident_date: selectedFolderData.incident_date,
-          dispute_value: selectedFolderData.dispute_value,
-          status: selectedFolderData.status,
-          opposing_party: selectedFolderData.opposing_party,
-          deadline_date: selectedFolderData.deadline_date,
-          court_name: selectedFolderData.court_name,
-          case_number: selectedFolderData.case_number,
-          notes: selectedFolderData.notes,
+      // ── LOCAL AI: Two-step flow (server provides prompts, browser calls Ollama) ──
+      if (mode === "local") {
+        // Step 1: Get assembled prompts from server (no AI call)
+        const suggestBody: Record<string, unknown> = {
+          situation: situation.trim(),
+          language,
+          mode: "suggest",
         };
+        if (selectedFolderData) {
+          suggestBody.folder_context = {
+            id: selectedFolderData.id,
+            name: selectedFolderData.name,
+            category: selectedFolderData.category,
+            incident_date: selectedFolderData.incident_date,
+            dispute_value: selectedFolderData.dispute_value,
+            status: selectedFolderData.status,
+            opposing_party: selectedFolderData.opposing_party,
+            deadline_date: selectedFolderData.deadline_date,
+            court_name: selectedFolderData.court_name,
+            case_number: selectedFolderData.case_number,
+            notes: selectedFolderData.notes,
+          };
+        }
+
+        const suggestRes = await fetch("/api/guidance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(suggestBody),
+        });
+
+        if (!suggestRes.ok) {
+          const errData = await suggestRes.json().catch(() => ({}));
+          throw new Error(
+            errData.data?.message || errData.message ||
+            `Guidance suggestion failed (${suggestRes.status})`,
+          );
+        }
+
+        const suggestData = await suggestRes.json();
+        const { systemPrompt, userPrompt, folderContext } = suggestData.data;
+
+        if (!systemPrompt || !userPrompt) {
+          throw new Error("Server returned incomplete prompt data.");
+        }
+
+        // Step 2: Call Ollama directly from browser
+        const ollamaUrl = settings.brokerUrl || "http://localhost:11434";
+
+        // SSRF validation (same check as useChatStrategy)
+        if (!/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(ollamaUrl)) {
+          throw new Error("Invalid Ollama URL. Must be a localhost address.");
+        }
+
+        const ollamaRes = await fetch(`${ollamaUrl}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: settings.model || ANALYSIS_MODEL,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt },
+            ],
+            stream: false,
+            options: {
+              temperature: settings.ollamaParams?.temperature ?? 0.3,
+              top_p: settings.ollamaParams?.top_p ?? 0.9,
+              top_k: settings.ollamaParams?.top_k ?? 40,
+              num_predict: settings.ollamaParams?.max_tokens ?? 8192,
+            },
+          }),
+          signal: AbortSignal.timeout(120000),
+        });
+
+        if (!ollamaRes.ok) {
+          const errText = await ollamaRes.text().catch(() => "Unknown error");
+          throw new Error(
+            `Local AI returned ${ollamaRes.status}: ${errText}. ` +
+            `Check that Ollama is running (ollama serve).`,
+          );
+        }
+
+        const ollamaData = await ollamaRes.json();
+        const rawResponse = ollamaData?.message?.content || "";
+
+        if (!rawResponse) {
+          throw new Error("Local AI returned an empty response.");
+        }
+
+        // Step 3: Parse guidance response and attach cost estimates
+        const parsedPaths = parseGuidanceResponse(rawResponse);
+        const disputeValue = folderContext?.dispute_value ?? 0;
+        const pathsWithCosts = attachCostEstimates(parsedPaths, disputeValue);
+        setPaths(pathsWithCosts);
+      } else {
+        // ── CLOUD / BASIC / BROWSER: Server handles AI or returns translated norms ──
+        const body: Record<string, unknown> = {
+          situation: situation.trim(),
+          language,
+          provider: settings.provider || "openai",
+          model: settings.model || "gpt-4o-mini",
+        };
+
+        // Add folder context if selected
+        if (selectedFolderData) {
+          body.folder_id = selectedFolderData.id;
+          body.folder_context = {
+            id: selectedFolderData.id,
+            name: selectedFolderData.name,
+            category: selectedFolderData.category,
+            incident_date: selectedFolderData.incident_date,
+            dispute_value: selectedFolderData.dispute_value,
+            status: selectedFolderData.status,
+            opposing_party: selectedFolderData.opposing_party,
+            deadline_date: selectedFolderData.deadline_date,
+            court_name: selectedFolderData.court_name,
+            case_number: selectedFolderData.case_number,
+            notes: selectedFolderData.notes,
+          };
+        }
+
+        const res = await fetch("/api/guidance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(
+            errData.message ||
+            `Guidance generation failed (${res.status}). Please try again.`,
+          );
+        }
+
+        const data = await res.json();
+        setPaths(data.data?.paths || []);
       }
-
-      const res = await fetch("/api/guidance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(
-          errData.message ||
-          `Guidance generation failed (${res.status}). Please try again.`,
-        );
-      }
-
-      const data = await res.json();
-      setPaths(data.data?.paths || []);
 
       // Scroll to results
       setTimeout(() => {
@@ -202,6 +303,40 @@ export default function GuidancePage() {
           >
             <Clock className="w-3.5 h-3.5" />
             History
+          </Link>
+        </div>
+      </div>
+
+      {/* System Awareness — shows current mode and service health */}
+      <div className="glass-panel p-4 border-white/5 mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
+            AI Mode
+          </span>
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-wider border ${settings.mode === "local"
+              ? "bg-accent-amber/10 text-accent-amber border-accent-amber/20"
+              : settings.mode === "cloud"
+                ? "bg-accent-electric/10 text-accent-electric border-accent-electric/20"
+                : settings.mode === "browser"
+                  ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                  : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+            }`}>
+            {settings.mode === "local"
+              ? "Local AI"
+              : settings.mode === "cloud"
+                ? `Cloud — ${settings.provider}`
+                : settings.mode === "browser"
+                  ? "Browser AI"
+                  : "Basic Search"}
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <SystemStatus compact />
+          <Link
+            href="/settings"
+            className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-600 hover:text-zinc-400 transition-colors"
+          >
+            Settings
           </Link>
         </div>
       </div>

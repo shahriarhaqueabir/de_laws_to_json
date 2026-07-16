@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_SEARCH_RATE_LIMIT,
+} from "../../../lib/rate-limiter";
 
 const PRODUCTION_URL = "https://ai-assisted-german-law.vercel.app";
 const LOCAL_URL = "http://localhost:3000";
@@ -627,6 +632,18 @@ const spec = {
 };
 
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req);
+  const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+    ip,
+    DEFAULT_SEARCH_RATE_LIMIT,
+  );
+  if (!allowed) {
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+      { status: 429, headers: rateLimitHeaders },
+    );
+  }
+
   const host = req.headers.get("host") || "localhost:3000";
   const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
   const currentUrl = `${protocol}://${host}`;

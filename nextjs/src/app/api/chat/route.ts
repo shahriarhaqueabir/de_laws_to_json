@@ -8,7 +8,7 @@ import type { ChatMode, CloudProvider, CitedLaw } from "../../../lib/types";
 import { errorResponse } from "../../../lib/api-utils";
 import { decryptApiKey } from "../../../lib/encryption";
 import { sanitizeErrorMessage } from "../../../lib/sanitize";
-import { isValidBrokerUrl, resolveBrokerUrl, buildOllamaChatBody } from "../../../lib/broker";
+import { buildOllamaChatBody } from "../../../lib/ollama";
 import { translateQueryToGerman } from "../../../lib/translate-server";
 import { detectCategory } from "../../../lib/category-detect";
 import { extractLawKeys, KNOWN_LAW_KEYS } from "../../../lib/law-keys";
@@ -18,8 +18,6 @@ import {
   getClientIp,
   DEFAULT_AI_RATE_LIMIT,
 } from "../../../lib/rate-limiter";
-
-const BROKER_URL = resolveBrokerUrl();
 
 const OllamaParamsSchema = z
   .object({
@@ -221,79 +219,47 @@ export async function POST(req: NextRequest) {
 
     // 2. Generate response based on mode
     let response: string;
-    let brokerAvailable: boolean | null = null;
     let providerUsed: string | undefined;
+    let brokerAvailable: boolean | undefined;
 
     switch (mode) {
       case "local": {
-        // Mode 1: Local Ollama — try broker first (backward compat),
-        // then fall back to direct Ollama API
+        // Mode 1: Local Ollama — direct call from server to localhost:11434
+        // This path works in development; on Vercel the client-side flow in
+        // useChatStrategy.ts handles Local AI directly from the browser.
         try {
           const langName = "English";
-          let ollamaRes: Response;
-          let usedBroker = false;
 
-          // Try broker first (legacy port 9000)
-          try {
-            const brokerUrl = process.env.NEXT_PUBLIC_BROKER_URL || "http://localhost:9000";
-            ollamaRes = await fetch(`${brokerUrl}/api/chat`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                message,
-                context: contextStr,
-                conversationId,
-                model: model || ANALYSIS_MODEL,
-                language: langName,
-                temperature: ollamaParams?.temperature ?? 0.3,
-                top_p: ollamaParams?.top_p ?? 0.9,
-                top_k: ollamaParams?.top_k ?? 40,
-                max_tokens: ollamaParams?.max_tokens ?? 8192,
-                system_prompt: ollamaParams?.system_prompt || undefined,
-              }),
-              signal: AbortSignal.timeout(10000),
-            });
-            usedBroker = true;
-          } catch {
-            // Broker unreachable — try direct Ollama
-            console.warn("[Chat API] Broker unreachable, trying direct Ollama...");
-            const ollamaBody = buildOllamaChatBody({
-              message,
-              context: contextStr,
-              model: model || ANALYSIS_MODEL,
-              systemPrompt: ollamaParams?.system_prompt,
-              language: langName,
-              temperature: ollamaParams?.temperature,
-              top_p: ollamaParams?.top_p,
-              top_k: ollamaParams?.top_k,
-              max_tokens: ollamaParams?.max_tokens,
-              stream: false,
-            });
-            ollamaRes = await fetch("http://localhost:11434/api/chat", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(ollamaBody),
-              signal: AbortSignal.timeout(120000),
-            });
-          }
+          const ollamaBody = buildOllamaChatBody({
+            message,
+            context: contextStr,
+            model: model || ANALYSIS_MODEL,
+            systemPrompt: ollamaParams?.system_prompt,
+            language: langName,
+            temperature: ollamaParams?.temperature,
+            top_p: ollamaParams?.top_p,
+            top_k: ollamaParams?.top_k,
+            max_tokens: ollamaParams?.max_tokens,
+            stream: false,
+          });
+          const ollamaRes = await fetch("http://localhost:11434/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(ollamaBody),
+            signal: AbortSignal.timeout(120000),
+          });
 
           if (!ollamaRes.ok) {
             throw new Error(`Ollama returned ${ollamaRes.status}`);
           }
 
           const data = await ollamaRes.json();
-
-          if (usedBroker) {
-            // Broker format: { response: "..." }
-            response = data.response;
-            brokerAvailable = true;
-          } else {
-            // Ollama direct format: { message: { content: "..." } }
-            response = data?.message?.content || data?.response || "";
-            brokerAvailable = true;
-          }
+          // Ollama format: { message: { content: "..." } }
+          response = data?.message?.content || data?.response || "";
+          brokerAvailable = true;
         } catch (err) {
-          console.warn("[Chat API] All local AI paths failed:", err);
+          console.warn("[Chat API] Local AI call failed:", err);
+          brokerAvailable = false;
           response =
             `I found ${norms.length} relevant paragraphs, but your local AI is offline.\n\n` +
             `To use Local AI mode, ensure **Ollama** is running:\n` +
@@ -303,7 +269,6 @@ export async function POST(req: NextRequest) {
             citedLaws
               .map((l) => `- **${l.law_key}** ${l.norm_id} — ${l.law_title}`)
               .join("\n");
-          brokerAvailable = false;
         }
         break;
       }
@@ -312,7 +277,6 @@ export async function POST(req: NextRequest) {
         // Mode 2: BYO API Key — stored encrypted server-side per user
         if (!user) {
           response = "Please sign in to use Cloud AI mode.";
-          brokerAvailable = null;
           break;
         }
 
@@ -344,7 +308,6 @@ export async function POST(req: NextRequest) {
             citedLaws
               .map((l) => `- **${l.law_key}** ${l.norm_id} — ${l.law_title}`)
               .join("\n");
-          brokerAvailable = null;
           break;
         }
 
@@ -364,7 +327,6 @@ export async function POST(req: NextRequest) {
             maxTokens: ollamaParams?.max_tokens ?? 8192,
             systemPrompt: ollamaParams?.system_prompt as string,
           });
-          brokerAvailable = null;
         } catch (err: unknown) {
           const errMsg = sanitizeErrorMessage(err);
           response =
@@ -379,7 +341,6 @@ export async function POST(req: NextRequest) {
             citedLaws
               .map((l) => `- **${l.law_key}** ${l.norm_id} — ${l.law_title}`)
               .join("\n");
-          brokerAvailable = null;
         }
         break;
       }
@@ -398,7 +359,6 @@ export async function POST(req: NextRequest) {
                 `> ${n.content.slice(0, 300)}...`,
             )
             .join("\n\n");
-        brokerAvailable = null;
         break;
       }
 
@@ -437,9 +397,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       response,
       citedLaws,
-      brokerAvailable,
       mode,
       provider: mode === "cloud" ? providerUsed : undefined,
+      brokerAvailable,
     });
   } catch (err: unknown) {
     console.error("Chat API Error:", err);

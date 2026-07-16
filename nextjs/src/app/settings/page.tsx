@@ -24,6 +24,7 @@ import {
 } from "../../lib/types";
 import { RECOMMENDED_LOCAL_MODELS } from "../../lib/model-constants";
 import { browserWorker } from "../../lib/worker-manager";
+import { SystemStatus } from "../../components/system-status";
 
 const MODE_ICONS: Record<ChatMode, typeof Plug> = {
   local: Plug,
@@ -35,7 +36,7 @@ const MODE_ICONS: Record<ChatMode, typeof Plug> = {
 const MODE_LIMITATIONS: Record<ChatMode, string[]> = {
   local: [
     "Requires Ollama running on your machine (ollama serve)",
-    "Broker (broker.py) optional — translation falls back to direct Ollama on port 11434",
+    "Direct Ollama connection on port 11434 — no broker needed",
     "Not available on the live site (Vercel)",
     "Two models: 'german-legal' (6.6GB) for full analysis/guidance; 'qwen2.5:1.5b-translate' (1GB) for fast section translations",
   ],
@@ -59,7 +60,7 @@ const MODE_LIMITATIONS: Record<ChatMode, string[]> = {
 };
 
 const MODE_STATUS_NOTE: Record<ChatMode, string> = {
-  local: "Ollama on localhost:11434 (broker optional)",
+  local: "Ollama on localhost:11434",
   cloud: "Verify your API key is active",
   browser: "Model downloads on first use (~1GB)",
   basic: "Always available — no setup required",
@@ -79,7 +80,6 @@ export default function SettingsPage() {
   const { language } = useLanguage();
   const [brokerOk, setBrokerOk] = useState<boolean | null>(null);
   const [testing, setTesting] = useState(false);
-  const [brokerStarting, setBrokerStarting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [hasStoredKey, setHasStoredKey] = useState(false);
@@ -104,21 +104,20 @@ export default function SettingsPage() {
       .catch(() => { });
   }, [settings.mode, settings.provider]);
 
-  // Check broker health + fetch available Ollama models when in local mode
+  // Check Ollama health + fetch available models when in local mode
   useEffect(() => {
     if (settings.mode !== "local") return;
     const check = () => {
-      fetch(`${settings.brokerUrl}/health`)
+      fetch(`${settings.brokerUrl}/api/tags`)
         .then(async (r) => {
           if (r.ok) {
             setBrokerOk(true);
             const data = await r.json();
-            if (data.models?.length) {
-              setAvailableModels(data.models);
-              // Auto-select first model if current one isn't available
-              if (data.models?.length) {
-                setAvailableModels(data.models);
-              }
+            const models: string[] = (data.models || []).map(
+              (m: { name: string }) => m.name,
+            );
+            if (models.length) {
+              setAvailableModels(models);
             }
           } else {
             setBrokerOk(false);
@@ -145,28 +144,31 @@ export default function SettingsPage() {
     setTestResult(null);
     try {
       if (settings.mode === "local") {
-        // Lightweight test — just check health and show models
+        // Lightweight test — check Ollama directly via /api/tags
         try {
-          const res = await fetch(`${settings.brokerUrl}/health`, {
+          const res = await fetch(`${settings.brokerUrl}/api/tags`, {
             signal: AbortSignal.timeout(3000),
           });
           if (res.ok) {
             setBrokerOk(true);
             const data = await res.json();
-            const modelList = data.models?.length
-              ? data.models.join(", ")
-              : "active";
+            const modelNames: string[] = (data.models || []).map(
+              (m: { name: string }) => m.name,
+            );
+            const modelList = modelNames.length
+              ? modelNames.join(", ")
+              : "no models installed";
             setTestResult(`✓ Connected — Models: ${modelList}`);
           } else {
             setBrokerOk(false);
             setTestResult(
-              "Not connected — use 'Start Ollama Connection' first",
+              "Ollama returned an error — check that ollama serve is running",
             );
           }
         } catch {
           setBrokerOk(false);
           setTestResult(
-            "Not connected — use 'Start Ollama Connection' first",
+            "Ollama unreachable — ensure Ollama is running (ollama serve)",
           );
         }
       } else if (settings.mode === "cloud") {
@@ -226,79 +228,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleStartConnection = async () => {
-    setBrokerStarting(true);
-    setTestResult(null);
-    try {
-      setTestResult("Checking Ollama status...");
 
-      // Step 1: Check full status
-      const statusRes = await fetch("/api/broker/manage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "status" }),
-      });
-      const statusData = await statusRes.json();
-
-      // Step 2: Warn if Ollama is not running
-      if (!statusData.ollama_running) {
-        setTestResult(
-          "⚠️ Ollama is not running. Please start it with:\n  ollama serve\n\nThen click again.",
-        );
-        setBrokerOk(false);
-        setBrokerStarting(false);
-        return;
-      }
-
-      // Step 3: Check for missing models
-      const missingModels = RECOMMENDED_LOCAL_MODELS.filter(
-        (m) => !statusData.installed_models.includes(m),
-      );
-      if (missingModels.length > 0) {
-        setTestResult(
-          `Downloading: ${missingModels.join(", ")} (this may take several minutes)...`,
-        );
-      }
-
-      // Step 4: Start broker (pulls missing models + boots)
-      const startRes = await fetch("/api/broker/manage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "start" }),
-      });
-      const startData = await startRes.json();
-
-      if (startData.modelStatus?.ok === false) {
-        console.warn("[Settings] Model prep note:", startData.modelStatus.message);
-      }
-
-      // Step 5: Wait briefly for broker health
-      await new Promise((r) => setTimeout(r, 2000));
-
-      // Step 6: Final health check
-      const healthRes = await fetch(`${settings.brokerUrl}/health`, {
-        signal: AbortSignal.timeout(5000),
-      });
-      if (healthRes.ok) {
-        setBrokerOk(true);
-        const healthData = await healthRes.json();
-        const modelList = healthData.models?.length
-          ? healthData.models.join(", ")
-          : "active";
-        setTestResult(`✓ Connected — Models: ${modelList}`);
-      } else {
-        setBrokerOk(false);
-        setTestResult("Broker started but health check failed");
-      }
-    } catch (err: unknown) {
-      setTestResult(
-        `Error: ${err instanceof Error ? err.message : String(err)}`,
-      );
-      setBrokerOk(false);
-    } finally {
-      setBrokerStarting(false);
-    }
-  };
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-20 bg-transparent min-h-screen relative">
@@ -1046,14 +976,12 @@ export default function SettingsPage() {
           <div className="flex items-center gap-6 mb-16">
             <button
               onClick={handleTestConnection}
-              disabled={testing || brokerStarting}
+              disabled={testing}
               className="px-8 py-3 bg-accent-gold text-black font-black uppercase tracking-[0.2em] text-xs hover:bg-accent-gold-bright disabled:opacity-20 transition-all duration-500 active:scale-95 shadow-premium"
             >
-              {brokerStarting
-                ? "Starting..."
-                : testing
-                  ? "Testing..."
-                  : "Test Connection"}
+              {testing
+                ? "Testing..."
+                : "Test Connection"}
             </button>
             {testResult && (
               <span
@@ -1070,7 +998,7 @@ export default function SettingsPage() {
           </div>
         )}
 
-      {/* ── Data Store ── */}
+      {/* ── System Status ── */}
       <section className="border-t border-white/5 pt-12">
         <div className="flex items-center gap-4 mb-8">
           <Database className="w-5 h-5 text-zinc-600" />
@@ -1079,22 +1007,29 @@ export default function SettingsPage() {
           </h2>
           <div className="h-px w-full bg-zinc-800/50" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Dynamic live status panel */}
           <div className="p-5 border border-white/5 bg-white/[0.01]">
-            <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
-              Vector Database
-            </p>
-            <p className="text-xs text-zinc-400 font-bold">
-              Qdrant Cloud (E5-Small // 107K Norms)
-            </p>
+            <SystemStatus panel />
           </div>
-          <div className="p-5 border border-white/5 bg-white/[0.01]">
-            <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
-              Database
-            </p>
-            <p className="text-xs text-zinc-400 font-bold">
-              Supabase (PostgreSQL 16 // Auth Tier 1)
-            </p>
+          {/* Service info */}
+          <div className="space-y-3">
+            <div className="p-5 border border-white/5 bg-white/[0.01]">
+              <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
+                Vector Database
+              </p>
+              <p className="text-xs text-zinc-400 font-bold">
+                Qdrant Cloud (E5-Small // 107K Norms)
+              </p>
+            </div>
+            <div className="p-5 border border-white/5 bg-white/[0.01]">
+              <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
+                Database
+              </p>
+              <p className="text-xs text-zinc-400 font-bold">
+                Supabase (PostgreSQL 16 // Auth Tier 1)
+              </p>
+            </div>
           </div>
         </div>
       </section>

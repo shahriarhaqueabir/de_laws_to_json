@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Hoisted mutable state used by the mock factory — survives vi.mock hoisting
 const mockState = vi.hoisted(() => ({
-  subscribe: vi.fn(() => vi.fn()),
+  subscribe: vi.fn<(...args: any[]) => any>((_fn: any) => vi.fn()),
   ensureReady: vi.fn(),
   generate: vi.fn(),
   isReady: false,

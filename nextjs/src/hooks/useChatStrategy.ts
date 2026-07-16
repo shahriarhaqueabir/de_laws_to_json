@@ -3,7 +3,7 @@ import { ChatMode, CitedLaw, CloudProvider, ChatSettings } from "../lib/types";
 import { ANALYSIS_MODEL } from "../lib/model-constants";
 import { useBrowserAI } from "./useBrowserAI";
 import { stripThinkTags } from "../lib/prompt-format";
-import { buildOllamaChatBody, parseOllamaStreamLine } from "../lib/broker";
+import { buildOllamaChatBody, parseOllamaStreamLine } from "../lib/ollama";
 
 interface Message {
   role: "user" | "assistant";
@@ -16,9 +16,7 @@ interface ChatStrategyProps {
   settings: ChatSettings;
   mode: ChatMode;
   conversationId: string | null;
-  brokerOnline: boolean | null;
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  setBrokerOnline: (online: boolean | null) => void;
   setLoading: (loading: boolean) => void;
 }
 
@@ -61,9 +59,7 @@ export function useChatStrategy({
   settings,
   mode,
   conversationId,
-  brokerOnline,
   setMessages,
-  setBrokerOnline,
   setLoading,
 }: ChatStrategyProps) {
   const browserAI = useBrowserAI(mode === "browser");
@@ -91,7 +87,6 @@ export function useChatStrategy({
                 content: "⚠️ **Ollama URL rejected.**\n\nThe URL must be a localhost address (e.g. http://localhost:11434).",
               },
             ]);
-            setBrokerOnline(false);
             setLoading(false);
             return;
           }
@@ -158,13 +153,11 @@ export function useChatStrategy({
                   "**Alternatively**, switch to **Browser AI** mode (Settings → AI Mode) which runs entirely in your browser with no external setup.",
               },
             ]);
-            setBrokerOnline(false);
             setLoading(false);
             return;
           }
 
           setMessages((prev) => [...prev, { role: "assistant", content: "", citedLaws }]);
-          setBrokerOnline(true);
 
           // Step 3: Stream the NDJSON response from Ollama
           const reader = ollamaRes.body?.getReader();
@@ -265,8 +258,6 @@ export function useChatStrategy({
           ...prev,
           { role: "assistant", content: stripThinkTags(data.response) || "No response.", citedLaws: data.citedLaws || [] },
         ]);
-        if (data.brokerAvailable !== undefined) setBrokerOnline(data.brokerAvailable);
-
       } catch (err) {
         console.error("Chat Error:", err);
         setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error." }]);
@@ -274,7 +265,7 @@ export function useChatStrategy({
         setLoading(false);
       }
     },
-    [settings, mode, conversationId, brokerOnline, setMessages, setBrokerOnline, setLoading, browserAI]
+    [settings, mode, conversationId, setMessages, setLoading, browserAI]
   );
 
   return { sendMessage, browserAIStatus: browserAI.status };

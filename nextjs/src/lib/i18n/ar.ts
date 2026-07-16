@@ -1,5 +1,4 @@
 // src/lib/i18n/ar.ts — Arabic UI Strings
-import { EN } from "./en";
 
 export const AR: Record<string, string> = {
   "search.loading": "البحث...",
@@ -71,6 +70,7 @@ export const AR: Record<string, string> = {
   "onboarding.continue": "التالي",
   "onboarding.step_language": "لغة",
   "onboarding.step_mode": "وضع AI",
+  "onboarding.step_setup": "الإعدادات",
   "onboarding.step_features": "الميزات",
   "onboarding.step_complete": "حسبك جاهز",
   "onboarding.api_key_q": "هل لديك مفتاح API لOpenAI أو Anthropic؟",
@@ -97,6 +97,39 @@ export const AR: Record<string, string> = {
   "onboarding.resume": "المتابعة حيث تركتها",
   "onboarding.view_guide": "عرض وسيلة الإعداد",
   "onboarding.completed_on": "تم الإعداد على {date}",
+  "onboarding.back": "رجوع",
+  "onboarding.skip_config": "تخطي الإعدادات",
+  "onboarding.welcome_desc":
+    "بوابتك لأكثر من 6000 قانون اتحادي ألماني مع بحث مدعوم بالذكاء الاصطناعي وترجمة وإرشادات قانونية بـ 9 لغات.",
+  "onboarding.mode_select_title": "اختر وضع الذكاء الاصطناعي",
+  "onboarding.mode_select_desc":
+    "اختر كيف تريد التفاعل مع القانون الألماني. يمكنك تغيير هذا في أي وقت من الإعدادات.",
+  "onboarding.config_title": "إعداد {mode}",
+  "onboarding.config_desc": "قم بإعداد اتصال {mode} قبل البدء.",
+  "onboarding.config_cloud": "أدخل مفتاح API الخاص بـ OpenAI أو Anthropic أو أي مفتاح متوافق. يتم تشفير مفتاحك وتخزينه بشكل آمن على خادمنا.",
+  "onboarding.config_local": "اتصل بـ Ollama على جهازك. يعمل الوسيط على الرابط أدناه، أو Ollama مباشرة على المنفذ 11434.",
+  "onboarding.config_browser": "يقوم ذكاء اصطناعي المتصفح بتشغيل نموذج Qwen3-0.6B (تنزيل ~570MB) بالكامل في متصفحك عبر Web Workers. خصوصية كاملة — لا تغادر بياناتك جهازك.",
+  "onboarding.config_basic": "لا حاجة لإعداد. ابحث في جميع القوانين الـ 6000+ واقرأ المقتطفات مباشرة. تستخدم الترجمات نفس نموذج المتصفح المستخدم في ذكاء اصطناعي المتصفح.",
+  "onboarding.api_key_placeholder": "sk-...",
+  "onboarding.paste": "لصق",
+  "onboarding.test_connection": "اختبار الاتصال",
+  "onboarding.cloud_key_note": "المفتاح مشفر ومخزن على الخادم. لا يتم إرساله إلى أطراف ثالثة أبدًا.",
+  "onboarding.local_broker_label": "رابط الوسيط",
+  "onboarding.local_model_label": "النموذج",
+  "onboarding.local_status_checking": "جارٍ التحقق...",
+  "onboarding.local_status_connected": "متصل",
+  "onboarding.local_status_offline": "غير متصل — تأكد من تشغيل Ollama",
+  "onboarding.summary_title": "ملخص الإعدادات",
+  "onboarding.summary_desc": "أنت مستعد لاستكشاف القانون الألماني. إليك إعداداتك.",
+  "onboarding.mode_local": "ذكاء اصطناعي محلي",
+  "onboarding.mode_cloud": "ذكاء اصطناعي سحابي",
+  "onboarding.mode_browser": "ذكاء اصطناعي المتصفح",
+  "onboarding.mode_basic": "بحث أساسي",
+  "onboarding.mode_local_detail":
+    "نموذجان: 'german-legal' (6.6GB) للتحليل القانوني الكامل و 'qwen2.5:1.5b-translate' (1GB) للترجمات السريعة. غير متصل بالإنترنت بالكامل.",
+  "onboarding.mode_cloud_detail": "أحضر مفتاح API الخاص بك (OpenAI، Anthropic). أفضل جودة وأسرع استجابة. أنت تتحكم في الفواتير.",
+  "onboarding.mode_browser_detail": "يشغل Qwen3-0.6B في متصفحك (تنزيل ~570MB). خصوصية كاملة — لا تغادر بياناتك جهازك. جميع اللغات الـ 9.",
+  "onboarding.mode_basic_detail": "ابحث في 6000+ قانون واقرأ المقتطفات مباشرة. لا يوجد توليد بالذكاء الاصطناعي — أنت من يفسر النتائج. متاح دائمًا، لا حاجة لإعداد.",
   "gate.sign_in": "تسجيل الدخول لاستخدام هذه الوظيفة",
   "gate.api_key": "تحديث مفتاح API في الإعدادات",
   "gate.ai_mode": "قم بالتبديل إلى وضع AI في الإعدادات لتفعيل هذه الميزة",
@@ -119,4 +152,186 @@ export const AR: Record<string, string> = {
   "home.mode_local_desc":
     "اتصل بـ Ollama على جهازك عبر الوسيط المحلي. غير متصل تمامًا، لا توجد بيانات تغادر شبكتك.",
   "home.get_started": "ابدأ الآن",
+
+  "search_bar.mode_search": "بحث في القوانين",
+  "search_bar.mode_analyze": "تحليل بالذكاء الاصطناعي",
+
+  "guidance.page_title": "المعلومات القانونية",
+  "guidance.page_subtitle": "تنقل في وضعك القانوني",
+  "guidance.folder_label": "مجلد القضية (اختياري)",
+  "guidance.loading_folder": "جارٍ التحميل...",
+  "guidance.situation_label": "صف وضعك القانوني",
+  "guidance.situation_placeholder":
+    "صف وضعك القانوني بالتفصيل. قم بتضمين الحقائق ذات الصلة والتواريخ والأطراف المعنية وأي إجراءات قمت بها بالفعل. يمكنك الكتابة بأي لغة — الألمانية أو الإنجليزية أو التركية أو العربية أو الفرنسية أو الإسبانية أو البولندية أو الأوكرانية أو الروسية.",
+  "guidance.situation_hint":
+    "يقوم الذكاء الاصطناعي بالربط بين القوانين الاتحادية الألمانية وإشاراتك المرجعية وسياق المجلد الخاص بك.",
+  "guidance.analyzing": "جارٍ تحليل وضعك...",
+  "guidance.submit": "الحصول على الإرشاد",
+  "guidance.error_title": "فشل إنشاء الإرشاد",
+  "guidance.error_retry": "إعادة المحاولة",
+  "guidance.empty_title": "المعلومات القانونية",
+  "guidance.empty_desc":
+    "صف وضعك أعلاه وسيقوم الذكاء الاصطناعي بتحليل جميع القوانين الاتحادية الألمانية البالغ عددها 6000+، والربط مع إشاراتك المرجعية ومجلدات القضايا، وإرجاع 3-5 مسارات نتائج ملموسة مع تقييم المخاطر وتقديرات التكاليف والخطوات التالية التفصيلية.",
+  "guidance.empty_feature_risk": "شارات المخاطر",
+  "guidance.empty_feature_cost": "تقديرات التكاليف",
+  "guidance.empty_feature_laws": "القوانين المستشهد بها",
+  "guidance.empty_feature_docs": "إنشاء المستندات",
+  "guidance.success_hint":
+    "هذه طرق محتملة للمضي قدمًا بناءً على القانون الألماني. كل مسار له مخاطر وتكاليف وجداول زمنية مختلفة. انقر على مسار لتوسيعه ورؤية التعليمات خطوة بخطوة. أنت غير ملزم بأي خيار — هذا فقط لمساعدتك على فهم خياراتك.",
+  "guidance.your_paths": "مساراتك المحتملة للمضي قدمًا",
+  "guidance.cost_breakdown": "تفصيل التكاليف",
+  "guidance.paths_shown": "تم عرض {n} من 5 مسارات",
+  "guidance.est_cost": "التكلفة التقديرية",
+  "guidance.cost_court_fees": "الرسوم القضائية (GKG)",
+  "guidance.cost_lawyer_fees": "أتعاب المحاماة (RVG)",
+  "guidance.cost_total_risk": "إجمالي المخاطر (في حالة الخسارة)",
+  "guidance.cost_basis":
+    "بناءً على Streitwert بقيمة €{n} (حساب مبسط RVG/GKG). قد تختلف التكاليف الفعلية.",
+  "guidance.cited_laws": "القوانين ذات الصلة المستخدمة",
+  "guidance.cited_click": "انقر على قانون لقراءة نصه الكامل",
+  "guidance.gen_doc": "إنشاء مسودة مستند",
+  "guidance.gen_doc_progress": "جارٍ إنشاء المستند...",
+  "guidance.gen_doc_disclaimer":
+    "هذه مسودة بناءً على وضعك. اطلب من محامٍ (Rechtsanwalt) مراجعتها قبل استخدامها رسميًا.",
+  "guidance.detailed_analysis": "تحليل مفصل",
+  "guidance.step_plan": "خطة خطوة بخطوة",
+  "guidance.quick_tip": "نصيحة سريعة",
+  "guidance.risk_hint": "السبب: {reason}",
+  "guidance.remember":
+    "هذا الإرشاد هو لأغراض إعلامية فقط. للحصول على مشورة قانونية محددة، استشر محاميًا ألمانيًا مرخصًا (Rechtsanwalt).",
+  "guidance.save_archives": "حفظ القوانين ذات الصلة في أرشيفك",
+  "guidance.gen_doc_require_folder":
+    "أنشئ مجلد قضية أولاً لإنشاء المستندات.",
+  "guidance.gen_doc_require_folder_desc":
+    "اختر أو أنشئ مجلدًا من القائمة المنسدلة أعلاه، ثم حاول مرة أخرى.",
+
+  "guidance.risk_low": "مرجح أن يكون مناسبًا — مخاطر منخفضة",
+  "guidance.risk_medium": "غير مؤكد — مخاطر معتدلة",
+  "guidance.risk_high": "عقبات كبيرة — مخاطر عالية",
+  "guidance.risk_hint_low":
+    "هذا المسار لديه فرصة جيدة للنجاح. القانون في صفك هنا، والتكاليف معقولة.",
+  "guidance.risk_hint_medium":
+    "هذا المسار يمكن أن ينتهي بأي شكل. اعتبره مقامرة محسوبة — هناك حجج جيدة من كلا الجانبين. يمكن للمحامي مساعدتك في تقييم فرصك الفعلية.",
+  "guidance.risk_hint_high":
+    "هذا المسار معركة شاقة. القانون أو الحقائق تجعل الفوز صعبًا. قبل اتباع هذا الطريق، احصل على مشورة قانونية مهنية لفهم ما تواجهه.",
+  "guidance.prob_very_promising": "واعد جدًا",
+  "guidance.prob_promising": "واعد",
+  "guidance.prob_uncertain": "غير مؤكد",
+  "guidance.prob_difficult": "صعب",
+  "guidance.prob_very_difficult": "صعب جدًا",
+  "guidance.timeline_2_6_weeks":
+    "هذا سريع نسبيًا. في القانون الألماني، عادة ما تتحرك الخطوات خارج المحكمة بهذه الوتيرة.",
+  "guidance.timeline_3_12_months":
+    "تستغرق القضايا في المحاكم وقتًا في ألمانيا. لا تقلق — معظم القضايا يتم تسويتها قبل المحاكمة.",
+  "guidance.timeline_1_4_weeks":
+    "هذا سريع جدًا. تتحرك المحاكم بسرعة فقط في الأمور العاجلة (Eilverfahren).",
+  "guidance.timeline_fallback":
+    "تختلف الجداول الزمنية في الإجراءات القانونية الألمانية. يمكن للمحامي أن يعطيك تقديرًا أكثر دقة لقضيتك المحددة.",
+
+  "guidance_history.title": "سجل الإرشاد",
+  "guidance_history.subtitle": "تحليل القضايا",
+  "guidance_history.count": "{n} جلسة",
+  "guidance_history.sign_in_title": "تسجيل الدخول مطلوب",
+  "guidance_history.sign_in_desc":
+    "سجل الدخول لعرض سجل إرشاداتك. يتم حفظ الجلسات تلقائيًا عند إجراء تحليل القضية أثناء تسجيل الدخول.",
+  "guidance_history.sign_in_btn": "تسجيل الدخول",
+  "guidance_history.loading": "جارٍ تحميل الجلسات",
+  "guidance_history.empty_title": "لا توجد جلسات إرشاد بعد",
+  "guidance_history.empty_desc":
+    "صف وضعك القانوني وسيقوم الذكاء الاصطناعي بإنشاء 3-5 مسارات نتائج. يتم حفظ الجلسات تلقائيًا عند تسجيل الدخول.",
+  "guidance_history.empty_cta": "تحليل موقف",
+  "guidance_history.delete": "حذف الجلسة",
+  "guidance_history.deleting": "جارٍ الحذف...",
+  "guidance_history.previous": "السابق",
+  "guidance_history.next": "التالي",
+  "guidance_history.page_info": "الصفحة {current} من {total}",
+  "guidance_history.untitled": "جلسة بدون عنوان",
+  "guidance_history.incident": "الحادث: {date}",
+  "guidance_history.path": "المسار {n}: {title}",
+  "guidance_history.confirm_delete":
+    "هل تريد حذف جلسة الإرشاد هذه وجميع مسارات نتائجها؟",
+
+  "chat.limitation_basic":
+    "البحث الأساسي — يبحث في القوانين ويعرض المقتطفات ذات الصلة. لا يوجد تحليل بالذكاء الاصطناعي.",
+  "chat.limitation_browser":
+    "ذكاء اصطناعي المتصفح — يقوم بتنزيل نموذج ~1GB عند الاستخدام الأول. خصوصية كاملة.",
+  "chat.limitation_cloud":
+    "ذكاء اصطناعي سحابي — يستخدم مفتاح API الخاص بك. يتم الفوترة من قبل مزود الخدمة الخاص بك.",
+  "chat.limitation_local":
+    "ذكاء اصطناعي محلي — يعمل فقط عندما يكون broker.py و Ollama قيد التشغيل على جهازك.",
+  "chat.conversations": "المحادثات",
+  "chat.new_conversation": "محادثة جديدة",
+  "chat.type_message": "اكتب سؤالك القانوني...",
+  "chat.config_hint": "يرجى تكوين إعدادات الذكاء الاصطناعي الخاصة بك لاستخدام هذه الميزة.",
+
+  "folder.title": "مجلد قضية جديد",
+  "folder.edit_title": "تعديل مجلد القضية",
+  "folder.name_label": "اسم المجلد",
+  "folder.name_placeholder": "مثال: قضية فصل تعسفي",
+  "folder.desc_label": "الوصف",
+  "folder.desc_placeholder": "وصف مختصر للقضية",
+  "folder.category_label": "التصنيف",
+  "folder.status_label": "الحالة",
+  "folder.incident_date": "تاريخ الحادث",
+  "folder.incident_hint": "يحسب الذكاء الاصطناعي المواعيد النهائية من هذا التاريخ",
+  "folder.deadline_date": "تاريخ الموعد النهائي",
+  "folder.deadline_hint": "يحذر الذكاء الاصطناعي عند اقتراب هذا الموعد النهائي",
+  "folder.dispute_value": "قيمة النزاع (Streitwert) — يورو",
+  "folder.dispute_hint": "يستخدم لتقدير التكاليف (RVG/GKG)",
+  "folder.opposing_party": "الطرف المقابل",
+  "folder.opposing_hint": "يتحقق الذكاء الاصطناعي من حماية محددة (KSchG، BDSG، إلخ.)",
+  "folder.opposing_placeholder": "مثال: صاحب عمل، مالك عقار",
+  "folder.court_name": "اسم المحكمة",
+  "folder.court_placeholder": "مثال: Arbeitsgericht Berlin",
+  "folder.case_number": "رقم القضية (Aktenzeichen)",
+  "folder.case_placeholder": "مثال: 5 Ca 1234/24",
+  "folder.notes_label": "ملاحظات (سياق الذكاء الاصطناعي)",
+  "folder.notes_placeholder":
+    "أضف أي سياق إضافي حول قضيتك. يقرأ الذكاء الاصطناعي هذا عند إنشاء الإرشاد.",
+  "folder.notes_hint":
+    "نص حر للسياق — يقرأ الذكاء الاصطناعي هذا عند إنشاء مسارات الإرشاد",
+  "folder.cancel": "إلغاء",
+  "folder.save": "حفظ المجلد",
+  "folder.saving": "جارٍ الحفظ...",
+  "folder.name_required": "اسم المجلد مطلوب.",
+  "folder.save_error": "فشل حفظ المجلد",
+  "folder.basic_info": "المعلومات الأساسية",
+  "folder.timeline_value": "الجدول الزمني والقيمة",
+  "folder.parties_court": "الأطراف والمحكمة",
+
+  "norm.section": "القسم {id}",
+  "norm.translating_browser": "جارٍ الترجمة عبر ذكاء اصطناعي المتصفح…",
+  "norm.translating_cloud": "جارٍ الترجمة عبر الذكاء الاصطناعي السحابي…",
+  "norm.translating_local": "جارٍ الترجمة عبر الذكاء الاصطناعي المحلي…",
+  "norm.translating": "جارٍ الترجمة…",
+  "norm.german_original": "النص الألماني الأصلي",
+  "norm.translation_unavailable":
+    "الترجمة غير متاحة — قم بإعداد الذكاء الاصطناعي في الإعدادات",
+  "norm.translated_to": "مترجم إلى {lang}",
+  "norm.show_translation": "عرض الترجمة",
+  "norm.show_german": "عرض النص الألماني الأصلي",
+  "norm.analyzing": "جارٍ تحليل القانون...",
+  "norm.translate": "ترجمة إلى {lang}",
+  "norm.gate_translate": "قم بالتبديل إلى وضع AI في الإعدادات لترجمة القوانين",
+  "norm.translation_official": "ترجمة رسمية",
+  "norm.translation_ai": "ترجمة الذكاء الاصطناعي",
+  "norm.content_summary": "ملخص",
+  "norm.content_context": "سياق",
+  "norm.content_steps": "خطوات",
+  "norm.disclaimer": "معلومات الخزنة — تقرير أولي غير ملزم",
+
+  "law_detail.back": "رجوع",
+  "law_detail.key_badge": "{key}",
+  "law_detail.status": "الحالة",
+  "law_detail.authority": "السلطة",
+  "law_detail.modified": "آخر تعديل",
+  "law_detail.density": "الكثافة",
+  "law_detail.sections": "{n} قسم",
+  "law_detail.framework": "الإطار القانوني",
+  "law_detail.save": "حفظ",
+  "law_detail.saved": "تم الحفظ",
+  "law_detail.save_anon":
+    "تم حفظ الإشارة مرجعية محليًا. سجل الدخول للمزامنة عبر الأجهزة.",
+  "law_detail.archive_entry": "تمت إزالة الإدخال من الأرشيف",
+  "law_detail.loading": "جارٍ فك تشفير القانون...",
 };

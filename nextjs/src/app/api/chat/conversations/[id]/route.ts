@@ -3,12 +3,32 @@ import { cookies } from "next/headers";
 import { getServerClient } from "../../../../../lib/supabase-server";
 import { errorResponse } from "../../../../../lib/api-utils";
 import { sanitizeErrorMessage } from "../../../../../lib/sanitize";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_SEARCH_RATE_LIMIT,
+} from "../../../../../lib/rate-limiter";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests",
+        429,
+undefined,
+rateLimitHeaders,
+      );
+    }
+
     const { id } = await params;
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
@@ -50,10 +70,25 @@ export async function GET(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests",
+        429,
+undefined,
+rateLimitHeaders,
+      );
+    }
+
     const { id } = await params;
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);

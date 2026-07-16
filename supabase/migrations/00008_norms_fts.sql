@@ -29,3 +29,24 @@ CREATE INDEX IF NOT EXISTS idx_norms_content_trgm ON norms USING GIN (content gi
 ALTER TABLE norms ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Norms are publicly readable" ON norms;
 CREATE POLICY "Norms are publicly readable" ON norms FOR SELECT USING (true);
+
+-- Soft FK: norms.law_key → laws.key
+-- Cleans orphan rows first, then adds constraint with ON DELETE SET NULL
+-- to preserve norms even if a law key is removed.
+DELETE FROM public.norms
+WHERE law_key IS NOT NULL
+  AND law_key NOT IN (SELECT key FROM public.laws);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_norms_law_key'
+  ) THEN
+    ALTER TABLE public.norms
+      ADD CONSTRAINT fk_norms_law_key
+      FOREIGN KEY (law_key) REFERENCES public.laws(key)
+      ON DELETE SET NULL;
+  END IF;
+END
+$$;

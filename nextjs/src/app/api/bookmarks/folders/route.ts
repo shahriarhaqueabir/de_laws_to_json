@@ -4,6 +4,11 @@ import { cookies } from "next/headers";
 import { getServerClient } from "@/lib/supabase-server";
 import { errorResponse, successResponse } from "@/lib/api-utils";
 import { sanitizeErrorMessage } from "@/lib/sanitize";
+import {
+  checkRateLimit,
+  getClientIp,
+  DEFAULT_SEARCH_RATE_LIMIT,
+} from "@/lib/rate-limiter";
 
 function handleError(err: unknown) {
   const message = sanitizeErrorMessage(err);
@@ -52,6 +57,21 @@ const UpdateFolderSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests",
+        429,
+undefined,
+rateLimitHeaders,
+      );
+    }
+
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
     const {
@@ -78,6 +98,21 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests",
+        429,
+undefined,
+rateLimitHeaders,
+      );
+    }
+
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
     const {
@@ -126,6 +161,21 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests",
+        429,
+undefined,
+rateLimitHeaders,
+      );
+    }
+
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
     const {
@@ -180,6 +230,21 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const { allowed, headers: rateLimitHeaders } = await checkRateLimit(
+      ip,
+      DEFAULT_SEARCH_RATE_LIMIT,
+    );
+    if (!allowed) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Too many requests",
+        429,
+undefined,
+rateLimitHeaders,
+      );
+    }
+
     const cookieStore = await cookies();
     const supabase = getServerClient(cookieStore);
     const {

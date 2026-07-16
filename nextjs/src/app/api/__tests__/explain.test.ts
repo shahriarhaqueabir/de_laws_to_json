@@ -169,16 +169,16 @@ describe("POST /api/explain", () => {
     );
   });
 
-  it("local mode calls broker and parses JSON response", async () => {
+  it("local mode calls Ollama and parses response", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        response: JSON.stringify({
-          translation: "Broker translation",
-          summary: "Broker summary",
-          implications: "Broker implications",
-          next_steps: "Broker next steps",
-        }),
+        message: {
+          content: JSON.stringify({
+            translation: "Ollama translation",
+          }),
+        },
+        done: true,
       }),
     });
 
@@ -194,14 +194,14 @@ describe("POST /api/explain", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.translation).toBe("Broker translation");
+    expect(body.translation).toBe("Ollama translation");
     expect(body.summary).toBe("");
     expect(body.implications).toBe("");
     expect(body.next_steps).toBe("");
   });
 
-  it("local mode handles broker error gracefully", async () => {
-    mockFetch.mockRejectedValue(new Error("Broker unreachable"));
+  it("local mode handles Ollama error gracefully", async () => {
+    mockFetch.mockRejectedValue(new Error("Ollama unreachable"));
 
     const { POST } = await import("../explain/route");
     const req = makePostRequest("/api/explain", {

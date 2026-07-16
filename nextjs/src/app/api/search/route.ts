@@ -182,9 +182,9 @@ export async function GET(req: NextRequest) {
               ORDER BY score DESC
               LIMIT 20;
             `;
-            // Use rpc with the SQL as a string param (Supabase REST can't do
-            // raw SQL through the JS client — we use the Management API pattern)
-            // Instead, use the .from() query builder with textSearch fallback
+            // Use query builder .or() with ILIKE patterns for pg_trgm fallback.
+            // This won't trigger pg_trgm similarity scoring but gives us
+            // case-insensitive partial matching across content/norm_title/norm_id.
             const { data: trgmResults, error: trgmErr } = await (supabase
               .from("norms")
               .select(
@@ -194,16 +194,14 @@ export async function GET(req: NextRequest) {
                 `content.ilike.%${searchQuery}%,norm_title.ilike.%${searchQuery}%,norm_id.ilike.%${searchQuery}%`,
               )
               .limit(20) as unknown as Promise<{
-                data:
-                | {
+                data: {
                   law_key: string;
                   law_title: string;
                   category: string;
                   norm_id: string;
                   norm_title: string;
                   content: string;
-                }[]
-                | null;
+                }[] | null;
                 error: any;
               }>);
 

@@ -253,53 +253,6 @@ function extractQueryKeywords(query: string): Set<string> {
 }
 
 /**
- * Compute BM25 score for a single document given a set of query terms.
- * Uses smoothed IDF + term frequency with length normalization.
- */
-function computeBM25(
-  queryTerms: Set<string>,
-  docText: string,
-  docLen: number,
-  avgdl: number,
-  totalDocs: number,
-  docFrequency: Map<string, number>,
-): number {
-  const k1 = 1.2;
-  const b = 0.75;
-  const tokens = tokenizeForBM25(docText);
-  const tfMap = new Map<string, number>();
-  for (const t of tokens) {
-    tfMap.set(t, (tfMap.get(t) || 0) + 1);
-  }
-
-  let score = 0;
-  for (const term of Array.from(queryTerms)) {
-    const tf = tfMap.get(term) || 0;
-    if (tf === 0) continue;
-
-    // Smoothed IDF from result-set frequencies
-    const df = Math.max(1, docFrequency.get(term) || 1);
-    const idf = Math.log(1 + (totalDocs - df + 0.5) / (df + 0.5));
-
-    // BM25 term frequency normalization
-    const numerator = tf * (k1 + 1);
-    const denominator = tf + k1 * (1 - b + b * (docLen / avgdl));
-    score += idf * (numerator / denominator);
-  }
-  return score;
-}
-
-/**
- * Normalize an array of scores to [0, 1] range.
- */
-function normalizeScores(scores: number[]): number[] {
-  const max = Math.max(...scores, 1e-10);
-  const min = Math.min(...scores, 0);
-  const range = max - min || 1;
-  return scores.map((s) => (s - min) / range);
-}
-
-/**
  * Rerank search results by boosting results whose norm_title or law_title
  * contains keywords from the search query, and preferring laws with
  * multiple matching norms.

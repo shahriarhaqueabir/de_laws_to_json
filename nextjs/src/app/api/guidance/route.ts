@@ -7,12 +7,13 @@ import { searchNorms } from "@/lib/qdrant";
 import { translateQueryToGerman } from "@/lib/translate-server";
 import {
   generateGuidancePaths,
+  buildGuidancePrompts,
   type GenerateGuidanceParams,
   type FolderContext,
 } from "@/lib/guidance";
 import { decryptApiKey } from "@/lib/encryption";
 import { sanitizeErrorMessage } from "@/lib/sanitize";
-import { isValidBrokerUrl } from "@/lib/broker";
+import { isValidBrokerUrl } from "@/lib/ollama";
 import { ANALYSIS_MODEL } from "@/lib/model-constants";
 import { translateFromGerman } from "@/lib/translate-server";
 import {
@@ -160,6 +161,62 @@ export async function POST(req: NextRequest) {
           // Decryption failed — key rotation
         }
       }
+    }
+
+    // ── SUGGEST MODE: Return assembled prompts for client-side AI ──
+    if (mode === "suggest") {
+      const translatedSituation = await translateQueryToGerman(situation);
+      const norms = await searchNorms(
+        translatedSituation,
+        folder_context?.category,
+        15,
+      );
+
+      const qdrantResults = norms.map((n) => ({
+        law_key: n.law_key,
+        norm_id: n.norm_id,
+        law_title: n.law_title,
+      }));
+
+      const qdrantContext = norms
+        .map((n) => `[${n.law_key} ${n.norm_id}] ${n.content.slice(0, 1500)}`)
+        .join("\n\n");
+
+      let folderCtx: FolderContext | null = null;
+      if (folder_context) {
+        folderCtx = {
+          id: folder_context.id,
+          name: folder_context.name,
+          category: folder_context.category,
+          incident_date: folder_context.incident_date,
+          dispute_value: folder_context.dispute_value,
+          status: folder_context.status as FolderContext["status"],
+          opposing_party: folder_context.opposing_party,
+          deadline_date: folder_context.deadline_date,
+          court_name: folder_context.court_name,
+          case_number: folder_context.case_number,
+          notes: folder_context.notes,
+        };
+      }
+
+      const prompts = await buildGuidancePrompts({
+        situation,
+        language: "en" as const,
+        folderContext: folderCtx,
+        bookmarkedLaws: [],
+        qdrantResults,
+        qdrantContext,
+      });
+
+      return successResponse({
+        status: "suggest",
+        systemPrompt: prompts.systemPrompt,
+        userPrompt: prompts.userPrompt,
+        qdrantResults,
+        qdrantContext,
+        folderContext: folderCtx,
+        generated_at: new Date().toISOString(),
+      });
     }
 
     // LOCAL MODE — skip API key, use local broker

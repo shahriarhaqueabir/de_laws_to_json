@@ -50,7 +50,6 @@ interface ConversationResponse {
 interface ChatApiResponse {
   response: string;
   citedLaws: CitedLaw[];
-  brokerAvailable?: boolean | null;
   mode?: string;
 }
 

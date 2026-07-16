@@ -4,6 +4,7 @@ import { Suspense, useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useChat } from "../../components/chat-context";
 import { useAuth } from "../../components/auth-context";
+import { SystemStatus } from "../../components/system-status";
 import { FeatureGate } from "../../components/feature-gate";
 import { useApiKeyStatus } from "../../hooks/useApiKeyStatus";
 import ConversationList from "../../components/conversation-list";
@@ -52,7 +53,7 @@ function ChatContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [brokerOnline, setBrokerOnline] = useState<boolean | null>(null);
+  const [ollamaOk, setOllamaOk] = useState<boolean | null>(null);
 
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -62,9 +63,7 @@ function ChatContent() {
     settings,
     mode,
     conversationId,
-    brokerOnline,
     setMessages,
-    setBrokerOnline,
     setLoading,
   });
 
@@ -83,7 +82,7 @@ function ChatContent() {
       try {
         const saved = sessionStorage.getItem("glv_guest_chat");
         if (saved) setMessages(JSON.parse(saved));
-      } catch {}
+      } catch { }
     }
   }, [user]);
 
@@ -93,7 +92,19 @@ function ChatContent() {
     }
   }, [messages, user]);
 
-  const brokerAvailable = mode === "local" ? brokerOnline : null;
+  // Poll Ollama health when in local mode
+  useEffect(() => {
+    if (mode !== "local") return;
+    const check = () => {
+      fetch(`${settings.brokerUrl}/api/tags`)
+        .then((r) => setOllamaOk(r.ok))
+        .catch(() => setOllamaOk(false));
+    };
+    check();
+    const interval = setInterval(check, 10000);
+    return () => clearInterval(interval);
+  }, [mode, settings.brokerUrl]);
+
   const modeMeta = MODE_META[mode];
   const ModeIcon = modeMeta.icon;
 
@@ -175,24 +186,7 @@ function ChatContent() {
                     <ModeIcon className="w-2.5 h-2.5" />
                     {t(modeMeta.tKey)}
                   </span>
-                  {mode === "local" && brokerAvailable === true && (
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 uppercase tracking-widest">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Broker Online
-                    </span>
-                  )}
-                  {mode === "local" && brokerAvailable === false && (
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-red-400 uppercase tracking-widest">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                      Broker Offline
-                    </span>
-                  )}
-                  {mode === "local" && brokerAvailable === null && (
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-yellow-400 uppercase tracking-widest">
-                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-                      Connecting...
-                    </span>
-                  )}
+                  <SystemStatus compact />
                 </div>
               </div>
             </div>
@@ -375,8 +369,8 @@ function ChatContent() {
                 return (
                   <FeatureGate
                     requirement="ai-mode-local"
-                    message="Start your local broker to enable Local AI"
-                    met={brokerAvailable === true}
+                    message="Ensure Ollama is running (ollama serve)"
+                    met={ollamaOk === true}
                     action={() => router.push("/settings")}
                   >
                     {btn}
@@ -388,9 +382,9 @@ function ChatContent() {
             })()}
           </form>
 
-          {mode === "local" && brokerAvailable === false && (
+          {mode === "local" && ollamaOk === false && (
             <p className="text-xs text-center text-red-500 mt-4 uppercase tracking-[0.2em] font-black animate-pulse">
-              {t("chat.local_offline")} — Ensure Ollama and Broker are running
+              {t("chat.local_offline")} — Ensure Ollama is running (ollama serve)
             </p>
           )}
 

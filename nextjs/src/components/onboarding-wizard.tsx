@@ -346,7 +346,7 @@ function LocalConfig({ onContinue }: { onContinue: () => void }) {
   const { t } = useLanguage();
   const { settings, updateSettings } = useChat();
   const [brokerUrl, setBrokerUrl] = useState(
-    settings.brokerUrl || "http://localhost:9000",
+    settings.brokerUrl || "http://localhost:11434",
   );
   const [connectionStatus, setConnectionStatus] = useState<
     "idle" | "checking" | "connected" | "offline"
@@ -355,22 +355,10 @@ function LocalConfig({ onContinue }: { onContinue: () => void }) {
   const testConnection = async () => {
     setConnectionStatus("checking");
     try {
-      // Attempt to start the broker (non-fatal if it fails)
-      await fetch("/api/broker/manage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "start" }),
+      const res = await fetch(`${brokerUrl}/api/tags`, {
         signal: AbortSignal.timeout(5000),
       });
-    } catch {
-      // Broker may already be running or managed externally — that's fine
-    }
-    try {
-      const healthRes = await fetch(`${brokerUrl}/health`, {
-        method: "GET",
-        signal: AbortSignal.timeout(5000),
-      });
-      setConnectionStatus(healthRes.ok ? "connected" : "offline");
+      setConnectionStatus(res.ok ? "connected" : "offline");
     } catch {
       setConnectionStatus("offline");
     }

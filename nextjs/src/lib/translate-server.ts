@@ -10,6 +10,7 @@
  */
 
 import type { AppLanguage } from "./types";
+import { z } from "zod";
 
 // ── LibreTranslate Language Code Mapping ──────────────────────────────────
 // LibreTranslate uses ISO 639-1 codes which match our AppLanguage type
@@ -39,6 +40,19 @@ const OLLAMA_TRANSLATE_TIMEOUT_MS = 3_000;
 const OLLAMA_PROBE_TIMEOUT_MS = 1_000;
 const TRANSLATE_MODEL = "translategemma:4b";
 
+// Language names for Ollama translation prompts
+const OLLAMA_LANG_NAMES: Record<string, string> = {
+  de: "German",
+  en: "English",
+  tr: "Turkish",
+  ar: "Arabic",
+  fr: "French",
+  es: "Spanish",
+  pl: "Polish",
+  uk: "Ukrainian",
+  ru: "Russian",
+};
+
 // ── Translation Result Cache ─────────────────────────────────────────────────
 // LRU-like cache: maps "text::targetLang" → translated string.
 // Prevents redundant translations of the same text within and across requests.
@@ -53,7 +67,13 @@ function getCachedTranslation(
   text: string,
   targetLang: string,
 ): string | undefined {
-  return TRANSLATION_CACHE.get(cacheKey(text, targetLang));
+  // LRU: delete and re-set to move entry to end (most recently used)
+  const key = cacheKey(text, targetLang);
+  if (!TRANSLATION_CACHE.has(key)) return undefined;
+  const value = TRANSLATION_CACHE.get(key)!;
+  TRANSLATION_CACHE.delete(key);
+  TRANSLATION_CACHE.set(key, value);
+  return value;
 }
 
 function setCachedTranslation(
@@ -61,12 +81,16 @@ function setCachedTranslation(
   targetLang: string,
   result: string,
 ): void {
-  if (TRANSLATION_CACHE.size >= CACHE_MAX) {
-    // Evict oldest entry (Map preserves insertion order)
+  const key = cacheKey(text, targetLang);
+  // If key exists, delete first so re-insert goes to end (LRU)
+  if (TRANSLATION_CACHE.has(key)) {
+    TRANSLATION_CACHE.delete(key);
+  } else if (TRANSLATION_CACHE.size >= CACHE_MAX) {
+    // Evict oldest entry (Map preserves insertion order — first key is LRU)
     const firstKey = TRANSLATION_CACHE.keys().next();
     if (!firstKey.done) TRANSLATION_CACHE.delete(firstKey.value);
   }
-  TRANSLATION_CACHE.set(cacheKey(text, targetLang), result);
+  TRANSLATION_CACHE.set(key, result);
 }
 
 // Per-process cache: once we know Ollama is unreachable, skip it entirely.

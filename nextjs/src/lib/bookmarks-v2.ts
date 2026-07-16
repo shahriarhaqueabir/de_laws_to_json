@@ -123,15 +123,25 @@ export async function addBookmark(
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      await supabase.from("bookmarks").insert({
-        user_id: user.id,
-        law_key: b.law_key,
-        norm_id: b.norm_id || "",
-        note: b.snippet || "",
-      });
-      newBm.synced = true;
-      newBm.id = crypto.randomUUID(); // placeholder
-      setLocalBookmarks(bookmarks);
+      const { data, error } = await supabase
+        .from("bookmarks")
+        .insert({
+          user_id: user.id,
+          law_key: b.law_key,
+          norm_id: b.norm_id || "",
+          note: b.snippet || "",
+          law_title: b.law_title || b.law_key,
+          folder_id: b.folder_id || null,
+          created_at: b.added_at || new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        newBm.synced = true;
+        newBm.id = data.id;
+        setLocalBookmarks(bookmarks);
+      }
     }
   } catch {
     // Silently fail — data is safe in localStorage
@@ -201,6 +211,7 @@ export async function createFolder(
   };
 
   const folders = getLocalFolders();
+  const localIdx = folders.length; // Will be the index after push
   folders.push(folder);
   setLocalFolders(folders);
 
@@ -233,10 +244,9 @@ export async function createFolder(
       if (!error && data) {
         folder.id = data.id;
         folder.user_id = data.user_id;
-        // Update local cache with real ID
+        // Update local cache with real ID atomically
         const updated = getLocalFolders();
-        const idx = updated.findIndex((f) => f.id === folder.id);
-        if (idx >= 0) updated[idx] = folder;
+        updated[localIdx] = folder;
         setLocalFolders(updated);
       }
     }
@@ -303,6 +313,56 @@ export async function deleteFolder(id: string): Promise<void> {
   }
 }
 
+// ── v1 → v2 Migration ───────────────────────────────────────────────────────
+
+const V1_STORAGE_KEY = "glv_bookmarks";
+
+/**
+ * One-time migration from v1 (glv_bookmarks) to v2 (glv_bookmarks_v2).
+ * Reads legacy bookmarks, converts to v2 format, writes to v2 storage,
+ * then clears the old key. Best-effort — wraps in try/catch with silent fail.
+ */
+export function migrateFromV1(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const v2exists = localStorage.getItem(BOOKMARKS_KEY);
+    if (v2exists) return; // Already migrated
+
+    const raw = localStorage.getItem(V1_STORAGE_KEY);
+    if (!raw) return; // Nothing to migrate
+
+    const v1bookmarks: { law_key: string; law_title: string; category: string; norm_id?: string; norm_title?: string; snippet?: string; added_at: string }[] = JSON.parse(raw);
+    if (!Array.isArray(v1bookmarks) || v1bookmarks.length === 0) return;
+
+    const v2bookmarks: BookmarkV2[] = v1bookmarks.map((b) => ({
+      law_key: b.law_key,
+      law_title: b.law_title || b.law_key,
+      category: b.category || "other",
+      norm_id: b.norm_id,
+      norm_title: b.norm_title,
+      snippet: b.snippet,
+      added_at: b.added_at || new Date().toISOString(),
+      folder_id: undefined,
+      synced: false,
+    }));
+
+    // Deduplicate against any existing v2 entries
+    const existing = getLocalBookmarks();
+    const merged = [...v2bookmarks];
+    for (const eb of existing) {
+      const dup = merged.some(
+        (m) => m.law_key === eb.law_key && (m.norm_id || "") === (eb.norm_id || ""),
+      );
+      if (!dup) merged.push(eb);
+    }
+
+    localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(merged));
+    localStorage.removeItem(V1_STORAGE_KEY);
+  } catch {
+    // Silent — v1 data remains in localStorage, no data loss
+  }
+}
+
 // ── Sync ───────────────────────────────────────────────────────────────────
 
 export async function syncBookmarksToSupabase(): Promise<void> {
@@ -325,6 +385,9 @@ export async function syncBookmarksToSupabase(): Promise<void> {
         law_key: bm.law_key,
         norm_id: bm.norm_id || "",
         note: bm.snippet || "",
+        law_title: bm.law_title || bm.law_key,
+        folder_id: bm.folder_id || null,
+        created_at: bm.added_at || new Date().toISOString(),
       });
       if (!error) {
         bm.synced = true;
@@ -349,7 +412,7 @@ export async function syncBookmarksToSupabase(): Promise<void> {
           merged.push({
             id: r.id,
             law_key: r.law_key,
-            law_title: r.note || "",
+            law_title: r.law_title || r.law_key,
             category: "other",
             norm_id: r.norm_id || undefined,
             added_at: r.created_at,

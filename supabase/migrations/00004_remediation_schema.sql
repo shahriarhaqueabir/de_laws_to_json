@@ -46,10 +46,26 @@ CREATE POLICY "Users own their case files"
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Playbooks are public"
-    ON public.remediation_playbooks FOR SELECT
-    USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'remediation_playbooks'
+      AND policyname = 'Playbooks are public'
+  ) THEN
+    CREATE POLICY "Playbooks are public"
+      ON public.remediation_playbooks FOR SELECT
+      USING (true);
+  END IF;
 
-CREATE POLICY "Templates are public"
-    ON public.document_templates FOR SELECT
-    USING (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'document_templates'
+      AND policyname = 'Templates are public'
+  ) THEN
+    CREATE POLICY "Templates are public"
+      ON public.document_templates FOR SELECT
+      USING (true);
+  END IF;
+END
+$$;
