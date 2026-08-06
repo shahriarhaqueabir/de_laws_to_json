@@ -35,7 +35,8 @@ jobs:
         working-directory: nextjs
 
       - name: Deploy to Vercel
-        run: npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --cwd=nextjs
+        # Version pinned to avoid supply-chain drift on unpinned @latest
+        run: npx vercel@58.7.1 deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --cwd=nextjs
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
